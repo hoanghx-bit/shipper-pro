@@ -7,10 +7,10 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Shipper Pro">
+    <meta name="apple-mobile-web-app-title" content="ShipperPro">
     
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/180/motorcycle-delivery-single-box.png">
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/motorcycle-delivery-single-box.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2300AA55'/><path d='M20 70 L40 70 L45 75 L55 75 L60 70 L80 70 M30 70 Q30 50 50 50 L70 50 L70 60' stroke='white' stroke-width='5' fill='none'/><circle cx='35' cy='75' r='7' fill='white'/><circle cx='65' cy='75' r='7' fill='white'/><path d='M50 30 L75 30 L65 50 L40 50 Z' fill='%23C0C0C0'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2300AA55'/><path d='M20 70 L40 70 L45 75 L55 75 L60 70 L80 70 M30 70 Q30 50 50 50 L70 50 L70 60' stroke='white' stroke-width='5' fill='none'/><circle cx='35' cy='75' r='7' fill='white'/><circle cx='65' cy='75' r='7' fill='white'/><path d='M50 30 L75 30 L65 50 L40 50 Z' fill='%23C0C0C0'/></svg>">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -20,50 +20,58 @@
     <style>
         :root { --primary: #00AA55; --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --red: #ff4757; --orange: #ffa502; --blue: #4285F4; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding-bottom: 90px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
         
         header { padding: 10px 20px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .logo-container { display: flex; align-items: center; gap: 10px; }
-        .logo-img { width: 35px; height: 35px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-        .logo-text { font-weight: 800; color: var(--primary); font-size: 1.1rem; letter-spacing: -0.5px; }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-svg { width: 35px; height: 35px; }
+        .logo-text { font-weight: 900; color: var(--primary); font-size: 1.2rem; }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
-        #map { height: 300px; width: 100%; border-radius: 24px; background: #e0e0e0; margin-bottom: -40px; border: 4px solid white; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 1; }
+        #map { height: 300px; width: 100%; border-radius: 24px; margin-bottom: -40px; border: 4px solid white; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 1; }
 
-        .main-card { background: var(--card); border-radius: 30px; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; margin-top: 0; border: 1px solid rgba(0,0,0,0.03); }
+        .main-card { background: var(--card); border-radius: 30px; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; border: 1px solid rgba(0,0,0,0.03); }
         
-        input { background: #f1f3f5; border: 2px solid transparent; color: #2d3436; padding: 16px; border-radius: 18px; width: 100%; margin-bottom: 12px; font-size: 16px; font-weight: 600; transition: 0.3s; }
+        input { background: #f1f3f5; border: 2px solid transparent; padding: 16px; border-radius: 18px; width: 100%; margin-bottom: 12px; font-size: 16px; font-weight: 600; }
         input:focus { border-color: var(--primary); background: white; outline: none; }
 
-        .btn { border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; font-size: 14px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(0,170,85,0.3); }
+        .btn { border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; text-transform: uppercase; }
+        .btn-primary { background: var(--primary); color: white; }
         .btn-green { background: #238636; color: white; }
-        .btn-maps { background: var(--blue); color: white; box-shadow: 0 8px 20px rgba(66,133,244,0.3); }
-        .btn-orange { background: var(--orange); color: white; box-shadow: 0 8px 20px rgba(255,165,2,0.3); }
+        .btn-maps { background: var(--blue); color: white; }
+        .btn-orange { background: var(--orange); color: white; }
         .btn-ghost { background: #f1f3f5; color: #747d8c; }
-        .btn:active { transform: scale(0.96); }
         .btn:disabled { opacity: 0.4; pointer-events: none; }
 
-        .status-badge { background: #e8f5e9; color: var(--primary); padding: 6px 14px; border-radius: 12px; font-size: 12px; font-weight: 800; }
-        .info-panel { background: #f8f9fa; padding: 18px; border-radius: 20px; margin: 15px 0; border: 1px dashed #dee2e6; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-item { background: white; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .stat-label { font-size: 11px; color: #95a5a6; font-weight: 700; }
+        .stat-val { font-size: 18px; font-weight: 800; color: var(--primary); }
 
-        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 5px 25px 5px; border-top: 1px solid #f1f3f5; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 10px; font-weight: 700; text-transform: uppercase; display: flex; flex-direction: column; gap: 5px; }
-        .nav-item i { font-size: 1.4rem; }
+        .history-item, .debt-item { background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 5px 25px; border-top: 1px solid #f1f3f5; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; gap: 5px; }
         .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.5rem; }
 
         .hidden { display: none; }
-        .pulse-marker { width: 18px; height: 18px; background: var(--primary); border: 3px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(0,170,85,0.6); }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-container">
-            <img src="https://img.icons8.com/fluency/48/motorcycle-delivery-single-box.png" class="logo-img" alt="Logo">
+        <div class="logo-box">
+            <svg class="logo-svg" viewBox="0 0 100 100">
+                <rect width="100" height="100" rx="20" fill="#00AA55"/>
+                <path d="M20 70 L40 70 L45 75 L55 75 L60 70 L80 70 M30 70 Q30 50 50 50 L70 50 L70 60" stroke="white" stroke-width="5" fill="none"/>
+                <circle cx="35" cy="75" r="7" fill="white"/>
+                <circle cx="65" cy="75" r="7" fill="white"/>
+                <path d="M50 30 L75 30 L65 50 L40 50 Z" fill="#C0C0C0"/>
+            </svg>
             <div class="logo-text">SHIPPER PRO</div>
         </div>
-        <div class="status-badge" id="today-income">0đ</div>
+        <div id="header-today" style="font-weight: 800; color: var(--primary);">0đ</div>
     </header>
 
     <div class="container">
@@ -71,87 +79,69 @@
             <div id="map"></div>
             <div class="main-card">
                 <div id="idle-view">
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="margin:0 0 5px 0; font-size: 18px;">Hôm nay bạn thế nào?</h3>
-                        <p style="margin:0; color: #95a5a6; font-size: 13px;">Bấm bắt đầu để lấy vị trí và nhận chuyến đi mới.</p>
-                    </div>
                     <input type="text" id="cust-name" placeholder="Tên khách hàng...">
-                    <button class="btn btn-primary" onclick="startOrder()">
-                        <i class="fa-solid fa-play"></i> BẮT ĐẦU NHẬN ĐƠN
-                    </button>
+                    <button class="btn btn-primary" onclick="startOrder()"><i class="fa-solid fa-motorcycle"></i> BẮT ĐẦU NHẬN ĐƠN</button>
                 </div>
-
                 <div id="running-view" class="hidden">
-                    <div class="info-panel">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-weight: 800; font-size: 16px;" id="active-cust">Khách lẻ</div>
-                            <div class="status-badge" style="background:#fff7e6; color:#ffa502">ĐANG GIAO</div>
+                    <div style="background:#f8f9fa; padding:15px; border-radius:20px; margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <b id="active-cust">Khách</b>
+                            <span style="color:var(--orange); font-size:12px; font-weight:800;">ĐANG GIAO</span>
                         </div>
-                        <div id="preview-info" style="color: #95a5a6; font-size: 12px; margin-top:5px;">Chạm bản đồ để lấy lộ trình đường bộ...</div>
-                        <div id="preview-fee" style="font-size: 34px; font-weight: 900; color: var(--primary); margin-top: 5px;">0đ</div>
+                        <div id="preview-dist" style="font-size:12px; color:#95a5a6; margin-top:5px;">Chạm bản đồ chỉ đường...</div>
+                        <div id="preview-fee" style="font-size:30px; font-weight:900; color:var(--primary);">0đ</div>
                     </div>
-
-                    <div id="action-buttons">
-                        <button class="btn btn-maps" id="btn-gmaps" onclick="openGoogleMaps()" disabled>
-                            <i class="fa-solid fa-diamond-turn-right"></i> MỞ GOOGLE MAPS
-                        </button>
-                        <button class="btn btn-green" id="btn-finish" onclick="completeOrder('cash')" disabled>
-                            <i class="fa-solid fa-check"></i> HOÀN THÀNH - THU TIỀN
-                        </button>
-                        <button class="btn btn-orange" id="btn-debt" onclick="completeOrder('debt')" disabled>
-                            <i class="fa-solid fa-user-clock"></i> GHI NỢ KHÁCH
-                        </button>
-                        <button class="btn btn-ghost" onclick="cancelOrder()">HỦY CHUYẾN</button>
-                    </div>
+                    <button class="btn btn-maps" id="btn-gmaps" onclick="openGoogleMaps()" disabled><i class="fa-solid fa-location-arrow"></i> GOOGLE MAPS</button>
+                    <button class="btn btn-green" id="btn-finish" onclick="completeOrder('cash')" disabled><i class="fa-solid fa-check"></i> HOÀN THÀNH</button>
+                    <button class="btn btn-orange" id="btn-debt" onclick="completeOrder('debt')" disabled><i class="fa-solid fa-user-clock"></i> GHI NỢ</button>
+                    <button class="btn btn-ghost" onclick="location.reload()">HỦY</button>
                 </div>
             </div>
         </div>
 
         <div id="tab-stats" class="tab-content hidden">
-            <div style="padding:10px;" id="stats-data">
-                <div class="info-panel" style="text-align:center;">
-                    <div style="font-size:12px; color:#95a5a6">THU NHẬP HÔM NAY</div>
-                    <div id="s-day" style="font-size:28px; font-weight:900; color:var(--primary)">0đ</div>
-                </div>
+            <div class="stat-grid">
+                <div class="stat-item"><div class="stat-label">NGÀY</div><div id="s-day" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">TUẦN</div><div id="s-week" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">THÁNG</div><div id="s-month" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">NĂM</div><div id="s-year" class="stat-val">0đ</div></div>
             </div>
-            <canvas id="incomeChart" height="180" style="background: white; border-radius: 20px; padding: 15px;"></canvas>
-            <div id="history-list" style="margin-top: 15px;"></div>
+            <div id="history-list"></div>
         </div>
 
         <div id="tab-debt" class="tab-content hidden">
+            <h3 style="margin-top:0">Danh sách nợ</h3>
             <div id="debt-list"></div>
         </div>
 
         <div id="tab-settings" class="tab-content hidden">
             <div class="main-card">
-                <h3>Cài đặt giá</h3>
+                <h3>Cài đặt phí ship</h3>
                 <div id="pricing-list"></div>
-                <button class="btn btn-primary" onclick="savePricing()">LƯU GIÁ</button>
+                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC KM</button>
+                <button class="btn btn-primary" onclick="savePricing()">LƯU CÀI ĐẶT</button>
             </div>
         </div>
     </div>
 
     <nav>
         <div class="nav-item active" onclick="showTab('order', this)"><i class="fa-solid fa-route"></i>Đơn</div>
-        <div class="nav-item" onclick="showTab('stats', this)"><i class="fa-solid fa-chart-pie"></i>Báo cáo</div>
+        <div class="nav-item" onclick="showTab('stats', this)"><i class="fa-solid fa-chart-line"></i>Báo cáo</div>
         <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-wallet"></i>Sổ nợ</div>
-        <div class="nav-item" onclick="showTab('settings', this)"><i class="fa-solid fa-sliders"></i>Giá</div>
+        <div class="nav-item" onclick="showTab('settings', this)"><i class="fa-solid fa-gear"></i>Cài đặt</div>
     </nav>
 
     <script>
-        // GIỮ NGUYÊN LOGIC CHỨC NĂNG CŨ: CHỈ ĐƯỜNG THỰC TẾ OSRM
-        let history = JSON.parse(localStorage.getItem('v13_hist') || '[]');
-        let debts = JSON.parse(localStorage.getItem('v13_debts') || '[]');
-        let pricing = JSON.parse(localStorage.getItem('v13_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
-        let current = JSON.parse(localStorage.getItem('v13_curr') || 'null');
-        let map, mStart, mEnd, routeLine, myChart;
-        let selectedFee = 0, selectedDist = 0, destLatLng = null;
+        let history = JSON.parse(localStorage.getItem('shipper_hist') || '[]');
+        let debts = JSON.parse(localStorage.getItem('shipper_debts') || '[]');
+        let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
+        let current = null;
+        let map, mStart, mEnd, routeLine, destLatLng, selectedDist, selectedFee;
 
         window.onload = () => {
             initMap();
-            if(current) showRunning();
+            updateHeader();
             renderPricing();
-            updateHeaderIncome();
         };
 
         function initMap() {
@@ -162,54 +152,48 @@
 
         async function fetchRoute(latlng) {
             destLatLng = latlng;
-            const start = current.start;
-            const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
-
+            const url = `https://router.project-osrm.org/route/v1/driving/${current.start[1]},${current.start[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
             try {
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data.code === 'Ok') {
-                    const route = data.routes[0];
-                    selectedDist = (route.distance / 1000).toFixed(1);
+                const res = await fetch(url);
+                const data = await res.json();
+                if(data.code === 'Ok') {
+                    const r = data.routes[0];
+                    selectedDist = (r.distance / 1000).toFixed(1);
                     selectedFee = calculateFee(selectedDist);
                     if(routeLine) map.removeLayer(routeLine);
                     if(mEnd) map.removeLayer(mEnd);
-                    routeLine = L.geoJSON(route.geometry, { style: { color: '#00AA55', weight: 6, opacity: 0.8 } }).addTo(map);
-                    mEnd = L.marker(latlng, { icon: L.divIcon({className: 'custom-div-icon', html: "<i class='fa-solid fa-location-dot' style='color:#ff4757; font-size:30px;'></i>", iconAnchor: [15, 30]}) }).addTo(map);
-                    map.fitBounds(routeLine.getBounds(), {padding: [40, 40]});
-                    document.getElementById('preview-info').innerText = `Khoảng cách thực tế: ${selectedDist} km`;
+                    routeLine = L.geoJSON(r.geometry, {style: {color: '#00AA55', weight: 6}}).addTo(map);
+                    mEnd = L.marker(latlng).addTo(map);
+                    map.fitBounds(routeLine.getBounds(), {padding: [30,30]});
+                    document.getElementById('preview-dist').innerText = `Lộ trình: ${selectedDist} km`;
                     document.getElementById('preview-fee').innerText = selectedFee.toLocaleString() + 'đ';
-                    document.querySelectorAll('#btn-gmaps, #btn-finish, #btn-debt').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+                    document.querySelectorAll('#btn-gmaps, #btn-finish, #btn-debt').forEach(b => b.disabled = false);
                 }
-            } catch (e) { alert("Lỗi kết nối vệ tinh!"); }
+            } catch(e) { alert("Lỗi kết nối bản đồ!"); }
+        }
+
+        function calculateFee(d) {
+            let s = [...pricing].sort((a,b) => a.km - b.km);
+            for(let p of s) { if(d <= p.km) return p.price; }
+            return s[s.length-1].price;
         }
 
         function startOrder() {
             navigator.geolocation.getCurrentPosition(p => {
-                const pos = [p.coords.latitude, p.coords.longitude];
-                current = { name: document.getElementById('cust-name').value || "Khách lẻ", start: pos, time: new Date().getTime() };
-                localStorage.setItem('v13_curr', JSON.stringify(current));
-                showRunning();
-            }, () => alert("Hãy bật GPS!"));
+                current = { name: document.getElementById('cust-name').value || "Khách lẻ", start: [p.coords.latitude, p.coords.longitude] };
+                document.getElementById('idle-view').classList.add('hidden');
+                document.getElementById('running-view').classList.remove('hidden');
+                document.getElementById('active-cust').innerText = current.name;
+                mStart = L.circleMarker(current.start, {color: '#00AA55', radius: 8}).addTo(map);
+                map.setView(current.start, 15);
+            });
         }
 
-        function showRunning() {
-            document.getElementById('idle-view').classList.add('hidden');
-            document.getElementById('running-view').classList.remove('hidden');
-            document.getElementById('active-cust').innerText = current.name;
-            if(mStart) map.removeLayer(mStart);
-            mStart = L.marker(current.start, {icon: L.divIcon({className: 'pulse-marker'})}).addTo(map);
-            map.setView(current.start, 15);
-        }
-
-        function openGoogleMaps() {
-            window.open(`https://www.google.com/maps/dir/?api=1&origin=${current.start[0]},${current.start[1]}&destination=${destLatLng.lat},${destLatLng.lng}&travelmode=motorcycle`, '_blank');
-        }
-
-        function calculateFee(d) {
-            let sorted = [...pricing].sort((a,b) => a.km - b.km);
-            for(let p of sorted) { if(d <= p.km) return p.price; }
-            return sorted[sorted.length-1].price;
+        function completeOrder(type) {
+            const item = { id: Date.now(), name: current.name, fee: selectedFee, dist: selectedDist, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
+            if(type === 'debt') { debts.unshift(item); localStorage.setItem('shipper_debts', JSON.stringify(debts)); }
+            else { history.unshift(item); localStorage.setItem('shipper_hist', JSON.stringify(history)); }
+            location.reload();
         }
 
         function showTab(tab, el) {
@@ -218,22 +202,70 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
             if(tab === 'stats') renderStats();
+            if(tab === 'debt') renderDebts();
             if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
         }
 
-        function completeOrder(type) {
-            const data = { name: current.name, dist: selectedDist, fee: selectedFee, date: new Date().toLocaleDateString('vi-VN'), timestamp: new Date().getTime() };
-            if(type === 'debt') debts.unshift(data); else history.unshift(data);
-            localStorage.setItem('v13_hist', JSON.stringify(history));
-            localStorage.setItem('v13_debts', JSON.stringify(debts));
-            localStorage.removeItem('v13_curr');
-            location.reload();
+        function renderStats() {
+            const now = new Date();
+            const getSum = (arr, fn) => arr.filter(fn).reduce((a,b) => a + b.fee, 0);
+            
+            document.getElementById('s-day').innerText = getSum(history, h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
+            document.getElementById('s-week').innerText = getSum(history, h => h.ts > (Date.now() - 7*86400000)).toLocaleString() + 'đ';
+            document.getElementById('s-month').innerText = getSum(history, h => new Date(h.ts).getMonth() === now.getMonth()).toLocaleString() + 'đ';
+            document.getElementById('s-year').innerText = getSum(history, h => new Date(h.ts).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
+
+            document.getElementById('history-list').innerHTML = history.map((h, i) => `
+                <div class="history-item">
+                    <div><b>${h.name}</b><br><small>${h.date} - ${h.dist}km</small></div>
+                    <div style="text-align:right">
+                        <b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br>
+                        <i class="fa-solid fa-trash" style="color:var(--red); font-size:12px;" onclick="deleteHistory(${i})"></i>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function renderPricing() { document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `<div style="display:flex; gap:8px; margin-bottom:10px;"><input type="number" style="flex:1" value="${p.km}" onchange="pricing[${i}].km=parseFloat(this.value)"><input type="number" style="flex:2" value="${p.price}" onchange="pricing[${i}].price=parseFloat(this.value)"></div>`).join(''); }
-        function savePricing() { localStorage.setItem('v13_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
-        function updateHeaderIncome() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('today-income').innerText = `${total.toLocaleString()}đ`; }
-        function cancelOrder() { if(confirm("Hủy đơn?")) { localStorage.removeItem('v13_curr'); location.reload(); } }
+        function deleteHistory(i) { if(confirm("Xóa đơn này?")) { history.splice(i,1); localStorage.setItem('shipper_hist', JSON.stringify(history)); renderStats(); updateHeader(); } }
+
+        function renderDebts() {
+            document.getElementById('debt-list').innerHTML = debts.map((d, i) => `
+                <div class="debt-item" onclick="collectDebt(${i})">
+                    <div><b>${d.name}</b><br><small>${d.date}</small></div>
+                    <b style="color:var(--orange)">${d.fee.toLocaleString()}đ</b>
+                </div>
+            `).join('');
+        }
+
+        function collectDebt(i) {
+            if(confirm("Xác nhận đã thu tiền đơn này?")) {
+                let d = debts.splice(i, 1)[0];
+                history.unshift(d);
+                localStorage.setItem('shipper_debts', JSON.stringify(debts));
+                localStorage.setItem('shipper_hist', JSON.stringify(history));
+                renderDebts();
+                updateHeader();
+            }
+        }
+
+        function renderPricing() {
+            document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <input type="number" style="margin:0" value="${p.km}" onchange="pricing[${i}].km=Number(this.value)">
+                    <input type="number" style="margin:0" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)">
+                    <button onclick="pricing.splice(${i},1); renderPricing()" style="border:none; background:none; color:var(--red)"><i class="fa-solid fa-circle-xmark"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
+        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
+        function updateHeader() {
+            const today = new Date().toLocaleDateString('vi-VN');
+            const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0);
+            document.getElementById('header-today').innerText = total.toLocaleString() + 'đ';
+        }
+        function openGoogleMaps() { window.open(`https://www.google.com/maps/dir/?api=1&origin=${current.start[0]},${current.start[1]}&destination=${destLatLng.lat},${destLatLng.lng}&travelmode=motorcycle`); }
     </script>
 </body>
 </html>

@@ -3,60 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO V4</title>
+    <title>SHIPPER PRO V5</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root { --primary: #3b82f6; --bg: #000000; --card: #161b22; --text: #ffffff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; }
         
-        /* Header */
-        header { padding: 15px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; }
-        .logo { font-weight: 900; italic: true; color: var(--primary); font-size: 1.2rem; }
+        header { padding: 15px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; }
+        .logo { font-weight: 900; color: var(--primary); font-style: italic; }
 
-        /* Container */
         .container { max-width: 500px; margin: auto; padding: 15px; }
+        #map { height: 180px; width: 100%; border-radius: 20px; background: #0d1117; margin-bottom: 15px; border: 1px solid #30363d; }
+
+        .card { background: var(--card); border-radius: 25px; padding: 20px; border: 1px solid #30363d; margin-bottom: 15px; }
+        input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 10px; }
         
-        /* Map */
-        #map { height: 200px; width: 100%; border-radius: 20px; background: #0d1117; margin-bottom: 15px; border: 1px solid #30363d; }
-
-        /* Card & Inputs */
-        .card { background: var(--card); border-radius: 25px; padding: 20px; border: 1px solid #30363d; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input { w-full; background: #0d1117; border: 1px solid #30363d; color: white; padding: 15px; border-radius: 15px; width: 100%; margin-bottom: 10px; font-size: 16px; }
-        input:focus { border-color: var(--primary); outline: none; }
-
-        /* Buttons */
-        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; font-size: 16px; text-transform: uppercase; }
+        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; font-size: 15px; text-transform: uppercase; margin-bottom: 10px; }
         .btn-blue { background: var(--primary); color: white; }
         .btn-green { background: #238636; color: white; }
-        .btn-ghost { background: #21262d; color: #8b949e; margin-top: 10px; }
-        .btn:active { transform: scale(0.98); opacity: 0.8; }
+        .btn-red { background: #da3633; color: white; }
+        .btn-ghost { background: #21262d; color: #8b949e; }
 
-        /* Order Status */
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
-        .bg-orange { background: rgba(255, 165, 0, 0.2); color: orange; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .stat-grid { display: grid; grid-cols: 2; display: flex; flex-wrap: wrap; gap: 10px; }
+        .stat-item { flex: 1; min-width: 45%; background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid #30363d; }
+        .stat-val { font-size: 18px; font-weight: 900; color: var(--primary); }
 
-        /* History & Stats */
-        .hist-item { background: #0d1117; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #21262d; display: flex; justify-content: space-between; }
-        .price { color: var(--primary); font-weight: 900; }
-        
-        /* Navigation */
         nav { position: fixed; bottom: 0; width: 100%; background: #161b22; display: flex; border-top: 1px solid #30363d; z-index: 100; }
-        .nav-item { flex: 1; text-align: center; padding: 15px; color: #8b949e; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .nav-item { flex: 1; text-align: center; padding: 15px; color: #8b949e; font-size: 10px; font-weight: bold; }
         .nav-item.active { color: var(--primary); }
 
+        .price-row { display: flex; gap: 5px; margin-bottom: 5px; }
         .hidden { display: none; }
+        canvas { margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">SHIPPER PRO V4</div>
-        <div id="today-income" style="font-size: 12px; font-weight: bold;">Hôm nay: 0đ</div>
+        <div class="logo">SHIPPER PRO V5</div>
+        <div id="header-status" style="font-size: 11px; color: #8b949e;">Sẵn sàng</div>
     </header>
 
     <div class="container">
@@ -65,178 +55,191 @@
             
             <div class="card">
                 <div id="idle-view">
-                    <input type="text" id="cust-name" placeholder="Tên khách hàng...">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <button class="btn btn-ghost" style="margin:0; font-size: 11px;" onclick="getLoc('start')">📍 Điểm nhận</button>
-                        <button class="btn btn-ghost" style="margin:0; font-size: 11px;" onclick="getLoc('end')">🏁 Điểm giao</button>
-                    </div>
-                    <input type="number" id="km-input" placeholder="Số KM..." oninput="recalc()">
-                    
-                    <div style="text-align: center; padding: 15px; margin-bottom: 15px;">
-                        <span style="color: #8b949e; font-size: 12px;">ƯỚC TÍNH CƯỚC</span>
-                        <div id="fee-total" style="font-size: 35px; font-weight: 900; color: var(--primary);">0đ</div>
-                    </div>
-                    
-                    <button class="btn btn-blue" onclick="takeOrder()">Bắt đầu nhận đơn</button>
+                    <input type="text" id="cust-name" placeholder="Tên khách hàng (không bắt buộc)">
+                    <p style="font-size: 11px; color: #8b949e; text-align: center;">Bấm Nhận đơn khi bạn ở điểm lấy hàng</p>
+                    <button class="btn btn-blue" onclick="processOrder('start')">🔔 Nhận Đơn</button>
                 </div>
 
-                <div id="running-view" class="hidden" style="text-align: center;">
-                    <div class="status-badge bg-orange">ĐANG GIAO HÀNG...</div>
-                    <h2 id="run-name" style="margin: 10px 0;">Khách lẻ</h2>
-                    <p id="run-info" style="color: #8b949e; margin-bottom: 25px;">0 km - 0đ</p>
-                    <button class="btn btn-green" onclick="finishOrder()">Hoàn thành đơn</button>
-                    <button class="btn btn-ghost" onclick="cancelOrder()">Hủy đơn</button>
+                <div id="running-view" class="hidden">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="color: orange; font-weight: bold; font-size: 12px; margin-bottom: 5px;">⚡ ĐANG GIAO HÀNG...</div>
+                        <h2 id="active-cust" style="margin: 0;">Khách lẻ</h2>
+                    </div>
+                    <button class="btn btn-green" onclick="processOrder('end')">🏁 Giao Hàng (Kết thúc)</button>
+                    <button class="btn btn-ghost" onclick="cancelOrder()">Hủy bỏ đơn</button>
                 </div>
             </div>
         </div>
 
-        <div id="tab-history" class="tab-content hidden">
-            <h3 style="margin-bottom: 15px;">Đơn hàng đã giao</h3>
-            <div id="list-history"></div>
+        <div id="tab-stats" class="tab-content hidden">
+            <div class="stat-grid">
+                <div class="stat-item"><div>Ngày</div><div id="s-day" class="stat-val">0</div></div>
+                <div class="stat-item"><div>Tuần</div><div id="s-week" class="stat-val">0</div></div>
+                <div class="stat-item"><div>Tháng</div><div id="s-month" class="stat-val">0</div></div>
+                <div class="stat-item"><div>Năm</div><div id="s-year" class="stat-val">0</div></div>
+            </div>
+            <div class="card" style="margin-top:15px;">
+                <canvas id="incomeChart"></canvas>
+            </div>
+            <div id="history-list" style="margin-top: 15px;"></div>
         </div>
 
         <div id="tab-settings" class="tab-content hidden">
             <div class="card">
-                <h3>Cài đặt giá</h3>
-                <label style="font-size: 12px; color: #8b949e;">Giá 3km đầu (VNĐ)</label>
-                <input type="number" id="cfg-base" onchange="saveCfg()">
-                <label style="font-size: 12px; color: #8b949e;">Giá mỗi km tiếp theo (VNĐ)</label>
-                <input type="number" id="cfg-extra" onchange="saveCfg()">
-                <p style="font-size: 10px; color: #58a6ff;">* App sẽ tự động lưu giá này.</p>
-                <button class="btn btn-ghost" style="color: #f85149;" onclick="clearAll()">Xóa sạch dữ liệu</button>
+                <h3>Cài đặt mốc phí</h3>
+                <div id="pricing-list"></div>
+                <button class="btn btn-ghost" onclick="addPriceStep()" style="margin-top:10px;">+ Thêm mốc km</button>
+                <button class="btn btn-blue" onclick="savePricing()" style="margin-top:10px;">Lưu cài đặt</button>
+                <hr border="0" style="border-top: 1px solid #333; margin: 20px 0;">
+                <button class="btn btn-red" onclick="clearData()">Xóa toàn bộ dữ liệu</button>
             </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="showTab('order', this)">Đơn hàng</div>
-        <div class="nav-item" onclick="showTab('history', this)">Lịch sử</div>
+        <div class="nav-item active" onclick="showTab('order', this)">Vận đơn</div>
+        <div class="nav-item" onclick="showTab('stats', this)">Thống kê</div>
         <div class="nav-item" onclick="showTab('settings', this)">Cài đặt</div>
     </nav>
 
     <script>
-        // Dữ liệu
-        let history = JSON.parse(localStorage.getItem('sh_hist') || '[]');
-        let config = JSON.parse(localStorage.getItem('sh_cfg') || '{"base":15000, "extra":5000}');
-        let current = JSON.parse(localStorage.getItem('sh_curr') || 'null');
-        let map, mStart, mEnd;
+        let history = JSON.parse(localStorage.getItem('v5_hist') || '[]');
+        let pricing = JSON.parse(localStorage.getItem('v5_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
+        let current = JSON.parse(localStorage.getItem('v5_curr') || 'null');
+        let map, mStart, mEnd, myChart;
 
-        // Khởi tạo
         window.onload = () => {
-            document.getElementById('cfg-base').value = config.base;
-            document.getElementById('cfg-extra').value = config.extra;
-            
+            initMap();
+            if(current) showRunning();
+            renderPricing();
+            updateStats();
+        };
+
+        function initMap() {
             try {
                 map = L.map('map').setView([10.7626, 106.6601], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            } catch(e) { 
-                document.getElementById('map').innerHTML = "<p style='padding:20px; color:#58a6ff'>Bản đồ đang tải hoặc ngoại tuyến...</p>";
-            }
-
-            if(current) showRunning();
-            updateStats();
-        };
+            } catch(e) { console.log("Map error"); }
+        }
 
         function showTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + id).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            if(id === 'history') renderHistory();
+            if(id === 'stats') { updateStats(); renderHistory(); }
         }
 
-        function getLoc(type) {
+        function processOrder(step) {
             navigator.geolocation.getCurrentPosition(p => {
                 const pos = [p.coords.latitude, p.coords.longitude];
-                if(type === 'start') {
-                    if(mStart) map.removeLayer(mStart);
-                    mStart = L.marker(pos).addTo(map).bindPopup("Nhận hàng").openPopup();
+                if(step === 'start') {
+                    current = { 
+                        name: document.getElementById('cust-name').value || "Khách lẻ",
+                        start: pos,
+                        startTime: new Date().getTime()
+                    };
+                    localStorage.setItem('v5_curr', JSON.stringify(current));
+                    showRunning();
                 } else {
-                    if(mEnd) map.removeLayer(mEnd);
-                    mEnd = L.marker(pos).addTo(map).bindPopup("Giao hàng").openPopup();
+                    const dist = (L.latLng(current.start).distanceTo(L.latLng(pos)) / 1000 * 1.2).toFixed(1);
+                    const fee = calculateFee(dist);
+                    const order = {
+                        ...current,
+                        dist: dist,
+                        fee: fee,
+                        date: new Date().toLocaleDateString('vi-VN'),
+                        timestamp: new Date().getTime()
+                    };
+                    history.unshift(order);
+                    localStorage.setItem('v5_hist', JSON.stringify(history));
+                    localStorage.removeItem('v5_curr');
+                    current = null;
+                    alert(`Giao xong! ${dist}km - ${fee.toLocaleString()}đ`);
+                    location.reload();
                 }
-                map.setView(pos, 15);
-                if(mStart && mEnd) {
-                    let d = (map.distance(mStart.getLatLng(), mEnd.getLatLng()) / 1000 * 1.2).toFixed(1);
-                    document.getElementById('km-input').value = d;
-                    recalc();
-                }
-            }, () => alert("Hãy bật định vị GPS"));
+            }, () => alert("Lỗi GPS. Hãy bật vị trí."));
         }
 
-        function recalc() {
-            let d = parseFloat(document.getElementById('km-input').value) || 0;
-            let fee = d <= 3 ? config.base : config.base + Math.ceil(d - 3) * config.extra;
-            document.getElementById('fee-total').innerText = fee.toLocaleString() + 'đ';
-            return fee;
-        }
-
-        function takeOrder() {
-            let km = parseFloat(document.getElementById('km-input').value);
-            if(!km) return alert("Vui lòng nhập số KM");
-            current = {
-                name: document.getElementById('cust-name').value || "Khách lẻ",
-                km: km,
-                fee: recalc(),
-                date: new Date().toLocaleDateString('vi-VN')
-            };
-            localStorage.setItem('sh_curr', JSON.stringify(current));
-            showRunning();
+        function calculateFee(d) {
+            let sorted = pricing.sort((a,b) => a.km - b.km);
+            for(let p of sorted) {
+                if(d <= p.km) return p.price;
+            }
+            return sorted[sorted.length - 1].price;
         }
 
         function showRunning() {
             document.getElementById('idle-view').classList.add('hidden');
             document.getElementById('running-view').classList.remove('hidden');
-            document.getElementById('run-name').innerText = current.name;
-            document.getElementById('run-info').innerText = current.km + " km - " + current.fee.toLocaleString() + "đ";
-        }
-
-        function finishOrder() {
-            history.unshift(current);
-            localStorage.setItem('sh_hist', JSON.stringify(history));
-            cancelOrder();
-            updateStats();
-            alert("Đã hoàn thành!");
+            document.getElementById('active-cust').innerText = current.name;
+            document.getElementById('header-status').innerText = "Đang giao hàng...";
         }
 
         function cancelOrder() {
-            localStorage.removeItem('sh_curr');
-            current = null;
-            document.getElementById('idle-view').classList.remove('hidden');
-            document.getElementById('running-view').classList.add('hidden');
-            document.getElementById('km-input').value = "";
-            document.getElementById('cust-name').value = "";
+            if(confirm("Hủy đơn này?")) {
+                localStorage.removeItem('v5_curr');
+                location.reload();
+            }
+        }
+
+        function updateStats() {
+            const now = new Date();
+            const getSum = (filterFn) => history.filter(filterFn).reduce((a,b) => a + b.fee, 0);
+
+            document.getElementById('s-day').innerText = getSum(h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
+            document.getElementById('s-month').innerText = getSum(h => new Date(h.timestamp).getMonth() === now.getMonth()).toLocaleString() + 'đ';
+            document.getElementById('s-year').innerText = getSum(h => new Date(h.timestamp).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
+            
+            // Vẽ biểu đồ
+            const ctx = document.getElementById('incomeChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            
+            let days = [];
+            let totals = [];
+            for(let i=6; i>=0; i--) {
+                let d = new Date(); d.setDate(d.getDate() - i);
+                let dStr = d.toLocaleDateString('vi-VN');
+                days.push(dStr.split('/')[0] + '/' + dStr.split('/')[1]);
+                totals.push(history.filter(h => h.date === dStr).reduce((a,b) => a + b.fee, 0));
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{ label: 'Thu nhập 7 ngày', data: totals, backgroundColor: '#3b82f6' }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
         }
 
         function renderHistory() {
-            const div = document.getElementById('list-history');
-            div.innerHTML = history.map((h, i) => `
-                <div class="hist-item">
-                    <div><b>${h.name}</b><br><small style="color:#8b949e">${h.date} • ${h.km}km</small></div>
-                    <div class="price">${h.fee.toLocaleString()}đ</div>
+            const container = document.getElementById('history-list');
+            container.innerHTML = history.slice(0,10).map(h => `
+                <div style="background:#161b22; padding:12px; border-radius:15px; margin-bottom:8px; border:1px solid #333; display:flex; justify-content:space-between;">
+                    <div><b style="font-size:13px">${h.name}</b><br><small style="color:#666">${h.date} - ${h.dist}km</small></div>
+                    <div style="color:#3b82f6; font-weight:bold">${h.fee.toLocaleString()}đ</div>
                 </div>
             `).join('');
         }
 
-        function updateStats() {
-            let today = new Date().toLocaleDateString('vi-VN');
-            let income = history.filter(h => h.date === today).reduce((a, b) => a + b.fee, 0);
-            document.getElementById('today-income').innerText = "Hôm nay: " + income.toLocaleString() + "đ";
+        function renderPricing() {
+            const list = document.getElementById('pricing-list');
+            list.innerHTML = pricing.map((p, i) => `
+                <div class="price-row">
+                    <input type="number" placeholder="Dưới...km" value="${p.km}" onchange="updatePriceVal(${i}, 'km', this.value)">
+                    <input type="number" placeholder="Giá tiền" value="${p.price}" onchange="updatePriceVal(${i}, 'price', this.value)">
+                    <button onclick="removePriceStep(${i})" style="background:none; border:none; color:red;">X</button>
+                </div>
+            `).join('');
         }
 
-        function saveCfg() {
-            config.base = parseInt(document.getElementById('cfg-base').value);
-            config.extra = parseInt(document.getElementById('cfg-extra').value);
-            localStorage.setItem('sh_cfg', JSON.stringify(config));
-            recalc();
-        }
-
-        function clearAll() {
-            if(confirm("Xóa hết lịch sử và cài đặt?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
+        function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
+        function removePriceStep(i) { pricing.splice(i, 1); renderPricing(); }
+        function updatePriceVal(i, key, val) { pricing[i][key] = parseFloat(val); }
+        function savePricing() { localStorage.setItem('v5_price', JSON.stringify(pricing)); alert("Đã lưu giá mới!"); }
+        function clearData() { if(confirm("Xóa hết?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>

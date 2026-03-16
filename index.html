@@ -3,230 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shipper Pro V3 - Professional</title>
+    <title>SHIPPER PRO ULTIMATE</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
     <style>
-        body { background-color: #000; color: #fff; margin: 0; padding: 0; overflow-x: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        #map { height: 220px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 1px solid #333; }
-        .active-tab { color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1); border-radius: 15px; }
-        input[type="number"]::-webkit-inner-spin-button { display: none; }
-        .glass-card { background: rgba(30, 30, 30, 0.8); backdrop-filter: blur(10px); border: 1px solid #333; border-radius: 24px; }
+        :root { --blue: #3b82f6; --dark: #0f172a; --card: #1e293b; }
+        body { background-color: #000; color: #fff; font-family: -apple-system, system-ui, sans-serif; margin:0; }
+        #map { height: 220px; width: 100%; border-radius: 20px; border: 1px solid #334155; z-index: 1; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid #334155; }
+        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-active { color: var(--blue) !important; background: rgba(59, 130, 246, 0.1); }
+        input { background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 12px; outline: none; }
+        input:focus { border-color: var(--blue); }
     </style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
-        const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } = Recharts;
+    <header class="p-4 flex justify-between items-center sticky top-0 bg-black z-50 border-b border-gray-800">
+        <button onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center bg-slate-900 rounded-xl">
+            <i class="fa-solid fa-bars text-blue-500"></i>
+        </button>
+        <h1 class="font-black italic text-blue-500 text-xl tracking-tighter">SHIPPER PRO</h1>
+        <div class="w-10 text-right"><i class="fa-solid fa-circle-user text-gray-600 text-xl"></i></div>
+    </header>
 
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('order');
-            const [isMenuOpen, setIsMenuOpen] = useState(false);
-            const [history, setHistory] = useState(() => JSON.parse(localStorage.getItem('shipper_v3_history') || '[]'));
-            const [pricing, setPricing] = useState(() => JSON.parse(localStorage.getItem('shipper_v3_price') || '[{"from":0,"to":3,"price":15000},{"from":3,"to":10,"price":5000}]'));
-            const [currentOrder, setCurrentOrder] = useState(() => JSON.parse(localStorage.getItem('shipper_v3_current') || 'null'));
-            const [distance, setDistance] = useState(0);
-            const [customer, setCustomer] = useState('');
-            const mapRef = useRef(null);
+    <div id="sidebar" class="fixed inset-0 bg-black/80 z-[60] hidden" onclick="toggleMenu()">
+        <aside class="w-64 h-full bg-slate-900 p-6 shadow-2xl" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+                <span class="font-bold text-blue-500">DANH MỤC</span>
+                <i class="fa-solid fa-xmark" onclick="toggleMenu()"></i>
+            </div>
+            <nav class="space-y-4 text-gray-300">
+                <div onclick="switchTab('order')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-motorcycle w-6"></i> Vận đơn</div>
+                <div onclick="switchTab('history')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left w-6"></i> Lịch sử đơn</div>
+                <div onclick="switchTab('stats')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-chart-pie w-6"></i> Thống kê</div>
+                <div onclick="switchTab('settings')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-sliders w-6"></i> Cài đặt phí</div>
+            </nav>
+        </aside>
+    </div>
 
-            // Lưu dữ liệu
-            useEffect(() => {
-                localStorage.setItem('shipper_v3_history', JSON.stringify(history));
-                localStorage.setItem('shipper_v3_price', JSON.stringify(pricing));
-                localStorage.setItem('shipper_v3_current', JSON.stringify(currentOrder));
-            }, [history, pricing, currentOrder]);
-
-            // Khởi tạo bản đồ sau khi giao diện load
-            useEffect(() => {
-                if (activeTab === 'order' && !mapRef.current) {
-                    setTimeout(() => {
-                        mapRef.current = L.map('map').setView([10.7626, 106.6601], 13);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
-                        mapRef.current.on('click', (e) => {
-                            // Chức năng chọn nhanh km bằng cách click bản đồ (giả lập)
-                            const randomKm = (Math.random() * 5 + 1).toFixed(1);
-                            setDistance(parseFloat(randomKm));
-                        });
-                    }, 500);
-                }
-            }, [activeTab]);
-
-            const fee = useMemo(() => {
-                const d = parseFloat(distance) || 0;
-                const base = pricing[0];
-                if (d <= base.to) return base.price;
-                return base.price + Math.ceil(d - base.to) * pricing[1].price;
-            }, [distance, pricing]);
-
-            const handleOrder = () => {
-                if (!currentOrder) {
-                    if (distance <= 0) return alert("Vui lòng nhập số km!");
-                    setCurrentOrder({ id: Date.now(), customer: customer || 'Khách lẻ', distance, fee, date: new Date().toLocaleDateString('vi-VN') });
-                } else {
-                    setHistory([currentOrder, ...history]);
-                    setCurrentOrder(null);
-                    setDistance(0); setCustomer('');
-                    alert("Đã hoàn thành đơn hàng!");
-                }
-            };
-
-            return (
-                <div className="flex flex-col min-h-screen max-w-md mx-auto relative">
-                    {/* Header */}
-                    <header className="p-4 flex items-center justify-between sticky top-0 bg-black z-40 border-b border-gray-800">
-                        <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 flex items-center justify-center bg-gray-900 rounded-xl">
-                            <i className="fa-solid fa-bars text-blue-500"></i>
-                        </button>
-                        <h1 className="font-black italic tracking-tighter text-blue-500 text-xl">SHIPPER PRO</h1>
-                        <div className="w-10"></div>
-                    </header>
-
-                    {/* Menu trượt */}
-                    <div className={`fixed inset-0 bg-black/80 z-50 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}>
-                        <aside className={`w-64 h-full bg-gray-900 p-6 transform transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                            <div className="flex justify-between mb-8">
-                                <span className="font-bold text-blue-500">MENU</span>
-                                <i className="fa-solid fa-xmark"></i>
-                            </div>
-                            <nav className="space-y-4">
-                                <div onClick={() => setActiveTab('order')} className={`p-3 flex items-center gap-3 ${activeTab === 'order' ? 'text-blue-500' : ''}`}>
-                                    <i className="fa-solid fa-motorcycle"></i> Vận đơn
-                                </div>
-                                <div onClick={() => setActiveTab('history')} className={`p-3 flex items-center gap-3 ${activeTab === 'history' ? 'text-blue-500' : ''}`}>
-                                    <i className="fa-solid fa-clock-rotate-left"></i> Lịch sử
-                                </div>
-                                <div onClick={() => setActiveTab('stats')} className={`p-3 flex items-center gap-3 ${activeTab === 'stats' ? 'text-blue-500' : ''}`}>
-                                    <i className="fa-solid fa-chart-line"></i> Thống kê
-                                </div>
-                                <div onClick={() => setActiveTab('settings')} className={`p-3 flex items-center gap-3 ${activeTab === 'settings' ? 'text-blue-500' : ''}`}>
-                                    <i className="fa-solid fa-gears"></i> Cài đặt giá
-                                </div>
-                            </nav>
-                        </aside>
+    <main class="max-w-md mx-auto pb-24">
+        
+        <section id="order" class="tab-content active">
+            <div id="map" class="mb-4"></div>
+            
+            <div id="order-form" class="glass p-5 rounded-[2rem] space-y-4">
+                <div id="status-idle">
+                    <div class="flex flex-col gap-3 mb-4">
+                        <input type="text" id="cust-name" placeholder="Tên khách hàng...">
+                        <div class="flex gap-2">
+                            <button onclick="getGPS('start')" class="flex-1 text-[10px] font-bold bg-slate-800 p-3 rounded-xl border border-slate-700">
+                                <i class="fa-solid fa-location-crosshairs mr-1"></i> GPS NHẬN
+                            </button>
+                            <button onclick="getGPS('end')" class="flex-1 text-[10px] font-bold bg-slate-800 p-3 rounded-xl border border-slate-700">
+                                <i class="fa-solid fa-flag-checkered mr-1"></i> GPS GIAO
+                            </button>
+                        </div>
+                        <div class="flex items-center bg-black/50 p-4 rounded-xl border border-slate-800">
+                            <input type="number" id="distance-input" placeholder="0" class="w-20 text-2xl font-black bg-transparent border-none p-0 text-blue-400" oninput="updateFee()">
+                            <span class="font-bold text-gray-500 ml-2 uppercase text-xs">km dự kiến</span>
+                        </div>
                     </div>
-
-                    {/* Content */}
-                    <main className="p-4 flex-1 overflow-y-auto pb-24">
-                        {activeTab === 'order' && (
-                            <div className="animate-in fade-in duration-500">
-                                <div id="map"></div>
-                                <div className="glass-card p-6 space-y-4">
-                                    {!currentOrder ? (
-                                        <>
-                                            <input type="text" placeholder="Tên khách hàng..." value={customer} onChange={e => setCustomer(e.target.value)} className="w-full bg-gray-800 border-none rounded-xl p-4 outline-none text-white focus:ring-1 focus:ring-blue-500" />
-                                            <div className="flex gap-4">
-                                                <div className="flex-1">
-                                                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-2">Số km</label>
-                                                    <input type="number" value={distance} onChange={e => setDistance(e.target.value)} className="w-full bg-gray-800 border-none rounded-xl p-4 text-2xl font-black text-blue-400 outline-none" />
-                                                </div>
-                                                <div className="flex-1 text-right">
-                                                    <label className="text-[10px] text-gray-500 font-bold uppercase mr-2">Phí ship</label>
-                                                    <div className="text-2xl font-black p-4">{fee.toLocaleString()}đ</div>
-                                                </div>
-                                            </div>
-                                            <button onClick={handleOrder} className="w-full bg-blue-600 p-5 rounded-2xl font-black text-lg active:scale-95 transition-transform uppercase shadow-lg shadow-blue-900/30">Nhận Đơn</button>
-                                        </>
-                                    ) : (
-                                        <div className="text-center py-4 space-y-6">
-                                            <div className="text-yellow-500 font-bold animate-pulse"><i className="fa-solid fa-truck-fast mr-2"></i> ĐANG GIAO HÀNG...</div>
-                                            <div>
-                                                <div className="text-2xl font-black">{currentOrder.customer}</div>
-                                                <div className="text-gray-400">{currentOrder.distance} km - {currentOrder.fee.toLocaleString()}đ</div>
-                                            </div>
-                                            <button onClick={handleOrder} className="w-full bg-green-600 p-5 rounded-2xl font-black text-lg active:scale-95 transition-transform uppercase shadow-lg shadow-green-900/30">Kết Thúc Đơn</button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'history' && (
-                            <div className="space-y-3">
-                                {history.length === 0 && <p className="text-center text-gray-600 mt-20">Chưa có lịch sử</p>}
-                                {history.map(h => (
-                                    <div key={h.id} className="glass-card p-4 flex justify-between items-center">
-                                        <div>
-                                            <div className="font-bold">{h.customer}</div>
-                                            <div className="text-[10px] text-gray-500">{h.date} • {h.distance}km</div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-black text-blue-500">{h.fee.toLocaleString()}đ</div>
-                                            <button onClick={() => setHistory(history.filter(x => x.id !== h.id))} className="text-red-900 text-xs mt-1">Xóa</button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {activeTab === 'stats' && (
-                            <div className="space-y-6">
-                                <div className="glass-card p-6 h-64">
-                                    <h3 className="text-xs font-bold text-gray-500 mb-4">DOANH THU 7 NGÀY GẦN NHẤT</h3>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={history.slice(0, 7).reverse().map(h => ({ name: h.date.split('/')[0], total: h.fee }))}>
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} tick={{fill: '#666'}} />
-                                            <Bar dataKey="total" fill="#3b82f6" radius={[5, 5, 5, 5]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="glass-card p-6 bg-blue-600/10 border-blue-900">
-                                        <div className="text-[10px] text-gray-400 font-bold">TỔNG THU</div>
-                                        <div className="text-xl font-black">{history.reduce((a, b) => a + b.fee, 0).toLocaleString()}đ</div>
-                                    </div>
-                                    <div className="glass-card p-6">
-                                        <div className="text-[10px] text-gray-400 font-bold">TỔNG ĐƠN</div>
-                                        <div className="text-xl font-black">{history.length}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'settings' && (
-                            <div className="glass-card p-6 space-y-6">
-                                <h3 className="font-bold text-blue-500 border-b border-gray-800 pb-2 italic">CÀI ĐẶT MỐC GIÁ</h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-[10px] text-gray-500 font-bold ml-1 uppercase">Giá 3km đầu (VNĐ)</label>
-                                        <input type="number" value={pricing[0].price} onChange={e => {
-                                            const newP = [...pricing]; newP[0].price = parseInt(e.target.value); setPricing(newP);
-                                        }} className="w-full bg-gray-800 border-none rounded-xl p-4 mt-1 font-black" />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] text-gray-500 font-bold ml-1 uppercase">Giá km tiếp theo (VNĐ)</label>
-                                        <input type="number" value={pricing[1].price} onChange={e => {
-                                            const newP = [...pricing]; newP[1].price = parseInt(e.target.value); setPricing(newP);
-                                        }} className="w-full bg-gray-800 border-none rounded-xl p-4 mt-1 font-black" />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </main>
-
-                    {/* Bottom Nav */}
-                    <nav className="fixed bottom-0 inset-x-0 bg-black/90 backdrop-blur-md border-t border-gray-900 flex justify-around p-2 z-40">
-                        <button onClick={() => setActiveTab('order')} className={`p-4 flex-1 ${activeTab === 'order' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-motorcycle"></i></button>
-                        <button onClick={() => setActiveTab('history')} className={`p-4 flex-1 ${activeTab === 'history' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-clock-rotate-left"></i></button>
-                        <button onClick={() => setActiveTab('stats')} className={`p-4 flex-1 ${activeTab === 'stats' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-chart-line"></i></button>
-                        <button onClick={() => setActiveTab('settings')} className={`p-4 flex-1 ${activeTab === 'settings' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-gears"></i></button>
-                    </nav>
+                    <div class="bg-blue-600/10 border border-blue-500/20 p-4 rounded-2xl text-center mb-4">
+                        <p class="text-[10px] font-bold text-gray-500 uppercase">Phí báo khách</p>
+                        <p id="fee-display" class="text-3xl font-black text-blue-500">0đ</p>
+                    </div>
+                    <button onclick="startOrder()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-lg shadow-lg shadow-blue-900/40 uppercase">Nhận Đơn</button>
                 </div>
-            );
+
+                <div id="status-running" class="hidden text-center py-4 space-y-6">
+                    <div class="inline-block px-4 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-[10px] font-bold animate-pulse">
+                        <i class="fa-solid fa-truck-fast mr-2"></i> ĐANG TRÊN ĐƯỜNG GIAO...
+                    </div>
+                    <div>
+                        <h3 id="running-cust" class="text-2xl font-black">Khách lẻ</h3>
+                        <p id="running-info" class="text-gray-400">5.0 km - 25,000đ</p>
+                    </div>
+                    <button onclick="completeOrder()" class="w-full bg-green-600 py-4 rounded-2xl font-black text-lg shadow-lg shadow-green-900/40 uppercase">Giao Thành Công</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="history" class="tab-content">
+            <h2 class="text-lg font-bold mb-4 flex justify-between">
+                Lịch sử gần đây
+                <span id="history-count" class="text-xs bg-slate-800 px-2 py-1 rounded">0 đơn</span>
+            </h2>
+            <div id="history-list" class="space-y-3"></div>
+        </section>
+
+        <section id="stats" class="tab-content">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="glass p-5 rounded-3xl border-blue-500/30">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Tổng Thu</p>
+                    <p id="stat-total-money" class="text-xl font-black text-blue-500">0đ</p>
+                </div>
+                <div class="glass p-5 rounded-3xl">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Hôm nay</p>
+                    <p id="stat-today-money" class="text-xl font-black text-green-500">0đ</p>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-[2rem]">
+                <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase">Doanh thu theo ngày</h3>
+                <div id="simple-chart" class="flex items-end gap-2 h-32 border-b border-slate-800 pb-1">
+                    </div>
+            </div>
+        </section>
+
+        <section id="settings" class="tab-content">
+            <div class="glass p-6 rounded-[2rem] space-y-6">
+                <h3 class="font-black italic text-blue-500 border-b border-slate-800 pb-2">CÀI ĐẶT CƯỚC</h3>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1">GIÁ MỞ CỬA (Dưới 3km)</label>
+                    <input type="number" id="cfg-base" class="w-full text-xl font-black" onchange="saveConfig()">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1">GIÁ MỖI KM TIẾP THEO</label>
+                    <input type="number" id="cfg-extra" class="w-full text-xl font-black" onchange="saveConfig()">
+                </div>
+                <p class="text-[10px] text-gray-600 italic">Dữ liệu được lưu an toàn trên trình duyệt điện thoại của bạn.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="fixed bottom-0 inset-x-0 bg-black/90 backdrop-blur-md border-t border-slate-800 flex justify-around p-2 z-50">
+        <button onclick="switchTab('order')" id="nav-order" class="p-4 flex-1 btn-active"><i class="fa-solid fa-motorcycle"></i></button>
+        <button onclick="switchTab('history')" id="nav-history" class="p-4 flex-1"><i class="fa-solid fa-clock-rotate-left"></i></button>
+        <button onclick="switchTab('stats')" id="nav-stats" class="p-4 flex-1"><i class="fa-solid fa-chart-pie"></i></button>
+        <button onclick="switchTab('settings')" id="nav-settings" class="p-4 flex-1"><i class="fa-solid fa-sliders"></i></button>
+    </nav>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // --- DỮ LIỆU ---
+        let history = JSON.parse(localStorage.getItem('ship_hist') || '[]');
+        let config = JSON.parse(localStorage.getItem('ship_cfg') || '{"base":15000, "extra":5000}');
+        let currentOrder = JSON.parse(localStorage.getItem('ship_curr') || 'null');
+        let map, markers = { start: null, end: null };
+
+        // --- KHỞI TẠO ---
+        window.onload = () => {
+            initMap();
+            renderAll();
+            document.getElementById('cfg-base').value = config.base;
+            document.getElementById('cfg-extra').value = config.extra;
+            if(currentOrder) showRunningStatus();
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function initMap() {
+            map = L.map('map').setView([10.7626, 106.6601], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+
+        // --- HÀM XỬ LÝ ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('btn-active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('nav-' + tabId).classList.add('btn-active');
+            if(tabId === 'order') setTimeout(() => map.invalidateSize(), 200);
+            if(tabId === 'history') renderHistory();
+            if(tabId === 'stats') renderStats();
+        }
+
+        function toggleMenu() {
+            const side = document.getElementById('sidebar');
+            side.classList.toggle('hidden');
+        }
+
+        function getGPS(type) {
+            if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS");
+            navigator.geolocation.getCurrentPosition(pos => {
+                const latlng = [pos.coords.latitude, pos.coords.longitude];
+                if(markers[type]) map.removeLayer(markers[type]);
+                markers[type] = L.marker(latlng).addTo(map);
+                map.setView(latlng, 16);
+                checkDistance();
+            }, () => alert("Không thể lấy vị trí. Hãy bật định vị."));
+        }
+
+        function checkDistance() {
+            if(markers.start && markers.end) {
+                const d = map.distance(markers.start.getLatLng(), markers.end.getLatLng()) / 1000;
+                document.getElementById('distance-input').value = (d * 1.2).toFixed(1);
+                updateFee();
+            }
+        }
+
+        function updateFee() {
+            const d = parseFloat(document.getElementById('distance-input').value) || 0;
+            let fee = d <= 3 ? config.base : config.base + Math.ceil(d - 3) * config.extra;
+            document.getElementById('fee-display').innerText = fee.toLocaleString() + 'đ';
+            return fee;
+        }
+
+        function startOrder() {
+            const dist = parseFloat(document.getElementById('distance-input').value);
+            if(!dist) return alert("Nhập số km");
+            currentOrder = {
+                cust: document.getElementById('cust-name').value || "Khách lẻ",
+                dist: dist,
+                fee: updateFee(),
+                date: new Date().toLocaleDateString('vi-VN'),
+                rawDate: new Date().toISOString()
+            };
+            localStorage.setItem('ship_curr', JSON.stringify(currentOrder));
+            showRunningStatus();
+        }
+
+        function showRunningStatus() {
+            document.getElementById('status-idle').classList.add('hidden');
+            document.getElementById('status-running').classList.remove('hidden');
+            document.getElementById('running-cust').innerText = currentOrder.cust;
+            document.getElementById('running-info').innerText = `${currentOrder.dist} km - ${currentOrder.fee.toLocaleString()}đ`;
+        }
+
+        function completeOrder() {
+            history.unshift(currentOrder);
+            localStorage.setItem('ship_hist', JSON.stringify(history));
+            localStorage.removeItem('ship_curr');
+            currentOrder = null;
+            document.getElementById('status-idle').classList.remove('hidden');
+            document.getElementById('status-running').classList.add('hidden');
+            document.getElementById('distance-input').value = "";
+            document.getElementById('cust-name').value = "";
+            if(markers.start) map.removeLayer(markers.start);
+            if(markers.end) map.removeLayer(markers.end);
+            alert("Đã lưu vào lịch sử!");
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            document.getElementById('history-count').innerText = history.length + " đơn";
+            list.innerHTML = history.map((h, i) => `
+                <div class="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-blue-500">
+                    <div>
+                        <p class="font-bold">${h.cust}</p>
+                        <p class="text-[10px] text-gray-500">${h.date} • ${h.dist}km</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-black text-blue-500">${h.fee.toLocaleString()}đ</p>
+                        <button onclick="delHist(${i})" class="text-[10px] text-red-900 uppercase font-bold">Xóa</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function delHist(i) {
+            if(confirm("Xóa đơn này?")) {
+                history.splice(i, 1);
+                localStorage.setItem('ship_hist', JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        function renderStats() {
+            const total = history.reduce((a, b) => a + b.fee, 0);
+            const todayStr = new Date().toLocaleDateString('vi-VN');
+            const todayTotal = history.filter(h => h.date === todayStr).reduce((a, b) => a + b.fee, 0);
+            
+            document.getElementById('stat-total-money').innerText = total.toLocaleString() + 'đ';
+            document.getElementById('stat-today-money').innerText = todayTotal.toLocaleString() + 'đ';
+
+            // Biểu đồ đơn giản
+            const chart = document.getElementById('simple-chart');
+            const last7Days = [...new Set(history.map(h => h.date))].slice(0, 7).reverse();
+            chart.innerHTML = last7Days.map(date => {
+                const daySum = history.filter(h => h.date === date).reduce((a, b) => a + b.fee, 0);
+                const height = Math.min((daySum / 500000) * 100, 100); // Max 500k
+                return `<div class="flex-1 bg-blue-600 rounded-t-md relative group" style="height: ${height}%">
+                    <span class="absolute -top-6 left-0 text-[8px] hidden group-hover:block">${daySum/1000}k</span>
+                </div>`;
+            }).join('');
+        }
+
+        function saveConfig() {
+            config.base = parseInt(document.getElementById('cfg-base').value);
+            config.extra = parseInt(document.getElementById('cfg-extra').value);
+            localStorage.setItem('ship_cfg', JSON.stringify(config));
+        }
+
+        function renderAll() {
+            updateFee();
+        }
     </script>
 </body>
 </html>

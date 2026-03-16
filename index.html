@@ -3,295 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO ULTIMATE</title>
+    <title>SHIPPER PRO V4</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        :root { --blue: #3b82f6; --dark: #0f172a; --card: #1e293b; }
-        body { background-color: #000; color: #fff; font-family: -apple-system, system-ui, sans-serif; margin:0; }
-        #map { height: 220px; width: 100%; border-radius: 20px; border: 1px solid #334155; z-index: 1; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid #334155; }
-        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .btn-active { color: var(--blue) !important; background: rgba(59, 130, 246, 0.1); }
-        input { background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 12px; outline: none; }
-        input:focus { border-color: var(--blue); }
+        :root { --primary: #3b82f6; --bg: #000000; --card: #161b22; --text: #ffffff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        
+        /* Header */
+        header { padding: 15px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; }
+        .logo { font-weight: 900; italic: true; color: var(--primary); font-size: 1.2rem; }
+
+        /* Container */
+        .container { max-width: 500px; margin: auto; padding: 15px; }
+        
+        /* Map */
+        #map { height: 200px; width: 100%; border-radius: 20px; background: #0d1117; margin-bottom: 15px; border: 1px solid #30363d; }
+
+        /* Card & Inputs */
+        .card { background: var(--card); border-radius: 25px; padding: 20px; border: 1px solid #30363d; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { w-full; background: #0d1117; border: 1px solid #30363d; color: white; padding: 15px; border-radius: 15px; width: 100%; margin-bottom: 10px; font-size: 16px; }
+        input:focus { border-color: var(--primary); outline: none; }
+
+        /* Buttons */
+        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; font-size: 16px; text-transform: uppercase; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-green { background: #238636; color: white; }
+        .btn-ghost { background: #21262d; color: #8b949e; margin-top: 10px; }
+        .btn:active { transform: scale(0.98); opacity: 0.8; }
+
+        /* Order Status */
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .bg-orange { background: rgba(255, 165, 0, 0.2); color: orange; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* History & Stats */
+        .hist-item { background: #0d1117; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #21262d; display: flex; justify-content: space-between; }
+        .price { color: var(--primary); font-weight: 900; }
+        
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; display: flex; border-top: 1px solid #30363d; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; padding: 15px; color: #8b949e; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .nav-item.active { color: var(--primary); }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <header class="p-4 flex justify-between items-center sticky top-0 bg-black z-50 border-b border-gray-800">
-        <button onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center bg-slate-900 rounded-xl">
-            <i class="fa-solid fa-bars text-blue-500"></i>
-        </button>
-        <h1 class="font-black italic text-blue-500 text-xl tracking-tighter">SHIPPER PRO</h1>
-        <div class="w-10 text-right"><i class="fa-solid fa-circle-user text-gray-600 text-xl"></i></div>
+    <header>
+        <div class="logo">SHIPPER PRO V4</div>
+        <div id="today-income" style="font-size: 12px; font-weight: bold;">Hôm nay: 0đ</div>
     </header>
 
-    <div id="sidebar" class="fixed inset-0 bg-black/80 z-[60] hidden" onclick="toggleMenu()">
-        <aside class="w-64 h-full bg-slate-900 p-6 shadow-2xl" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-                <span class="font-bold text-blue-500">DANH MỤC</span>
-                <i class="fa-solid fa-xmark" onclick="toggleMenu()"></i>
+    <div class="container">
+        <div id="tab-order" class="tab-content">
+            <div id="map"></div>
+            
+            <div class="card">
+                <div id="idle-view">
+                    <input type="text" id="cust-name" placeholder="Tên khách hàng...">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <button class="btn btn-ghost" style="margin:0; font-size: 11px;" onclick="getLoc('start')">📍 Điểm nhận</button>
+                        <button class="btn btn-ghost" style="margin:0; font-size: 11px;" onclick="getLoc('end')">🏁 Điểm giao</button>
+                    </div>
+                    <input type="number" id="km-input" placeholder="Số KM..." oninput="recalc()">
+                    
+                    <div style="text-align: center; padding: 15px; margin-bottom: 15px;">
+                        <span style="color: #8b949e; font-size: 12px;">ƯỚC TÍNH CƯỚC</span>
+                        <div id="fee-total" style="font-size: 35px; font-weight: 900; color: var(--primary);">0đ</div>
+                    </div>
+                    
+                    <button class="btn btn-blue" onclick="takeOrder()">Bắt đầu nhận đơn</button>
+                </div>
+
+                <div id="running-view" class="hidden" style="text-align: center;">
+                    <div class="status-badge bg-orange">ĐANG GIAO HÀNG...</div>
+                    <h2 id="run-name" style="margin: 10px 0;">Khách lẻ</h2>
+                    <p id="run-info" style="color: #8b949e; margin-bottom: 25px;">0 km - 0đ</p>
+                    <button class="btn btn-green" onclick="finishOrder()">Hoàn thành đơn</button>
+                    <button class="btn btn-ghost" onclick="cancelOrder()">Hủy đơn</button>
+                </div>
             </div>
-            <nav class="space-y-4 text-gray-300">
-                <div onclick="switchTab('order')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-motorcycle w-6"></i> Vận đơn</div>
-                <div onclick="switchTab('history')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left w-6"></i> Lịch sử đơn</div>
-                <div onclick="switchTab('stats')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-chart-pie w-6"></i> Thống kê</div>
-                <div onclick="switchTab('settings')" class="p-3 flex items-center gap-3"><i class="fa-solid fa-sliders w-6"></i> Cài đặt phí</div>
-            </nav>
-        </aside>
+        </div>
+
+        <div id="tab-history" class="tab-content hidden">
+            <h3 style="margin-bottom: 15px;">Đơn hàng đã giao</h3>
+            <div id="list-history"></div>
+        </div>
+
+        <div id="tab-settings" class="tab-content hidden">
+            <div class="card">
+                <h3>Cài đặt giá</h3>
+                <label style="font-size: 12px; color: #8b949e;">Giá 3km đầu (VNĐ)</label>
+                <input type="number" id="cfg-base" onchange="saveCfg()">
+                <label style="font-size: 12px; color: #8b949e;">Giá mỗi km tiếp theo (VNĐ)</label>
+                <input type="number" id="cfg-extra" onchange="saveCfg()">
+                <p style="font-size: 10px; color: #58a6ff;">* App sẽ tự động lưu giá này.</p>
+                <button class="btn btn-ghost" style="color: #f85149;" onclick="clearAll()">Xóa sạch dữ liệu</button>
+            </div>
+        </div>
     </div>
 
-    <main class="max-w-md mx-auto pb-24">
-        
-        <section id="order" class="tab-content active">
-            <div id="map" class="mb-4"></div>
-            
-            <div id="order-form" class="glass p-5 rounded-[2rem] space-y-4">
-                <div id="status-idle">
-                    <div class="flex flex-col gap-3 mb-4">
-                        <input type="text" id="cust-name" placeholder="Tên khách hàng...">
-                        <div class="flex gap-2">
-                            <button onclick="getGPS('start')" class="flex-1 text-[10px] font-bold bg-slate-800 p-3 rounded-xl border border-slate-700">
-                                <i class="fa-solid fa-location-crosshairs mr-1"></i> GPS NHẬN
-                            </button>
-                            <button onclick="getGPS('end')" class="flex-1 text-[10px] font-bold bg-slate-800 p-3 rounded-xl border border-slate-700">
-                                <i class="fa-solid fa-flag-checkered mr-1"></i> GPS GIAO
-                            </button>
-                        </div>
-                        <div class="flex items-center bg-black/50 p-4 rounded-xl border border-slate-800">
-                            <input type="number" id="distance-input" placeholder="0" class="w-20 text-2xl font-black bg-transparent border-none p-0 text-blue-400" oninput="updateFee()">
-                            <span class="font-bold text-gray-500 ml-2 uppercase text-xs">km dự kiến</span>
-                        </div>
-                    </div>
-                    <div class="bg-blue-600/10 border border-blue-500/20 p-4 rounded-2xl text-center mb-4">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase">Phí báo khách</p>
-                        <p id="fee-display" class="text-3xl font-black text-blue-500">0đ</p>
-                    </div>
-                    <button onclick="startOrder()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-lg shadow-lg shadow-blue-900/40 uppercase">Nhận Đơn</button>
-                </div>
-
-                <div id="status-running" class="hidden text-center py-4 space-y-6">
-                    <div class="inline-block px-4 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-[10px] font-bold animate-pulse">
-                        <i class="fa-solid fa-truck-fast mr-2"></i> ĐANG TRÊN ĐƯỜNG GIAO...
-                    </div>
-                    <div>
-                        <h3 id="running-cust" class="text-2xl font-black">Khách lẻ</h3>
-                        <p id="running-info" class="text-gray-400">5.0 km - 25,000đ</p>
-                    </div>
-                    <button onclick="completeOrder()" class="w-full bg-green-600 py-4 rounded-2xl font-black text-lg shadow-lg shadow-green-900/40 uppercase">Giao Thành Công</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="history" class="tab-content">
-            <h2 class="text-lg font-bold mb-4 flex justify-between">
-                Lịch sử gần đây
-                <span id="history-count" class="text-xs bg-slate-800 px-2 py-1 rounded">0 đơn</span>
-            </h2>
-            <div id="history-list" class="space-y-3"></div>
-        </section>
-
-        <section id="stats" class="tab-content">
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="glass p-5 rounded-3xl border-blue-500/30">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">Tổng Thu</p>
-                    <p id="stat-total-money" class="text-xl font-black text-blue-500">0đ</p>
-                </div>
-                <div class="glass p-5 rounded-3xl">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">Hôm nay</p>
-                    <p id="stat-today-money" class="text-xl font-black text-green-500">0đ</p>
-                </div>
-            </div>
-            <div class="glass p-6 rounded-[2rem]">
-                <h3 class="text-xs font-bold text-gray-500 mb-4 uppercase">Doanh thu theo ngày</h3>
-                <div id="simple-chart" class="flex items-end gap-2 h-32 border-b border-slate-800 pb-1">
-                    </div>
-            </div>
-        </section>
-
-        <section id="settings" class="tab-content">
-            <div class="glass p-6 rounded-[2rem] space-y-6">
-                <h3 class="font-black italic text-blue-500 border-b border-slate-800 pb-2">CÀI ĐẶT CƯỚC</h3>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 block mb-1">GIÁ MỞ CỬA (Dưới 3km)</label>
-                    <input type="number" id="cfg-base" class="w-full text-xl font-black" onchange="saveConfig()">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 block mb-1">GIÁ MỖI KM TIẾP THEO</label>
-                    <input type="number" id="cfg-extra" class="w-full text-xl font-black" onchange="saveConfig()">
-                </div>
-                <p class="text-[10px] text-gray-600 italic">Dữ liệu được lưu an toàn trên trình duyệt điện thoại của bạn.</p>
-            </div>
-        </section>
-
-    </main>
-
-    <nav class="fixed bottom-0 inset-x-0 bg-black/90 backdrop-blur-md border-t border-slate-800 flex justify-around p-2 z-50">
-        <button onclick="switchTab('order')" id="nav-order" class="p-4 flex-1 btn-active"><i class="fa-solid fa-motorcycle"></i></button>
-        <button onclick="switchTab('history')" id="nav-history" class="p-4 flex-1"><i class="fa-solid fa-clock-rotate-left"></i></button>
-        <button onclick="switchTab('stats')" id="nav-stats" class="p-4 flex-1"><i class="fa-solid fa-chart-pie"></i></button>
-        <button onclick="switchTab('settings')" id="nav-settings" class="p-4 flex-1"><i class="fa-solid fa-sliders"></i></button>
+    <nav>
+        <div class="nav-item active" onclick="showTab('order', this)">Đơn hàng</div>
+        <div class="nav-item" onclick="showTab('history', this)">Lịch sử</div>
+        <div class="nav-item" onclick="showTab('settings', this)">Cài đặt</div>
     </nav>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script>
-        // --- DỮ LIỆU ---
-        let history = JSON.parse(localStorage.getItem('ship_hist') || '[]');
-        let config = JSON.parse(localStorage.getItem('ship_cfg') || '{"base":15000, "extra":5000}');
-        let currentOrder = JSON.parse(localStorage.getItem('ship_curr') || 'null');
-        let map, markers = { start: null, end: null };
+        // Dữ liệu
+        let history = JSON.parse(localStorage.getItem('sh_hist') || '[]');
+        let config = JSON.parse(localStorage.getItem('sh_cfg') || '{"base":15000, "extra":5000}');
+        let current = JSON.parse(localStorage.getItem('sh_curr') || 'null');
+        let map, mStart, mEnd;
 
-        // --- KHỞI TẠO ---
+        // Khởi tạo
         window.onload = () => {
-            initMap();
-            renderAll();
             document.getElementById('cfg-base').value = config.base;
             document.getElementById('cfg-extra').value = config.extra;
-            if(currentOrder) showRunningStatus();
+            
+            try {
+                map = L.map('map').setView([10.7626, 106.6601], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            } catch(e) { 
+                document.getElementById('map').innerHTML = "<p style='padding:20px; color:#58a6ff'>Bản đồ đang tải hoặc ngoại tuyến...</p>";
+            }
+
+            if(current) showRunning();
+            updateStats();
         };
 
-        function initMap() {
-            map = L.map('map').setView([10.7626, 106.6601], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        function showTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + id).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            if(id === 'history') renderHistory();
         }
 
-        // --- HÀM XỬ LÝ ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(el => el.classList.remove('btn-active'));
-            document.getElementById(tabId).classList.add('active');
-            document.getElementById('nav-' + tabId).classList.add('btn-active');
-            if(tabId === 'order') setTimeout(() => map.invalidateSize(), 200);
-            if(tabId === 'history') renderHistory();
-            if(tabId === 'stats') renderStats();
+        function getLoc(type) {
+            navigator.geolocation.getCurrentPosition(p => {
+                const pos = [p.coords.latitude, p.coords.longitude];
+                if(type === 'start') {
+                    if(mStart) map.removeLayer(mStart);
+                    mStart = L.marker(pos).addTo(map).bindPopup("Nhận hàng").openPopup();
+                } else {
+                    if(mEnd) map.removeLayer(mEnd);
+                    mEnd = L.marker(pos).addTo(map).bindPopup("Giao hàng").openPopup();
+                }
+                map.setView(pos, 15);
+                if(mStart && mEnd) {
+                    let d = (map.distance(mStart.getLatLng(), mEnd.getLatLng()) / 1000 * 1.2).toFixed(1);
+                    document.getElementById('km-input').value = d;
+                    recalc();
+                }
+            }, () => alert("Hãy bật định vị GPS"));
         }
 
-        function toggleMenu() {
-            const side = document.getElementById('sidebar');
-            side.classList.toggle('hidden');
-        }
-
-        function getGPS(type) {
-            if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ GPS");
-            navigator.geolocation.getCurrentPosition(pos => {
-                const latlng = [pos.coords.latitude, pos.coords.longitude];
-                if(markers[type]) map.removeLayer(markers[type]);
-                markers[type] = L.marker(latlng).addTo(map);
-                map.setView(latlng, 16);
-                checkDistance();
-            }, () => alert("Không thể lấy vị trí. Hãy bật định vị."));
-        }
-
-        function checkDistance() {
-            if(markers.start && markers.end) {
-                const d = map.distance(markers.start.getLatLng(), markers.end.getLatLng()) / 1000;
-                document.getElementById('distance-input').value = (d * 1.2).toFixed(1);
-                updateFee();
-            }
-        }
-
-        function updateFee() {
-            const d = parseFloat(document.getElementById('distance-input').value) || 0;
+        function recalc() {
+            let d = parseFloat(document.getElementById('km-input').value) || 0;
             let fee = d <= 3 ? config.base : config.base + Math.ceil(d - 3) * config.extra;
-            document.getElementById('fee-display').innerText = fee.toLocaleString() + 'đ';
+            document.getElementById('fee-total').innerText = fee.toLocaleString() + 'đ';
             return fee;
         }
 
-        function startOrder() {
-            const dist = parseFloat(document.getElementById('distance-input').value);
-            if(!dist) return alert("Nhập số km");
-            currentOrder = {
-                cust: document.getElementById('cust-name').value || "Khách lẻ",
-                dist: dist,
-                fee: updateFee(),
-                date: new Date().toLocaleDateString('vi-VN'),
-                rawDate: new Date().toISOString()
+        function takeOrder() {
+            let km = parseFloat(document.getElementById('km-input').value);
+            if(!km) return alert("Vui lòng nhập số KM");
+            current = {
+                name: document.getElementById('cust-name').value || "Khách lẻ",
+                km: km,
+                fee: recalc(),
+                date: new Date().toLocaleDateString('vi-VN')
             };
-            localStorage.setItem('ship_curr', JSON.stringify(currentOrder));
-            showRunningStatus();
+            localStorage.setItem('sh_curr', JSON.stringify(current));
+            showRunning();
         }
 
-        function showRunningStatus() {
-            document.getElementById('status-idle').classList.add('hidden');
-            document.getElementById('status-running').classList.remove('hidden');
-            document.getElementById('running-cust').innerText = currentOrder.cust;
-            document.getElementById('running-info').innerText = `${currentOrder.dist} km - ${currentOrder.fee.toLocaleString()}đ`;
+        function showRunning() {
+            document.getElementById('idle-view').classList.add('hidden');
+            document.getElementById('running-view').classList.remove('hidden');
+            document.getElementById('run-name').innerText = current.name;
+            document.getElementById('run-info').innerText = current.km + " km - " + current.fee.toLocaleString() + "đ";
         }
 
-        function completeOrder() {
-            history.unshift(currentOrder);
-            localStorage.setItem('ship_hist', JSON.stringify(history));
-            localStorage.removeItem('ship_curr');
-            currentOrder = null;
-            document.getElementById('status-idle').classList.remove('hidden');
-            document.getElementById('status-running').classList.add('hidden');
-            document.getElementById('distance-input').value = "";
+        function finishOrder() {
+            history.unshift(current);
+            localStorage.setItem('sh_hist', JSON.stringify(history));
+            cancelOrder();
+            updateStats();
+            alert("Đã hoàn thành!");
+        }
+
+        function cancelOrder() {
+            localStorage.removeItem('sh_curr');
+            current = null;
+            document.getElementById('idle-view').classList.remove('hidden');
+            document.getElementById('running-view').classList.add('hidden');
+            document.getElementById('km-input').value = "";
             document.getElementById('cust-name').value = "";
-            if(markers.start) map.removeLayer(markers.start);
-            if(markers.end) map.removeLayer(markers.end);
-            alert("Đã lưu vào lịch sử!");
         }
 
         function renderHistory() {
-            const list = document.getElementById('history-list');
-            document.getElementById('history-count').innerText = history.length + " đơn";
-            list.innerHTML = history.map((h, i) => `
-                <div class="glass p-4 rounded-2xl flex justify-between items-center border-l-4 border-blue-500">
-                    <div>
-                        <p class="font-bold">${h.cust}</p>
-                        <p class="text-[10px] text-gray-500">${h.date} • ${h.dist}km</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-blue-500">${h.fee.toLocaleString()}đ</p>
-                        <button onclick="delHist(${i})" class="text-[10px] text-red-900 uppercase font-bold">Xóa</button>
-                    </div>
+            const div = document.getElementById('list-history');
+            div.innerHTML = history.map((h, i) => `
+                <div class="hist-item">
+                    <div><b>${h.name}</b><br><small style="color:#8b949e">${h.date} • ${h.km}km</small></div>
+                    <div class="price">${h.fee.toLocaleString()}đ</div>
                 </div>
             `).join('');
         }
 
-        function delHist(i) {
-            if(confirm("Xóa đơn này?")) {
-                history.splice(i, 1);
-                localStorage.setItem('ship_hist', JSON.stringify(history));
-                renderHistory();
-            }
+        function updateStats() {
+            let today = new Date().toLocaleDateString('vi-VN');
+            let income = history.filter(h => h.date === today).reduce((a, b) => a + b.fee, 0);
+            document.getElementById('today-income').innerText = "Hôm nay: " + income.toLocaleString() + "đ";
         }
 
-        function renderStats() {
-            const total = history.reduce((a, b) => a + b.fee, 0);
-            const todayStr = new Date().toLocaleDateString('vi-VN');
-            const todayTotal = history.filter(h => h.date === todayStr).reduce((a, b) => a + b.fee, 0);
-            
-            document.getElementById('stat-total-money').innerText = total.toLocaleString() + 'đ';
-            document.getElementById('stat-today-money').innerText = todayTotal.toLocaleString() + 'đ';
-
-            // Biểu đồ đơn giản
-            const chart = document.getElementById('simple-chart');
-            const last7Days = [...new Set(history.map(h => h.date))].slice(0, 7).reverse();
-            chart.innerHTML = last7Days.map(date => {
-                const daySum = history.filter(h => h.date === date).reduce((a, b) => a + b.fee, 0);
-                const height = Math.min((daySum / 500000) * 100, 100); // Max 500k
-                return `<div class="flex-1 bg-blue-600 rounded-t-md relative group" style="height: ${height}%">
-                    <span class="absolute -top-6 left-0 text-[8px] hidden group-hover:block">${daySum/1000}k</span>
-                </div>`;
-            }).join('');
-        }
-
-        function saveConfig() {
+        function saveCfg() {
             config.base = parseInt(document.getElementById('cfg-base').value);
             config.extra = parseInt(document.getElementById('cfg-extra').value);
-            localStorage.setItem('ship_cfg', JSON.stringify(config));
+            localStorage.setItem('sh_cfg', JSON.stringify(config));
+            recalc();
         }
 
-        function renderAll() {
-            updateFee();
+        function clearAll() {
+            if(confirm("Xóa hết lịch sử và cài đặt?")) {
+                localStorage.clear();
+                location.reload();
+            }
         }
     </script>
 </body>

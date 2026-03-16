@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Shipper Pro">
     
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/180/helmet.png">
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/helmet.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/180/motorcycle-delivery-single-box.png">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/motorcycle-delivery-single-box.png">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -24,7 +24,7 @@
         
         header { padding: 10px 20px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo-container { display: flex; align-items: center; gap: 10px; }
-        .logo-img { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .logo-img { width: 35px; height: 35px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
         .logo-text { font-weight: 800; color: var(--primary); font-size: 1.1rem; letter-spacing: -0.5px; }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
@@ -53,14 +53,14 @@
         .nav-item.active { color: var(--primary); }
 
         .hidden { display: none; }
-        .pulse-marker { width: 15px; height: 15px; background: var(--primary); border: 3px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,170,85,0.5); }
+        .pulse-marker { width: 18px; height: 18px; background: var(--primary); border: 3px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(0,170,85,0.6); }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo-container">
-            <img src="https://img.icons8.com/fluency/48/helmet.png" class="logo-img" alt="Logo">
+            <img src="https://img.icons8.com/fluency/48/motorcycle-delivery-single-box.png" class="logo-img" alt="Logo">
             <div class="logo-text">SHIPPER PRO</div>
         </div>
         <div class="status-badge" id="today-income">0đ</div>
@@ -72,12 +72,12 @@
             <div class="main-card">
                 <div id="idle-view">
                     <div style="margin-bottom: 20px;">
-                        <h3 style="margin:0 0 5px 0; font-size: 18px;">Bạn đang ở đâu?</h3>
-                        <p style="margin:0; color: #95a5a6; font-size: 13px;">Bấm bắt đầu để xác định vị trí giao hàng.</p>
+                        <h3 style="margin:0 0 5px 0; font-size: 18px;">Hôm nay bạn thế nào?</h3>
+                        <p style="margin:0; color: #95a5a6; font-size: 13px;">Bấm bắt đầu để lấy vị trí và nhận chuyến đi mới.</p>
                     </div>
                     <input type="text" id="cust-name" placeholder="Tên khách hàng...">
                     <button class="btn btn-primary" onclick="startOrder()">
-                        <i class="fa-solid fa-motorcycle"></i> BẮT ĐẦU NHẬN ĐƠN
+                        <i class="fa-solid fa-play"></i> BẮT ĐẦU NHẬN ĐƠN
                     </button>
                 </div>
 
@@ -139,11 +139,11 @@
     </nav>
 
     <script>
-        // GIỮ NGUYÊN LOGIC V11: CHỈ ĐƯỜNG THỰC TẾ OSRM
-        let history = JSON.parse(localStorage.getItem('v12_hist') || '[]');
-        let debts = JSON.parse(localStorage.getItem('v12_debts') || '[]');
-        let pricing = JSON.parse(localStorage.getItem('v12_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
-        let current = JSON.parse(localStorage.getItem('v12_curr') || 'null');
+        // GIỮ NGUYÊN LOGIC CHỨC NĂNG CŨ: CHỈ ĐƯỜNG THỰC TẾ OSRM
+        let history = JSON.parse(localStorage.getItem('v13_hist') || '[]');
+        let debts = JSON.parse(localStorage.getItem('v13_debts') || '[]');
+        let pricing = JSON.parse(localStorage.getItem('v13_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
+        let current = JSON.parse(localStorage.getItem('v13_curr') || 'null');
         let map, mStart, mEnd, routeLine, myChart;
         let selectedFee = 0, selectedDist = 0, destLatLng = null;
 
@@ -188,7 +188,7 @@
             navigator.geolocation.getCurrentPosition(p => {
                 const pos = [p.coords.latitude, p.coords.longitude];
                 current = { name: document.getElementById('cust-name').value || "Khách lẻ", start: pos, time: new Date().getTime() };
-                localStorage.setItem('v12_curr', JSON.stringify(current));
+                localStorage.setItem('v13_curr', JSON.stringify(current));
                 showRunning();
             }, () => alert("Hãy bật GPS!"));
         }
@@ -224,16 +224,16 @@
         function completeOrder(type) {
             const data = { name: current.name, dist: selectedDist, fee: selectedFee, date: new Date().toLocaleDateString('vi-VN'), timestamp: new Date().getTime() };
             if(type === 'debt') debts.unshift(data); else history.unshift(data);
-            localStorage.setItem('v12_hist', JSON.stringify(history));
-            localStorage.setItem('v12_debts', JSON.stringify(debts));
-            localStorage.removeItem('v12_curr');
+            localStorage.setItem('v13_hist', JSON.stringify(history));
+            localStorage.setItem('v13_debts', JSON.stringify(debts));
+            localStorage.removeItem('v13_curr');
             location.reload();
         }
 
         function renderPricing() { document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `<div style="display:flex; gap:8px; margin-bottom:10px;"><input type="number" style="flex:1" value="${p.km}" onchange="pricing[${i}].km=parseFloat(this.value)"><input type="number" style="flex:2" value="${p.price}" onchange="pricing[${i}].price=parseFloat(this.value)"></div>`).join(''); }
-        function savePricing() { localStorage.setItem('v12_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
+        function savePricing() { localStorage.setItem('v13_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
         function updateHeaderIncome() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('today-income').innerText = `${total.toLocaleString()}đ`; }
-        function cancelOrder() { if(confirm("Hủy đơn?")) { localStorage.removeItem('v12_curr'); location.reload(); } }
+        function cancelOrder() { if(confirm("Hủy đơn?")) { localStorage.removeItem('v13_curr'); location.reload(); } }
     </script>
 </body>
 </html>

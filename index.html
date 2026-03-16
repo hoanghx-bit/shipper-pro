@@ -2,22 +2,25 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shipper Pro V3 - Quy Trình Vận Đơn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shipper Pro V3 - Professional</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
     <style>
-        #map { height: 250px; border-radius: 24px; z-index: 10; }
-        .tab-active { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-        body { background-color: #000; color: #fff; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #000; color: #fff; margin: 0; padding: 0; overflow-x: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        #map { height: 220px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 1px solid #333; }
+        .active-tab { color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1); border-radius: 15px; }
+        input[type="number"]::-webkit-inner-spin-button { display: none; }
+        .glass-card { background: rgba(30, 30, 30, 0.8); backdrop-filter: blur(10px); border: 1px solid #333; border-radius: 24px; }
     </style>
 </head>
 <body>
@@ -25,171 +28,123 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
-        const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = Recharts;
+        const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } = Recharts;
 
         const App = () => {
             const [activeTab, setActiveTab] = useState('order');
             const [isMenuOpen, setIsMenuOpen] = useState(false);
-            
-            // Dữ liệu đơn hàng & Cấu hình
-            const [history, setHistory] = useState(JSON.parse(localStorage.getItem('ship_logs_v3') || '[]'));
-            const [pricing, setPricing] = useState(JSON.parse(localStorage.getItem('ship_price_v3') || '[{"from":0,"to":3,"price":15000},{"from":3,"to":10,"price":5000}]'));
-            
-            // Trạng thái đơn hiện tại
-            const [currentOrder, setCurrentOrder] = useState(JSON.parse(localStorage.getItem('current_ship') || 'null'));
-            const [points, setPoints] = useState({ start: null, end: null });
-            const [customer, setCustomer] = useState('');
+            const [history, setHistory] = useState(() => JSON.parse(localStorage.getItem('shipper_v3_history') || '[]'));
+            const [pricing, setPricing] = useState(() => JSON.parse(localStorage.getItem('shipper_v3_price') || '[{"from":0,"to":3,"price":15000},{"from":3,"to":10,"price":5000}]'));
+            const [currentOrder, setCurrentOrder] = useState(() => JSON.parse(localStorage.getItem('shipper_v3_current') || 'null'));
             const [distance, setDistance] = useState(0);
-
+            const [customer, setCustomer] = useState('');
             const mapRef = useRef(null);
 
-            // Lưu LocalStorage
+            // Lưu dữ liệu
             useEffect(() => {
-                localStorage.setItem('ship_logs_v3', JSON.stringify(history));
-                localStorage.setItem('ship_price_v3', JSON.stringify(pricing));
-                localStorage.setItem('current_ship', JSON.stringify(currentOrder));
+                localStorage.setItem('shipper_v3_history', JSON.stringify(history));
+                localStorage.setItem('shipper_v3_price', JSON.stringify(pricing));
+                localStorage.setItem('shipper_v3_current', JSON.stringify(currentOrder));
             }, [history, pricing, currentOrder]);
 
-            // Khởi tạo bản đồ
+            // Khởi tạo bản đồ sau khi giao diện load
             useEffect(() => {
                 if (activeTab === 'order' && !mapRef.current) {
-                    mapRef.current = L.map('map').setView([10.7626, 106.6601], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
+                    setTimeout(() => {
+                        mapRef.current = L.map('map').setView([10.7626, 106.6601], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
+                        mapRef.current.on('click', (e) => {
+                            // Chức năng chọn nhanh km bằng cách click bản đồ (giả lập)
+                            const randomKm = (Math.random() * 5 + 1).toFixed(1);
+                            setDistance(parseFloat(randomKm));
+                        });
+                    }, 500);
                 }
             }, [activeTab]);
 
-            // Lấy tọa độ GPS thực tế
-            const getGPS = (type) => {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    setPoints(prev => ({ ...prev, [type]: latlng }));
-                    L.marker(latlng).addTo(mapRef.current).bindPopup(type === 'start' ? "Điểm nhận" : "Điểm giao").openPopup();
-                    mapRef.current.setView(latlng, 15);
-                });
-            };
-
-            // Tính khoảng cách khi có 2 điểm
-            useEffect(() => {
-                if (points.start && points.end) {
-                    const d = (L.latLng(points.start).distanceTo(L.latLng(points.end)) / 1000 * 1.2).toFixed(1);
-                    setDistance(parseFloat(d));
-                }
-            }, [points]);
-
-            // Tính phí dựa trên các mốc km cài đặt
-            const calculateFee = (d) => {
-                let total = 0;
-                if (d <= 0) return 0;
-                
-                // Mốc đầu tiên (thường là giá mở cửa)
+            const fee = useMemo(() => {
+                const d = parseFloat(distance) || 0;
                 const base = pricing[0];
-                total = base.price;
-                
-                if (d > base.to) {
-                    const extraKm = d - base.to;
-                    const nextPrice = pricing[1]?.price || 5000;
-                    total += extraKm * nextPrice;
-                }
-                return Math.round(total);
-            };
+                if (d <= base.to) return base.price;
+                return base.price + Math.ceil(d - base.to) * pricing[1].price;
+            }, [distance, pricing]);
 
-            const fee = useMemo(() => calculateFee(distance), [distance, pricing]);
-
-            // Quản lý trạng thái đơn
-            const handleOrderAction = () => {
+            const handleOrder = () => {
                 if (!currentOrder) {
-                    // Nhận đơn
-                    if (distance <= 0) return alert("Vui lòng nhập/chọn quãng đường");
-                    setCurrentOrder({
-                        id: Date.now(),
-                        customer: customer || "Khách lẻ",
-                        distance,
-                        fee,
-                        status: 'DELIVERING',
-                        startTime: new Date().toISOString()
-                    });
+                    if (distance <= 0) return alert("Vui lòng nhập số km!");
+                    setCurrentOrder({ id: Date.now(), customer: customer || 'Khách lẻ', distance, fee, date: new Date().toLocaleDateString('vi-VN') });
                 } else {
-                    // Kết thúc đơn
-                    const completedOrder = { ...currentOrder, status: 'COMPLETED', date: new Date().toLocaleDateString('vi-VN') };
-                    setHistory([completedOrder, ...history]);
+                    setHistory([currentOrder, ...history]);
                     setCurrentOrder(null);
-                    setPoints({ start: null, end: null });
                     setDistance(0); setCustomer('');
-                    alert("Đã hoàn thành & ghi vào lịch sử!");
+                    alert("Đã hoàn thành đơn hàng!");
                 }
             };
-
-            // Dữ liệu cho biểu đồ
-            const chartData = useMemo(() => {
-                const groups = history.reduce((acc, obj) => {
-                    acc[obj.date] = (acc[obj.date] || 0) + obj.fee;
-                    return acc;
-                }, {});
-                return Object.keys(groups).map(date => ({ name: date, total: groups[date] })).reverse().slice(-7);
-            }, [history]);
-
-            useEffect(() => { lucide.createIcons(); }, [activeTab, isMenuOpen, currentOrder]);
 
             return (
-                <div className="min-h-screen pb-24">
+                <div className="flex flex-col min-h-screen max-w-md mx-auto relative">
                     {/* Header */}
-                    <header className="p-4 flex justify-between items-center border-b border-gray-800 bg-black/80 sticky top-0 z-50 backdrop-blur-md">
-                        <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-900 rounded-xl text-blue-500"><i data-lucide="menu"></i></button>
-                        <h1 className="font-black italic text-xl tracking-tighter text-blue-500 underline decoration-2 underline-offset-4">SHIPPER PRO</h1>
-                        <div className="w-10 text-right"><i data-lucide="bell" size={18}></i></div>
+                    <header className="p-4 flex items-center justify-between sticky top-0 bg-black z-40 border-b border-gray-800">
+                        <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 flex items-center justify-center bg-gray-900 rounded-xl">
+                            <i className="fa-solid fa-bars text-blue-500"></i>
+                        </button>
+                        <h1 className="font-black italic tracking-tighter text-blue-500 text-xl">SHIPPER PRO</h1>
+                        <div className="w-10"></div>
                     </header>
 
-                    {/* Sidebar */}
-                    <aside className={`fixed inset-y-0 left-0 w-72 bg-gray-900 z-[100] transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform p-6 shadow-2xl`}>
-                        <div className="flex justify-between items-center mb-10 text-blue-500">
-                             <h2 className="text-xl font-black italic">DANH MỤC</h2>
-                             <X onClick={()=>setIsMenuOpen(false)} />
-                        </div>
-                        <nav className="space-y-2">
-                            {[
-                                { id: 'order', icon: 'navigation', label: 'Vận đơn' },
-                                { id: 'history', icon: 'clipboard-list', label: 'Lịch sử' },
-                                { id: 'stats', icon: 'pie-chart', label: 'Báo cáo' },
-                                { id: 'settings', icon: 'settings-2', label: 'Cài đặt giá' }
-                            ].map(item => (
-                                <div key={item.id} onClick={() => {setActiveTab(item.id); setIsMenuOpen(false)}} className={`flex items-center space-x-4 p-4 rounded-2xl cursor-pointer ${activeTab === item.id ? 'tab-active font-bold text-blue-500' : 'text-gray-400'}`}>
-                                    <i data-lucide={item.icon}></i> <span>{item.label}</span>
+                    {/* Menu trượt */}
+                    <div className={`fixed inset-0 bg-black/80 z-50 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}>
+                        <aside className={`w-64 h-full bg-gray-900 p-6 transform transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                            <div className="flex justify-between mb-8">
+                                <span className="font-bold text-blue-500">MENU</span>
+                                <i className="fa-solid fa-xmark"></i>
+                            </div>
+                            <nav className="space-y-4">
+                                <div onClick={() => setActiveTab('order')} className={`p-3 flex items-center gap-3 ${activeTab === 'order' ? 'text-blue-500' : ''}`}>
+                                    <i className="fa-solid fa-motorcycle"></i> Vận đơn
                                 </div>
-                            ))}
-                        </nav>
-                    </aside>
+                                <div onClick={() => setActiveTab('history')} className={`p-3 flex items-center gap-3 ${activeTab === 'history' ? 'text-blue-500' : ''}`}>
+                                    <i className="fa-solid fa-clock-rotate-left"></i> Lịch sử
+                                </div>
+                                <div onClick={() => setActiveTab('stats')} className={`p-3 flex items-center gap-3 ${activeTab === 'stats' ? 'text-blue-500' : ''}`}>
+                                    <i className="fa-solid fa-chart-line"></i> Thống kê
+                                </div>
+                                <div onClick={() => setActiveTab('settings')} className={`p-3 flex items-center gap-3 ${activeTab === 'settings' ? 'text-blue-500' : ''}`}>
+                                    <i className="fa-solid fa-gears"></i> Cài đặt giá
+                                </div>
+                            </nav>
+                        </aside>
+                    </div>
 
-                    {/* Main Content */}
-                    <main className="max-w-md mx-auto p-4 space-y-4">
+                    {/* Content */}
+                    <main className="p-4 flex-1 overflow-y-auto pb-24">
                         {activeTab === 'order' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div id="map" className="mb-4 border-2 border-gray-800"></div>
-                                
-                                <div className="bg-gray-900 p-6 rounded-[2rem] border border-gray-800 shadow-xl">
+                            <div className="animate-in fade-in duration-500">
+                                <div id="map"></div>
+                                <div className="glass-card p-6 space-y-4">
                                     {!currentOrder ? (
-                                        <div className="space-y-4">
-                                            <input placeholder="Tên khách..." value={customer} onChange={e=>setCustomer(e.target.value)} className="w-full bg-gray-800 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-600 transition-all"/>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <button onClick={()=>getGPS('start')} className="bg-gray-800 p-3 rounded-xl text-xs font-bold text-gray-400 flex items-center justify-center gap-2 border border-gray-700 active:scale-95"><i data-lucide="map-pin" size={14}></i> GPS Nhận</button>
-                                                <button onClick={()=>getGPS('end')} className="bg-gray-800 p-3 rounded-xl text-xs font-bold text-gray-400 flex items-center justify-center gap-2 border border-gray-700 active:scale-95"><i data-lucide="flag" size={14}></i> GPS Giao</button>
-                                            </div>
-                                            <div className="flex items-center justify-between bg-black p-4 rounded-2xl border border-gray-800">
-                                                <div className="text-2xl font-black text-blue-500">{distance} <span className="text-sm font-normal text-gray-500">km</span></div>
-                                                <div className="text-right">
-                                                    <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Ước tính phí</div>
-                                                    <div className="text-xl font-bold">{fee.toLocaleString()}đ</div>
+                                        <>
+                                            <input type="text" placeholder="Tên khách hàng..." value={customer} onChange={e => setCustomer(e.target.value)} className="w-full bg-gray-800 border-none rounded-xl p-4 outline-none text-white focus:ring-1 focus:ring-blue-500" />
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-2">Số km</label>
+                                                    <input type="number" value={distance} onChange={e => setDistance(e.target.value)} className="w-full bg-gray-800 border-none rounded-xl p-4 text-2xl font-black text-blue-400 outline-none" />
+                                                </div>
+                                                <div className="flex-1 text-right">
+                                                    <label className="text-[10px] text-gray-500 font-bold uppercase mr-2">Phí ship</label>
+                                                    <div className="text-2xl font-black p-4">{fee.toLocaleString()}đ</div>
                                                 </div>
                                             </div>
-                                            <button onClick={handleOrderAction} className="w-full bg-blue-600 p-5 rounded-2xl font-black text-lg tracking-widest shadow-lg shadow-blue-900/40 active:scale-95 transition-all uppercase">Bắt đầu nhận đơn</button>
-                                        </div>
+                                            <button onClick={handleOrder} className="w-full bg-blue-600 p-5 rounded-2xl font-black text-lg active:scale-95 transition-transform uppercase shadow-lg shadow-blue-900/30">Nhận Đơn</button>
+                                        </>
                                     ) : (
                                         <div className="text-center py-4 space-y-6">
-                                            <div className="inline-block px-4 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-xs font-bold animate-pulse">ĐANG GIAO HÀNG...</div>
+                                            <div className="text-yellow-500 font-bold animate-pulse"><i className="fa-solid fa-truck-fast mr-2"></i> ĐANG GIAO HÀNG...</div>
                                             <div>
-                                                <h3 className="text-2xl font-black">{currentOrder.customer}</h3>
-                                                <p className="text-gray-400 text-sm">{currentOrder.distance} km - {currentOrder.fee.toLocaleString()}đ</p>
+                                                <div className="text-2xl font-black">{currentOrder.customer}</div>
+                                                <div className="text-gray-400">{currentOrder.distance} km - {currentOrder.fee.toLocaleString()}đ</div>
                                             </div>
-                                            <button onClick={handleOrderAction} className="w-full bg-green-600 p-5 rounded-2xl font-black text-lg shadow-lg shadow-green-900/40 active:scale-95 transition-all uppercase">Hoàn thành & Thu tiền</button>
+                                            <button onClick={handleOrder} className="w-full bg-green-600 p-5 rounded-2xl font-black text-lg active:scale-95 transition-transform uppercase shadow-lg shadow-green-900/30">Kết Thúc Đơn</button>
                                         </div>
                                     )}
                                 </div>
@@ -197,73 +152,74 @@
                         )}
 
                         {activeTab === 'history' && (
-                             <div className="space-y-3">
+                            <div className="space-y-3">
+                                {history.length === 0 && <p className="text-center text-gray-600 mt-20">Chưa có lịch sử</p>}
                                 {history.map(h => (
-                                    <div key={h.id} className="bg-gray-900 p-4 rounded-2xl border border-gray-800 flex justify-between items-center animate-in slide-in-from-right duration-300">
+                                    <div key={h.id} className="glass-card p-4 flex justify-between items-center">
                                         <div>
-                                            <div className="font-bold flex items-center gap-2">{h.customer} <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] rounded uppercase">Xong</span></div>
-                                            <div className="text-[10px] text-gray-500">{h.date} • {h.distance} km</div>
+                                            <div className="font-bold">{h.customer}</div>
+                                            <div className="text-[10px] text-gray-500">{h.date} • {h.distance}km</div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-black text-blue-500">+{h.fee.toLocaleString()}đ</div>
-                                            <button onClick={()=>{setHistory(history.filter(x=>x.id!==h.id))}} className="text-red-900"><i data-lucide="trash-2" size={14}></i></button>
+                                            <div className="font-black text-blue-500">{h.fee.toLocaleString()}đ</div>
+                                            <button onClick={() => setHistory(history.filter(x => x.id !== h.id))} className="text-red-900 text-xs mt-1">Xóa</button>
                                         </div>
                                     </div>
                                 ))}
-                             </div>
+                            </div>
                         )}
 
                         {activeTab === 'stats' && (
-                            <div className="space-y-4">
-                                <div className="bg-gray-900 p-6 rounded-[2.5rem] h-80 border border-gray-800 shadow-inner">
-                                    <h3 className="text-xs font-bold text-gray-500 mb-6 uppercase tracking-widest">Doanh thu tuần</h3>
+                            <div className="space-y-6">
+                                <div className="glass-card p-6 h-64">
+                                    <h3 className="text-xs font-bold text-gray-500 mb-4">DOANH THU 7 NGÀY GẦN NHẤT</h3>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={chartData}>
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} tick={{fill: '#4b5563'}} />
-                                            <Tooltip cursor={{fill: 'transparent'}} contentStyle={{backgroundColor: '#111827', border: 'none', borderRadius: '12px'}} />
-                                            <Bar dataKey="total" fill="#3b82f6" radius={[10, 10, 10, 10]} barSize={20} />
+                                        <BarChart data={history.slice(0, 7).reverse().map(h => ({ name: h.date.split('/')[0], total: h.fee }))}>
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} tick={{fill: '#666'}} />
+                                            <Bar dataKey="total" fill="#3b82f6" radius={[5, 5, 5, 5]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-blue-600 p-6 rounded-3xl shadow-lg shadow-blue-900/20">
-                                        <div className="text-[10px] font-bold uppercase opacity-60">Tổng tháng</div>
-                                        <div className="text-2xl font-black">{history.reduce((a,b)=>a+b.fee,0).toLocaleString()}đ</div>
+                                    <div className="glass-card p-6 bg-blue-600/10 border-blue-900">
+                                        <div className="text-[10px] text-gray-400 font-bold">TỔNG THU</div>
+                                        <div className="text-xl font-black">{history.reduce((a, b) => a + b.fee, 0).toLocaleString()}đ</div>
                                     </div>
-                                    <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800">
-                                        <div className="text-[10px] font-bold uppercase text-gray-500">Tổng đơn</div>
-                                        <div className="text-2xl font-black">{history.length}</div>
+                                    <div className="glass-card p-6">
+                                        <div className="text-[10px] text-gray-400 font-bold">TỔNG ĐƠN</div>
+                                        <div className="text-xl font-black">{history.length}</div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'settings' && (
-                            <div className="bg-gray-900 p-6 rounded-[2.5rem] border border-gray-800 space-y-6">
-                                <h3 className="font-black italic text-blue-500 underline decoration-gray-700">CẤU HÌNH CƯỚC</h3>
-                                {pricing.map((p, idx) => (
-                                    <div key={idx} className="space-y-2 p-4 bg-black rounded-2xl border border-gray-800 relative">
-                                        <div className="text-[10px] font-bold text-blue-500">Mốc {idx === 0 ? "Mở cửa" : "Tiếp theo"} ({p.from} - {p.to} km)</div>
-                                        <input type="number" value={p.price} onChange={e => {
-                                            const newPricing = [...pricing];
-                                            newPricing[idx].price = parseInt(e.target.value);
-                                            setPricing(newPricing);
-                                        }} className="w-full bg-transparent text-xl font-black outline-none border-b border-gray-800 focus:border-blue-500 transition-all" />
-                                        <span className="absolute right-4 bottom-4 text-xs text-gray-500">VNĐ</span>
+                            <div className="glass-card p-6 space-y-6">
+                                <h3 className="font-bold text-blue-500 border-b border-gray-800 pb-2 italic">CÀI ĐẶT MỐC GIÁ</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] text-gray-500 font-bold ml-1 uppercase">Giá 3km đầu (VNĐ)</label>
+                                        <input type="number" value={pricing[0].price} onChange={e => {
+                                            const newP = [...pricing]; newP[0].price = parseInt(e.target.value); setPricing(newP);
+                                        }} className="w-full bg-gray-800 border-none rounded-xl p-4 mt-1 font-black" />
                                     </div>
-                                ))}
-                                <p className="text-[10px] text-center text-gray-600 italic">Mốc 1 áp dụng giá cố định cho quãng đường đầu. Mốc 2 áp dụng đơn giá cho mỗi km cộng thêm.</p>
+                                    <div>
+                                        <label className="text-[10px] text-gray-500 font-bold ml-1 uppercase">Giá km tiếp theo (VNĐ)</label>
+                                        <input type="number" value={pricing[1].price} onChange={e => {
+                                            const newP = [...pricing]; newP[1].price = parseInt(e.target.value); setPricing(newP);
+                                        }} className="w-full bg-gray-800 border-none rounded-xl p-4 mt-1 font-black" />
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </main>
 
-                    {/* Navbar Mobile */}
-                    <nav className="fixed bottom-0 inset-x-0 bg-black/80 backdrop-blur-xl border-t border-gray-800 flex justify-around p-3 z-50">
-                        {['order', 'history', 'stats', 'settings'].map(t => (
-                            <button key={t} onClick={()=>setActiveTab(t)} className={`p-3 rounded-2xl transition-all ${activeTab === t ? 'text-blue-500 bg-blue-500/10' : 'text-gray-600'}`}>
-                                <i data-lucide={t === 'order' ? 'navigation' : t === 'history' ? 'clipboard-list' : t === 'stats' ? 'pie-chart' : 'settings-2'}></i>
-                            </button>
-                        ))}
+                    {/* Bottom Nav */}
+                    <nav className="fixed bottom-0 inset-x-0 bg-black/90 backdrop-blur-md border-t border-gray-900 flex justify-around p-2 z-40">
+                        <button onClick={() => setActiveTab('order')} className={`p-4 flex-1 ${activeTab === 'order' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-motorcycle"></i></button>
+                        <button onClick={() => setActiveTab('history')} className={`p-4 flex-1 ${activeTab === 'history' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-clock-rotate-left"></i></button>
+                        <button onClick={() => setActiveTab('stats')} className={`p-4 flex-1 ${activeTab === 'stats' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-chart-line"></i></button>
+                        <button onClick={() => setActiveTab('settings')} className={`p-4 flex-1 ${activeTab === 'settings' ? 'text-blue-500' : 'text-gray-600'}`}><i className="fa-solid fa-gears"></i></button>
                     </nav>
                 </div>
             );

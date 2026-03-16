@@ -8,74 +8,97 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
     <style>
-        :root { --primary: #3b82f6; --bg: #000000; --card: #161b22; --text: #ffffff; --red: #da3633; }
+        :root { --primary: #00AA55; --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --red: #ff4757; --orange: #ffa502; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding-bottom: 90px; }
         
-        header { padding: 15px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(0,0,0,0.9); backdrop-blur: 10px; z-index: 1000; }
-        .logo { font-weight: 900; color: var(--primary); font-style: italic; }
+        header { padding: 15px 20px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
-        #map { height: 250px; width: 100%; border-radius: 20px; background: #0d1117; margin-bottom: 15px; border: 1px solid #30363d; z-index: 1; }
+        #map { height: 280px; width: 100%; border-radius: 24px; background: #e0e0e0; margin-bottom: -30px; border: 4px solid white; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 1; }
 
-        .card { background: var(--card); border-radius: 25px; padding: 20px; border: 1px solid #30363d; margin-bottom: 15px; }
-        input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 10px; font-size: 16px; }
+        /* App-like Card Design */
+        .main-card { background: var(--card); border-radius: 30px; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; margin-top: 0; border: 1px solid rgba(0,0,0,0.03); }
         
-        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; font-size: 14px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-green { background: #238636; color: white; }
-        .btn-orange { background: #d29922; color: white; }
-        .btn-ghost { background: #21262d; color: #8b949e; }
+        input { background: #f1f3f5; border: 2px solid transparent; color: #2d3436; padding: 16px; border-radius: 18px; width: 100%; margin-bottom: 12px; font-size: 16px; font-weight: 600; transition: 0.3s; }
+        input:focus { border-color: var(--primary); background: white; outline: none; }
+
+        .btn { border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; font-size: 15px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(0,170,85,0.3); }
+        .btn-secondary { background: #e8f5e9; color: var(--primary); }
+        .btn-orange { background: var(--orange); color: white; box-shadow: 0 8px 20px rgba(255,165,2,0.3); }
+        .btn-ghost { background: #f1f3f5; color: #747d8c; }
+        .btn:active { transform: scale(0.96); }
 
         /* Search Results */
-        #search-results { background: #161b22; border: 1px solid #333; border-radius: 12px; position: absolute; width: calc(100% - 40px); z-index: 2000; max-height: 200px; overflow-y: auto; display: none; margin-top: -10px; }
-        .search-item { padding: 12px; border-bottom: 1px solid #333; font-size: 13px; cursor: pointer; }
+        #search-results { background: white; border-radius: 15px; position: absolute; width: calc(100% - 50px); z-index: 2000; max-height: 200px; overflow-y: auto; display: none; margin-top: -10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .search-item { padding: 15px; border-bottom: 1px solid #f1f3f5; font-size: 14px; cursor: pointer; color: #4b4b4b; }
 
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-item { background: var(--card); padding: 12px; border-radius: 18px; border: 1px solid #30363d; text-align: center; }
-        .stat-label { font-size: 9px; color: #8b949e; text-transform: uppercase; margin-bottom: 4px; }
-        .stat-val { font-size: 16px; font-weight: 900; color: var(--primary); }
+        /* Stats & Debts */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .stat-item { background: white; padding: 15px; border-radius: 22px; text-align: center; border: 1px solid rgba(0,0,0,0.03); }
+        .stat-label { font-size: 10px; color: #95a5a6; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+        .stat-val { font-size: 17px; font-weight: 800; color: var(--text); }
 
-        nav { position: fixed; bottom: 0; width: 100%; background: #161b22; display: flex; border-top: 1px solid #30363d; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; padding: 15px; color: #8b949e; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        .nav-item.active { color: var(--primary); border-top: 2px solid var(--primary); }
+        .debt-card { background: white; padding: 20px; border-radius: 22px; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.03); position: relative; }
+        .debt-tag { position: absolute; top: 15px; right: 15px; background: #fff7e6; color: var(--orange); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; }
 
-        .debt-item { background: #21262d; padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid #d29922; }
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 5px 25px 5px; border-top: 1px solid #f1f3f5; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 10px; font-weight: 700; text-transform: uppercase; display: flex; flex-direction: column; gap: 5px; }
+        .nav-item i { font-size: 1.4rem; }
+        .nav-item.active { color: var(--primary); }
+
         .hidden { display: none; }
+        .divider { height: 1px; background: #f1f3f5; margin: 15px 0; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">SHIPPER PRO</div>
-        <div id="today-total" style="font-size: 12px; font-weight: bold; color: #238636;">Hôm nay: 0đ</div>
+        <div class="logo"><i class="fa-solid fa-bolt-lightning"></i> SHIPPER PRO</div>
+        <div id="today-income" style="font-weight: 800; font-size: 14px; background: #e8f5e9; color: var(--primary); padding: 6px 12px; border-radius: 12px;">0đ</div>
     </header>
 
     <div class="container">
         <div id="tab-order" class="tab-content">
             <div id="map"></div>
             
-            <div class="card" style="position: relative;">
+            <div class="main-card">
                 <div id="idle-view">
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="margin:0 0 5px 0; font-size: 18px;">Hôm nay bạn thế nào?</h3>
+                        <p style="margin:0; color: #95a5a6; font-size: 13px;">Nhập tên khách để bắt đầu chuyến đi mới</p>
+                    </div>
                     <input type="text" id="cust-name" placeholder="Tên khách hàng...">
-                    <button class="btn btn-blue" onclick="startOrder()">🚀 Bắt đầu nhận đơn</button>
+                    <button class="btn btn-primary" onclick="startOrder()">
+                        <i class="fa-solid fa-play"></i> BẮT ĐẦU NHẬN ĐƠN
+                    </button>
                 </div>
 
                 <div id="running-view" class="hidden">
-                    <input type="text" id="search-addr" placeholder="Tìm địa chỉ giao..." oninput="searchAddress(this.value)">
-                    <div id="search-results"></div>
-
-                    <div style="text-align: center; margin: 15px 0;">
-                        <h2 id="active-cust" style="margin: 0; font-size: 18px;">Khách lẻ</h2>
-                        <div id="preview-info" style="color: #8b949e; font-size: 12px; margin-top: 5px;">Chạm bản đồ hoặc tìm địa chỉ</div>
-                        <div id="preview-fee" style="font-size: 32px; font-weight: 900; color: var(--primary); margin: 10px 0;">0đ</div>
+                    <div style="position: relative;">
+                        <input type="text" id="search-addr" placeholder="🔍 Nhập địa chỉ giao hàng..." oninput="searchAddress(this.value)">
+                        <div id="search-results"></div>
                     </div>
 
-                    <button class="btn btn-green" id="btn-finish" onclick="completeOrder('cash')" disabled style="opacity: 0.5;">💰 Thu tiền mặt</button>
-                    <button class="btn btn-orange" id="btn-debt" onclick="completeOrder('debt')" disabled style="opacity: 0.5;">📝 Ghi nợ khách</button>
-                    <button class="btn btn-ghost" onclick="cancelOrder()">Hủy đơn</button>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 20px; margin: 15px 0; text-align: center; border: 1px dashed #dee2e6;">
+                        <div id="active-cust" style="font-weight: 800; font-size: 18px; color: var(--text);">Khách lẻ</div>
+                        <div id="preview-info" style="color: #95a5a6; font-size: 12px; margin-top: 5px;">Chưa chọn điểm giao</div>
+                        <div id="preview-fee" style="font-size: 36px; font-weight: 900; color: var(--primary); margin: 8px 0;">0đ</div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-finish" onclick="completeOrder('cash')" disabled style="opacity: 0.5;">
+                        <i class="fa-solid fa-money-bill-wave"></i> THU TIỀN MẶT
+                    </button>
+                    <button class="btn btn-orange" id="btn-debt" onclick="completeOrder('debt')" disabled style="opacity: 0.5;">
+                        <i class="fa-solid fa-pen-to-square"></i> GHI NỢ KHÁCH
+                    </button>
+                    <button class="btn btn-ghost" onclick="cancelOrder()">HỦY CHUYẾN</button>
                 </div>
             </div>
         </div>
@@ -87,39 +110,44 @@
                 <div class="stat-item"><div class="stat-label">Tháng</div><div id="s-month" class="stat-val">0đ</div></div>
                 <div class="stat-item"><div class="stat-label">Năm</div><div id="s-year" class="stat-val">0đ</div></div>
             </div>
-            <div class="card"><canvas id="incomeChart" height="180"></canvas></div>
+            <div style="background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px;">
+                <canvas id="incomeChart" height="180"></canvas>
+            </div>
             <div id="history-list"></div>
         </div>
 
         <div id="tab-debt" class="tab-content hidden">
-            <h3 style="margin-bottom: 15px;">Danh sách ghi nợ</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;">Sổ ghi nợ</h3>
+                <span id="debt-count" style="background: var(--orange); color: white; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 800;">0 đơn</span>
+            </div>
             <div id="debt-list"></div>
         </div>
 
         <div id="tab-settings" class="tab-content hidden">
-            <div class="card">
-                <h3>Cài đặt phí</h3>
+            <div class="main-card">
+                <h3 style="margin-top:0">Cấu hình cước phí</h3>
                 <div id="pricing-list"></div>
-                <button class="btn btn-ghost" onclick="addPriceStep()">+ Thêm mốc</button>
-                <button class="btn btn-blue" onclick="savePricing()">Lưu giá</button>
-                <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-                <button class="btn btn-ghost" style="color: var(--red);" onclick="clearAllData()">Xóa sạch dữ liệu</button>
+                <button class="btn btn-secondary" onclick="addPriceStep()">+ THÊM MỐC MỚI</button>
+                <button class="btn btn-primary" onclick="savePricing()">LƯU CẤU HÌNH</button>
+                <div class="divider"></div>
+                <button class="btn btn-ghost" style="color: var(--red);" onclick="clearAllData()">XÓA TẤT CẢ DỮ LIỆU</button>
             </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="showTab('order', this)">Đơn</div>
-        <div class="nav-item" onclick="showTab('stats', this)">Báo cáo</div>
-        <div class="nav-item" onclick="showTab('debt', this)">Sổ nợ</div>
-        <div class="nav-item" onclick="showTab('settings', this)">Giá</div>
+        <div class="nav-item active" onclick="showTab('order', this)"><i class="fa-solid fa-motorcycle"></i>Đơn</div>
+        <div class="nav-item" onclick="showTab('stats', this)"><i class="fa-solid fa-chart-line"></i>Báo cáo</div>
+        <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-address-book"></i>Sổ nợ</div>
+        <div class="nav-item" onclick="showTab('settings', this)"><i class="fa-solid fa-gear"></i>Giá</div>
     </nav>
 
     <script>
-        let history = JSON.parse(localStorage.getItem('shipper_history') || '[]');
-        let debts = JSON.parse(localStorage.getItem('shipper_debts') || '[]');
-        let pricing = JSON.parse(localStorage.getItem('shipper_pricing') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
-        let current = JSON.parse(localStorage.getItem('shipper_current') || 'null');
+        let history = JSON.parse(localStorage.getItem('v7_hist') || '[]');
+        let debts = JSON.parse(localStorage.getItem('v7_debts') || '[]');
+        let pricing = JSON.parse(localStorage.getItem('v7_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
+        let current = JSON.parse(localStorage.getItem('v7_curr') || 'null');
         let map, mStart, mEnd, myChart;
         let selectedFee = 0, selectedDist = 0;
 
@@ -127,11 +155,11 @@
             initMap();
             if(current) showRunning();
             renderPricing();
-            updateTotalDisplay();
+            updateHeaderIncome();
         };
 
         function initMap() {
-            map = L.map('map').setView([10.7626, 106.6601], 13);
+            map = L.map('map', { zoomControl: false }).setView([10.7626, 106.6601], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             map.on('click', e => { if(current) updateDestination(e.latlng); });
         }
@@ -146,16 +174,16 @@
             if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
         }
 
-        // --- LOGIC VẬN ĐƠN ---
+        // --- VẬN ĐƠN ---
         function startOrder() {
             navigator.geolocation.getCurrentPosition(p => {
                 const pos = [p.coords.latitude, p.coords.longitude];
                 current = { name: document.getElementById('cust-name').value || "Khách lẻ", start: pos, time: new Date().getTime() };
-                localStorage.setItem('shipper_current', JSON.stringify(current));
+                localStorage.setItem('v7_curr', JSON.stringify(current));
                 if(mStart) map.removeLayer(mStart);
                 mStart = L.marker(pos).addTo(map).bindPopup("Điểm nhận").openPopup();
                 showRunning();
-            }, () => alert("Hãy bật GPS"));
+            }, () => alert("Vui lòng bật định vị GPS"));
         }
 
         function showRunning() {
@@ -164,7 +192,7 @@
             document.getElementById('active-cust').innerText = current.name;
             if(current.start) {
                 if(!mStart) mStart = L.marker(current.start).addTo(map);
-                map.setView(current.start, 15);
+                map.setView(current.start, 16);
             }
         }
 
@@ -173,14 +201,14 @@
             const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5`);
             const data = await res.json();
             const box = document.getElementById('search-results');
-            box.innerHTML = data.map(item => `<div class="search-item" onclick="selectAddr(${item.lat}, ${item.lon}, '${item.display_name}')">${item.display_name}</div>`).join('');
+            box.innerHTML = data.map(item => `<div class="search-item" onclick="selectAddr(${item.lat}, ${item.lon}, '${item.display_name}')"><i class="fa-solid fa-location-dot"></i> ${item.display_name}</div>`).join('');
             box.style.display = 'block';
         }
 
         function selectAddr(lat, lon, name) {
             const pos = L.latLng(lat, lon);
             updateDestination(pos);
-            map.setView(pos, 15);
+            map.setView(pos, 16);
             document.getElementById('search-results').style.display = 'none';
             document.getElementById('search-addr').value = name;
         }
@@ -190,7 +218,7 @@
             mEnd = L.marker(latlng).addTo(map);
             selectedDist = (L.latLng(current.start).distanceTo(latlng) / 1000 * 1.2).toFixed(1);
             selectedFee = calculateFee(selectedDist);
-            document.getElementById('preview-info').innerText = `${selectedDist} km`;
+            document.getElementById('preview-info').innerText = `${selectedDist} km từ điểm nhận`;
             document.getElementById('preview-fee').innerText = selectedFee.toLocaleString() + 'đ';
             document.querySelectorAll('#btn-finish, #btn-debt').forEach(b => { b.disabled = false; b.style.opacity = 1; });
         }
@@ -205,14 +233,14 @@
             };
             if(type === 'debt') {
                 debts.unshift(data);
-                localStorage.setItem('shipper_debts', JSON.stringify(debts));
-                alert("Đã ghi vào sổ nợ!");
+                localStorage.setItem('v7_debts', JSON.stringify(debts));
+                alert("Đã lưu vào sổ nợ!");
             } else {
                 history.unshift(data);
-                localStorage.setItem('shipper_history', JSON.stringify(history));
-                alert("Đã hoàn thành & nhận tiền!");
+                localStorage.setItem('v7_hist', JSON.stringify(history));
+                alert("Đã thu tiền mặt!");
             }
-            localStorage.removeItem('shipper_current');
+            localStorage.removeItem('v7_curr');
             location.reload();
         }
 
@@ -222,18 +250,21 @@
             return sorted[sorted.length-1].price;
         }
 
-        // --- QUẢN LÝ NỢ ---
+        // --- SỔ NỢ ---
         function renderDebts() {
             const box = document.getElementById('debt-list');
-            if(debts.length === 0) { box.innerHTML = '<p style="text-align:center;color:#666;margin-top:20px;">Không có nợ.</p>'; return; }
+            document.getElementById('debt-count').innerText = debts.length + " đơn";
+            if(debts.length === 0) { box.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fa-solid fa-folder-open" style="font-size:3rem; color:#dcdde1; margin-bottom:10px;"></i><p style="color:#747d8c;">Không có nợ nào.</p></div>'; return; }
             box.innerHTML = debts.map((d, i) => `
-                <div class="debt-item">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <b>${d.name}</b>
-                        <span style="color:#d29922; font-weight:900;">${d.fee.toLocaleString()}đ</span>
+                <div class="debt-card">
+                    <span class="debt-tag">ĐANG NỢ</span>
+                    <div style="font-weight: 800; font-size: 16px; margin-bottom: 5px;">${d.name}</div>
+                    <div style="color: var(--primary); font-weight: 900; font-size: 18px;">${d.fee.toLocaleString()}đ</div>
+                    <div style="font-size: 11px; color: #95a5a6; margin-top: 5px;">${d.date} • ${d.dist}km</div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-primary" style="padding:10px; font-size:12px; margin-bottom:0;" onclick="payDebt(${i})">ĐÃ THU TIỀN</button>
+                        <button class="btn btn-ghost" style="padding:10px; font-size:12px; margin-bottom:0; color: var(--red);" onclick="deleteDebt(${i})">XÓA</button>
                     </div>
-                    <div style="font-size:11px; color:#8b949e; margin-bottom:10px;">${d.date} • ${d.dist}km</div>
-                    <button class="btn btn-blue" style="padding:8px; font-size:11px;" onclick="payDebt(${i})">Xác nhận đã trả tiền</button>
                 </div>
             `).join('');
         }
@@ -241,22 +272,26 @@
         function payDebt(index) {
             const item = debts.splice(index, 1)[0];
             history.unshift(item);
-            localStorage.setItem('shipper_debts', JSON.stringify(debts));
-            localStorage.setItem('shipper_history', JSON.stringify(history));
-            alert("Đã trả nợ, tiền đã cộng vào doanh thu!");
+            localStorage.setItem('v7_debts', JSON.stringify(debts));
+            localStorage.setItem('v7_hist', JSON.stringify(history));
+            alert("Đã chuyển vào doanh thu!");
             renderDebts();
-            updateTotalDisplay();
+            updateHeaderIncome();
         }
 
-        // --- THỐNG KÊ ---
+        function deleteDebt(index) {
+            if(confirm("Bạn muốn xóa bỏ ghi nợ này? (Sẽ không cộng vào doanh thu)")) {
+                debts.splice(index, 1);
+                localStorage.setItem('v7_debts', JSON.stringify(debts));
+                renderDebts();
+            }
+        }
+
+        // --- BÁO CÁO & GIÁ ---
         function renderStats() {
             const now = new Date();
             const getSum = (arr, filterFn) => arr.filter(filterFn).reduce((a,b) => a + b.fee, 0);
-            
-            // Tính theo tuần (từ Thứ 2)
-            const Monday = new Date(now);
-            Monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
-            Monday.setHours(0,0,0,0);
+            const Monday = new Date(now); Monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1)); Monday.setHours(0,0,0,0);
 
             document.getElementById('s-day').innerText = getSum(history, h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
             document.getElementById('s-week').innerText = getSum(history, h => h.timestamp >= Monday.getTime()).toLocaleString() + 'đ';
@@ -274,40 +309,39 @@
             }
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: labels, datasets: [{ label: '7 ngày', data: data, backgroundColor: '#3b82f6' }] },
-                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#333' } } } }
+                data: { labels: labels, datasets: [{ label: 'Thu nhập', data: data, backgroundColor: '#00AA55', borderRadius: 8 }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
             });
         }
 
         function renderHistory() {
             const box = document.getElementById('history-list');
-            box.innerHTML = '<h4 style="margin:20px 0 10px 0">Đơn đã thu tiền</h4>' + history.slice(0,10).map(h => `
-                <div style="background:#0d1117; padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; border:1px solid #333;">
-                    <div style="font-size:12px;"><b>${h.name}</b><br><span style="color:#666">${h.date}</span></div>
-                    <b style="color:#3b82f6">${h.fee.toLocaleString()}đ</b>
+            box.innerHTML = '<h4 style="margin:20px 0 10px 0;">Lịch sử nhận tiền</h4>' + history.slice(0,10).map(h => `
+                <div style="background:white; padding:15px; border-radius:18px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border: 1px solid rgba(0,0,0,0.02);">
+                    <div><div style="font-weight:700; font-size:14px;">${h.name}</div><div style="color:#95a5a6; font-size:11px;">${h.date}</div></div>
+                    <div style="font-weight:800; color:var(--primary);">${h.fee.toLocaleString()}đ</div>
                 </div>
             `).join('');
         }
 
-        // --- CÀI ĐẶT ---
         function renderPricing() {
             document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `
-                <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <input type="number" value="${p.km}" onchange="pricing[${i}].km=parseFloat(this.value)">
-                    <input type="number" value="${p.price}" onchange="pricing[${i}].price=parseFloat(this.value)">
-                    <button onclick="pricing.splice(${i},1); renderPricing()" style="color:red; background:none; border:none;">X</button>
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <div style="flex:1;"><label style="font-size:10px; color:#95a5a6;">DƯỚI (KM)</label><input type="number" value="${p.km}" onchange="pricing[${i}].km=parseFloat(this.value)"></div>
+                    <div style="flex:2;"><label style="font-size:10px; color:#95a5a6;">GIÁ TIỀN (VNĐ)</label><input type="number" value="${p.price}" onchange="pricing[${i}].price=parseFloat(this.value)"></div>
+                    <button onclick="pricing.splice(${i},1); renderPricing()" style="color:var(--red); background:none; border:none; padding-top:20px;"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             `).join('');
         }
         function addPriceStep() { pricing.push({km:0, price:0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_pricing', JSON.stringify(pricing)); alert("Đã lưu!"); }
-        function updateTotalDisplay() {
+        function savePricing() { localStorage.setItem('v7_price', JSON.stringify(pricing)); alert("Đã lưu bảng giá!"); }
+        function updateHeaderIncome() {
             const today = new Date().toLocaleDateString('vi-VN');
             const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0);
-            document.getElementById('today-total').innerText = `Hôm nay: ${total.toLocaleString()}đ`;
+            document.getElementById('today-income').innerText = `${total.toLocaleString()}đ`;
         }
-        function cancelOrder() { if(confirm("Hủy đơn?")) { localStorage.removeItem('shipper_current'); location.reload(); } }
-        function clearAllData() { if(confirm("Xóa sạch hết?")) { localStorage.clear(); location.reload(); } }
+        function cancelOrder() { if(confirm("Xác nhận hủy chuyến đi này?")) { localStorage.removeItem('v7_curr'); location.reload(); } }
+        function clearAllData() { if(confirm("CẢNH BÁO: Xóa toàn bộ lịch sử, sổ nợ và bảng giá?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>

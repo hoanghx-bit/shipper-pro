@@ -10,148 +10,130 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        :root { --primary: #3b82f6; --bg: #000000; --card: #161b22; --text: #ffffff; }
+        :root { --primary: #3b82f6; --bg: #000000; --card: #161b22; --text: #ffffff; --red: #da3633; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding-bottom: 90px; }
         
-        header { padding: 15px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 1000; }
+        header { padding: 15px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(0,0,0,0.9); backdrop-blur: 10px; z-index: 1000; }
         .logo { font-weight: 900; color: var(--primary); font-style: italic; }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
         #map { height: 250px; width: 100%; border-radius: 20px; background: #0d1117; margin-bottom: 15px; border: 1px solid #30363d; z-index: 1; }
 
-        .card { background: var(--card); border-radius: 25px; padding: 20px; border: 1px solid #30363d; margin-bottom: 15px; position: relative; }
+        .card { background: var(--card); border-radius: 25px; padding: 20px; border: 1px solid #30363d; margin-bottom: 15px; }
         input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 10px; font-size: 16px; }
         
-        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; font-size: 15px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; font-size: 14px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-blue { background: var(--primary); color: white; }
         .btn-green { background: #238636; color: white; }
+        .btn-orange { background: #d29922; color: white; }
         .btn-ghost { background: #21262d; color: #8b949e; }
 
+        /* Search Results */
+        #search-results { background: #161b22; border: 1px solid #333; border-radius: 12px; position: absolute; width: calc(100% - 40px); z-index: 2000; max-height: 200px; overflow-y: auto; display: none; margin-top: -10px; }
+        .search-item { padding: 12px; border-bottom: 1px solid #333; font-size: 13px; cursor: pointer; }
+
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-item { background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid #30363d; text-align: center; }
-        .stat-label { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .stat-val { font-size: 18px; font-weight: 900; color: var(--primary); }
+        .stat-item { background: var(--card); padding: 12px; border-radius: 18px; border: 1px solid #30363d; text-align: center; }
+        .stat-label { font-size: 9px; color: #8b949e; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-val { font-size: 16px; font-weight: 900; color: var(--primary); }
 
         nav { position: fixed; bottom: 0; width: 100%; background: #161b22; display: flex; border-top: 1px solid #30363d; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; padding: 15px; color: #8b949e; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
-        .nav-item.active { color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        .nav-item { flex: 1; text-align: center; padding: 15px; color: #8b949e; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        .nav-item.active { color: var(--primary); border-top: 2px solid var(--primary); }
 
-        .price-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
-        .price-row input { margin-bottom: 0; }
+        .debt-item { background: #21262d; padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid #d29922; }
         .hidden { display: none; }
-        .pulse { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 165, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); } }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">SHIPPER PRO V6</div>
-        <div id="header-status" style="font-size: 11px; color: #238636; font-weight: bold;">● TRỰC TUYẾN</div>
+        <div class="logo">SHIPPER PRO</div>
+        <div id="today-total" style="font-size: 12px; font-weight: bold; color: #238636;">Hôm nay: 0đ</div>
     </header>
 
     <div class="container">
         <div id="tab-order" class="tab-content">
             <div id="map"></div>
             
-            <div class="card" id="main-card">
+            <div class="card" style="position: relative;">
                 <div id="idle-view">
                     <input type="text" id="cust-name" placeholder="Tên khách hàng...">
-                    <p style="font-size: 11px; color: #8b949e; text-align: center; margin-bottom: 15px;">Bấm Nhận đơn tại điểm lấy hàng</p>
-                    <button class="btn btn-blue" onclick="startOrder()">🚀 NHẬN ĐƠN</button>
+                    <button class="btn btn-blue" onclick="startOrder()">🚀 Bắt đầu nhận đơn</button>
                 </div>
 
                 <div id="running-view" class="hidden">
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <div class="status-badge" style="color: orange; font-weight: bold; font-size: 12px;">⚡ ĐANG GIAO HÀNG...</div>
-                        <h2 id="active-cust" style="margin: 5px 0;">Khách lẻ</h2>
-                        <p style="font-size: 11px; color: #8b949e;">Mẹo: Chạm vào bản đồ để chọn điểm giao</p>
-                    </div>
-                    
-                    <div style="background: #0d1117; padding: 15px; border-radius: 15px; border: 1px solid #333; margin-bottom: 15px; text-align: center;">
-                        <div id="preview-dist" style="font-size: 12px; color: #8b949e;">Khoảng cách: 0 km</div>
-                        <div id="preview-fee" style="font-size: 30px; font-weight: 900; color: var(--primary);">0đ</div>
+                    <input type="text" id="search-addr" placeholder="Tìm địa chỉ giao..." oninput="searchAddress(this.value)">
+                    <div id="search-results"></div>
+
+                    <div style="text-align: center; margin: 15px 0;">
+                        <h2 id="active-cust" style="margin: 0; font-size: 18px;">Khách lẻ</h2>
+                        <div id="preview-info" style="color: #8b949e; font-size: 12px; margin-top: 5px;">Chạm bản đồ hoặc tìm địa chỉ</div>
+                        <div id="preview-fee" style="font-size: 32px; font-weight: 900; color: var(--primary); margin: 10px 0;">0đ</div>
                     </div>
 
-                    <button class="btn btn-green pulse" id="btn-finish" onclick="finishOrder()" disabled style="opacity: 0.5;">🏁 GIAO HÀNG (CHỐT TIỀN)</button>
-                    <button class="btn btn-ghost" onclick="cancelOrder()">HỦY ĐƠN</button>
+                    <button class="btn btn-green" id="btn-finish" onclick="completeOrder('cash')" disabled style="opacity: 0.5;">💰 Thu tiền mặt</button>
+                    <button class="btn btn-orange" id="btn-debt" onclick="completeOrder('debt')" disabled style="opacity: 0.5;">📝 Ghi nợ khách</button>
+                    <button class="btn btn-ghost" onclick="cancelOrder()">Hủy đơn</button>
                 </div>
             </div>
         </div>
 
         <div id="tab-stats" class="tab-content hidden">
             <div class="stat-grid">
-                <div class="stat-item"><div class="stat-label">Hôm nay</div><div id="s-day" class="stat-val">0đ</div></div>
-                <div class="stat-item"><div class="stat-label">Tuần này</div><div id="s-week" class="stat-val">0đ</div></div>
-                <div class="stat-item"><div class="stat-label">Tháng này</div><div id="s-month" class="stat-val">0đ</div></div>
-                <div class="stat-item"><div class="stat-label">Tổng năm</div><div id="s-year" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">Ngày</div><div id="s-day" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">Tuần</div><div id="s-week" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">Tháng</div><div id="s-month" class="stat-val">0đ</div></div>
+                <div class="stat-item"><div class="stat-label">Năm</div><div id="s-year" class="stat-val">0đ</div></div>
             </div>
-            
-            <div class="card">
-                <canvas id="incomeChart" height="200"></canvas>
-            </div>
-
+            <div class="card"><canvas id="incomeChart" height="180"></canvas></div>
             <div id="history-list"></div>
+        </div>
+
+        <div id="tab-debt" class="tab-content hidden">
+            <h3 style="margin-bottom: 15px;">Danh sách ghi nợ</h3>
+            <div id="debt-list"></div>
         </div>
 
         <div id="tab-settings" class="tab-content hidden">
             <div class="card">
-                <h3 style="margin-top:0">Cấu hình giá đa mốc</h3>
+                <h3>Cài đặt phí</h3>
                 <div id="pricing-list"></div>
-                <button class="btn btn-ghost" onclick="addPriceStep()" style="margin-top:10px;">+ Thêm mốc km</button>
-                <button class="btn btn-blue" onclick="savePricing()" style="margin-top:10px;">Lưu cài đặt</button>
-                <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
-                <button class="btn btn-ghost" style="color: #da3633;" onclick="clearData()">Xóa dữ liệu</button>
+                <button class="btn btn-ghost" onclick="addPriceStep()">+ Thêm mốc</button>
+                <button class="btn btn-blue" onclick="savePricing()">Lưu giá</button>
+                <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+                <button class="btn btn-ghost" style="color: var(--red);" onclick="clearAllData()">Xóa sạch dữ liệu</button>
             </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="showTab('order', this)">Vận đơn</div>
-        <div class="nav-item" onclick="showTab('stats', this)">Thống kê</div>
-        <div class="nav-item" onclick="showTab('settings', this)">Cài đặt</div>
+        <div class="nav-item active" onclick="showTab('order', this)">Đơn</div>
+        <div class="nav-item" onclick="showTab('stats', this)">Báo cáo</div>
+        <div class="nav-item" onclick="showTab('debt', this)">Sổ nợ</div>
+        <div class="nav-item" onclick="showTab('settings', this)">Giá</div>
     </nav>
 
     <script>
-        let history = JSON.parse(localStorage.getItem('v6_hist') || '[]');
-        let pricing = JSON.parse(localStorage.getItem('v6_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
-        let current = JSON.parse(localStorage.getItem('v6_curr') || 'null');
+        let history = JSON.parse(localStorage.getItem('shipper_history') || '[]');
+        let debts = JSON.parse(localStorage.getItem('shipper_debts') || '[]');
+        let pricing = JSON.parse(localStorage.getItem('shipper_pricing') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
+        let current = JSON.parse(localStorage.getItem('shipper_current') || 'null');
         let map, mStart, mEnd, myChart;
-        let previewFee = 0;
-        let previewDist = 0;
+        let selectedFee = 0, selectedDist = 0;
 
         window.onload = () => {
             initMap();
             if(current) showRunning();
             renderPricing();
-            updateStats();
+            updateTotalDisplay();
         };
 
         function initMap() {
             map = L.map('map').setView([10.7626, 106.6601], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-            map.on('click', function(e) {
-                if(!current) return;
-                
-                // Đánh dấu điểm giao trên bản đồ
-                if(mEnd) map.removeLayer(mEnd);
-                mEnd = L.marker(e.latlng, {icon: L.divIcon({className: 'finish-marker', html: '🏁', iconSize: [25, 25]})}).addTo(map);
-
-                // Tính toán sơ bộ
-                let dist = (L.latLng(current.start).distanceTo(e.latlng) / 1000 * 1.2).toFixed(1);
-                previewDist = dist;
-                previewFee = calculateFee(dist);
-
-                // Cập nhật UI
-                document.getElementById('preview-dist').innerText = `Khoảng cách: ${dist} km`;
-                document.getElementById('preview-fee').innerText = previewFee.toLocaleString() + 'đ';
-                
-                let btnFinish = document.getElementById('btn-finish');
-                btnFinish.disabled = false;
-                btnFinish.style.opacity = "1";
-            });
+            map.on('click', e => { if(current) updateDestination(e.latlng); });
         }
 
         function showTab(tab, el) {
@@ -159,132 +141,173 @@
             document.getElementById('tab-' + tab).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            if(tab === 'stats') { updateStats(); renderHistory(); }
+            if(tab === 'stats') { renderStats(); renderHistory(); }
+            if(tab === 'debt') renderDebts();
             if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
         }
 
+        // --- LOGIC VẬN ĐƠN ---
         function startOrder() {
             navigator.geolocation.getCurrentPosition(p => {
                 const pos = [p.coords.latitude, p.coords.longitude];
-                current = {
-                    name: document.getElementById('cust-name').value || "Khách lẻ",
-                    start: pos,
-                    startTime: new Date().getTime()
-                };
-                localStorage.setItem('v6_curr', JSON.stringify(current));
-                
-                // Vẽ điểm bắt đầu
+                current = { name: document.getElementById('cust-name').value || "Khách lẻ", start: pos, time: new Date().getTime() };
+                localStorage.setItem('shipper_current', JSON.stringify(current));
                 if(mStart) map.removeLayer(mStart);
                 mStart = L.marker(pos).addTo(map).bindPopup("Điểm nhận").openPopup();
-                
                 showRunning();
-            }, () => alert("Lỗi GPS. Hãy bật vị trí."));
+            }, () => alert("Hãy bật GPS"));
         }
 
         function showRunning() {
             document.getElementById('idle-view').classList.add('hidden');
             document.getElementById('running-view').classList.remove('hidden');
             document.getElementById('active-cust').innerText = current.name;
-            if(current.start && !mStart) {
-                mStart = L.marker(current.start).addTo(map);
+            if(current.start) {
+                if(!mStart) mStart = L.marker(current.start).addTo(map);
                 map.setView(current.start, 15);
             }
         }
 
-        function finishOrder() {
-            if(!previewFee) return;
-            const order = {
-                name: current.name,
-                dist: previewDist,
-                fee: previewFee,
-                timestamp: new Date().getTime(),
-                date: new Date().toLocaleDateString('vi-VN')
+        async function searchAddress(query) {
+            if(query.length < 3) return;
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5`);
+            const data = await res.json();
+            const box = document.getElementById('search-results');
+            box.innerHTML = data.map(item => `<div class="search-item" onclick="selectAddr(${item.lat}, ${item.lon}, '${item.display_name}')">${item.display_name}</div>`).join('');
+            box.style.display = 'block';
+        }
+
+        function selectAddr(lat, lon, name) {
+            const pos = L.latLng(lat, lon);
+            updateDestination(pos);
+            map.setView(pos, 15);
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('search-addr').value = name;
+        }
+
+        function updateDestination(latlng) {
+            if(mEnd) map.removeLayer(mEnd);
+            mEnd = L.marker(latlng).addTo(map);
+            selectedDist = (L.latLng(current.start).distanceTo(latlng) / 1000 * 1.2).toFixed(1);
+            selectedFee = calculateFee(selectedDist);
+            document.getElementById('preview-info').innerText = `${selectedDist} km`;
+            document.getElementById('preview-fee').innerText = selectedFee.toLocaleString() + 'đ';
+            document.querySelectorAll('#btn-finish, #btn-debt').forEach(b => { b.disabled = false; b.style.opacity = 1; });
+        }
+
+        function completeOrder(type) {
+            const data = { 
+                name: current.name, 
+                dist: selectedDist, 
+                fee: selectedFee, 
+                date: new Date().toLocaleDateString('vi-VN'), 
+                timestamp: new Date().getTime() 
             };
-            history.unshift(order);
-            localStorage.setItem('v6_hist', JSON.stringify(history));
-            localStorage.removeItem('v6_curr');
-            alert(`Đã thanh toán: ${previewFee.toLocaleString()}đ. Đơn đã lưu!`);
+            if(type === 'debt') {
+                debts.unshift(data);
+                localStorage.setItem('shipper_debts', JSON.stringify(debts));
+                alert("Đã ghi vào sổ nợ!");
+            } else {
+                history.unshift(data);
+                localStorage.setItem('shipper_history', JSON.stringify(history));
+                alert("Đã hoàn thành & nhận tiền!");
+            }
+            localStorage.removeItem('shipper_current');
             location.reload();
         }
 
         function calculateFee(d) {
             let sorted = [...pricing].sort((a,b) => a.km - b.km);
-            for(let p of sorted) {
-                if(d <= p.km) return p.price;
-            }
-            return sorted[sorted.length - 1].price;
+            for(let p of sorted) { if(d <= p.km) return p.price; }
+            return sorted[sorted.length-1].price;
         }
 
-        function updateStats() {
+        // --- QUẢN LÝ NỢ ---
+        function renderDebts() {
+            const box = document.getElementById('debt-list');
+            if(debts.length === 0) { box.innerHTML = '<p style="text-align:center;color:#666;margin-top:20px;">Không có nợ.</p>'; return; }
+            box.innerHTML = debts.map((d, i) => `
+                <div class="debt-item">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <b>${d.name}</b>
+                        <span style="color:#d29922; font-weight:900;">${d.fee.toLocaleString()}đ</span>
+                    </div>
+                    <div style="font-size:11px; color:#8b949e; margin-bottom:10px;">${d.date} • ${d.dist}km</div>
+                    <button class="btn btn-blue" style="padding:8px; font-size:11px;" onclick="payDebt(${i})">Xác nhận đã trả tiền</button>
+                </div>
+            `).join('');
+        }
+
+        function payDebt(index) {
+            const item = debts.splice(index, 1)[0];
+            history.unshift(item);
+            localStorage.setItem('shipper_debts', JSON.stringify(debts));
+            localStorage.setItem('shipper_history', JSON.stringify(history));
+            alert("Đã trả nợ, tiền đã cộng vào doanh thu!");
+            renderDebts();
+            updateTotalDisplay();
+        }
+
+        // --- THỐNG KÊ ---
+        function renderStats() {
             const now = new Date();
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay()); // Tính từ Chủ Nhật
-            startOfWeek.setHours(0,0,0,0);
-
-            const getSum = (filterFn) => history.filter(filterFn).reduce((a,b) => a + b.fee, 0);
-
-            document.getElementById('s-day').innerText = getSum(h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
-            document.getElementById('s-week').innerText = getSum(h => h.timestamp >= startOfWeek.getTime()).toLocaleString() + 'đ';
-            document.getElementById('s-month').innerText = getSum(h => new Date(h.timestamp).getMonth() === now.getMonth()).toLocaleString() + 'đ';
-            document.getElementById('s-year').innerText = getSum(h => new Date(h.timestamp).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
+            const getSum = (arr, filterFn) => arr.filter(filterFn).reduce((a,b) => a + b.fee, 0);
             
-            renderChart();
-        }
+            // Tính theo tuần (từ Thứ 2)
+            const Monday = new Date(now);
+            Monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+            Monday.setHours(0,0,0,0);
 
-        function renderChart() {
+            document.getElementById('s-day').innerText = getSum(history, h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
+            document.getElementById('s-week').innerText = getSum(history, h => h.timestamp >= Monday.getTime()).toLocaleString() + 'đ';
+            document.getElementById('s-month').innerText = getSum(history, h => new Date(h.timestamp).getMonth() === now.getMonth()).toLocaleString() + 'đ';
+            document.getElementById('s-year').innerText = getSum(history, h => new Date(h.timestamp).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
+            
             const ctx = document.getElementById('incomeChart').getContext('2d');
             if(myChart) myChart.destroy();
-            
-            let labels = [];
-            let data = [];
+            let labels = [], data = [];
             for(let i=6; i>=0; i--) {
                 let d = new Date(); d.setDate(d.getDate() - i);
                 let dStr = d.toLocaleDateString('vi-VN');
                 labels.push(dStr.split('/')[0] + '/' + dStr.split('/')[1]);
-                data.push(history.filter(h => h.date === dStr).reduce((a,b) => a + b.fee, 0));
+                data.push(getSum(history, h => h.date === dStr));
             }
-
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{ label: 'Thu nhập 7 ngày', data: data, backgroundColor: '#3b82f6', borderRadius: 5 }]
-                },
-                options: { 
-                    responsive: true,
-                    scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { grid: { display: false } } },
-                    plugins: { legend: { display: false } }
-                }
+                data: { labels: labels, datasets: [{ label: '7 ngày', data: data, backgroundColor: '#3b82f6' }] },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#333' } } } }
             });
         }
 
         function renderHistory() {
-            const container = document.getElementById('history-list');
-            container.innerHTML = '<h3 style="margin: 20px 0 10px 0">Đơn hàng gần đây</h3>' + history.slice(0,10).map(h => `
-                <div style="background:#161b22; padding:15px; border-radius:18px; margin-bottom:10px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-                    <div><b style="font-size:14px">${h.name}</b><br><small style="color:#666">${h.date} - ${h.dist}km</small></div>
-                    <div style="color:#3b82f6; font-weight:900">${h.fee.toLocaleString()}đ</div>
+            const box = document.getElementById('history-list');
+            box.innerHTML = '<h4 style="margin:20px 0 10px 0">Đơn đã thu tiền</h4>' + history.slice(0,10).map(h => `
+                <div style="background:#0d1117; padding:12px; border-radius:12px; margin-bottom:8px; display:flex; justify-content:space-between; border:1px solid #333;">
+                    <div style="font-size:12px;"><b>${h.name}</b><br><span style="color:#666">${h.date}</span></div>
+                    <b style="color:#3b82f6">${h.fee.toLocaleString()}đ</b>
                 </div>
             `).join('');
         }
 
+        // --- CÀI ĐẶT ---
         function renderPricing() {
-            const list = document.getElementById('pricing-list');
-            list.innerHTML = pricing.map((p, i) => `
-                <div class="price-row">
-                    <input type="number" placeholder="Dưới...km" value="${p.km}" onchange="updatePriceVal(${i}, 'km', this.value)">
-                    <input type="number" placeholder="Giá tiền" value="${p.price}" onchange="updatePriceVal(${i}, 'price', this.value)">
-                    <button onclick="removePriceStep(${i})" style="background:none; border:none; color:#da3633; font-weight:bold; padding:10px;">X</button>
+            document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input type="number" value="${p.km}" onchange="pricing[${i}].km=parseFloat(this.value)">
+                    <input type="number" value="${p.price}" onchange="pricing[${i}].price=parseFloat(this.value)">
+                    <button onclick="pricing.splice(${i},1); renderPricing()" style="color:red; background:none; border:none;">X</button>
                 </div>
             `).join('');
         }
-
-        function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
-        function removePriceStep(i) { pricing.splice(i, 1); renderPricing(); }
-        function updatePriceVal(i, key, val) { pricing[i][key] = parseFloat(val); }
-        function savePricing() { localStorage.setItem('v6_price', JSON.stringify(pricing)); alert("Đã lưu giá!"); }
-        function cancelOrder() { if(confirm("Hủy đơn này?")) { localStorage.removeItem('v6_curr'); location.reload(); } }
-        function clearData() { if(confirm("Xóa sạch toàn bộ dữ liệu đơn hàng và cài đặt?")) { localStorage.clear(); location.reload(); } }
+        function addPriceStep() { pricing.push({km:0, price:0}); renderPricing(); }
+        function savePricing() { localStorage.setItem('shipper_pricing', JSON.stringify(pricing)); alert("Đã lưu!"); }
+        function updateTotalDisplay() {
+            const today = new Date().toLocaleDateString('vi-VN');
+            const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0);
+            document.getElementById('today-total').innerText = `Hôm nay: ${total.toLocaleString()}đ`;
+        }
+        function cancelOrder() { if(confirm("Hủy đơn?")) { localStorage.removeItem('shipper_current'); location.reload(); } }
+        function clearAllData() { if(confirm("Xóa sạch hết?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>

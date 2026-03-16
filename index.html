@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO</title>
+    <title>SHIPPER PRO V17</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -54,7 +54,7 @@
         .nav-item i { font-size: 1.5rem; }
 
         .hidden { display: none; }
-        .loading-text { font-size: 12px; color: var(--primary); font-weight: 800; }
+        .editable-fee { border-bottom: 2px dashed var(--primary); background: #fffbe6; padding: 2px 10px; border-radius: 10px; color: var(--primary); width: 120px; text-align: center; }
     </style>
 </head>
 <body>
@@ -79,6 +79,7 @@
             <div class="main-card">
                 <div id="idle-view">
                     <input type="text" id="cust-name" placeholder="Tên khách hàng...">
+                    <input type="number" id="cod-amount" placeholder="Tiền COD hàng (nếu có)..." style="background: #fff0f0;">
                     <button class="btn btn-primary" onclick="startOrder()"><i class="fa-solid fa-motorcycle"></i> BẮT ĐẦU NHẬN ĐƠN</button>
                 </div>
 
@@ -88,8 +89,18 @@
                             <b id="active-cust">Khách</b>
                             <span id="job-status" style="color:var(--orange); font-size:12px; font-weight:800;">ĐANG GIAO</span>
                         </div>
-                        <div id="live-info" style="font-size:12px; color:#95a5a6; margin-top:5px;">Chạm bản đồ để xem trước dự kiến...</div>
-                        <div id="live-fee" style="font-size:32px; font-weight:900; color:var(--primary); margin-top: 5px;">0đ</div>
+                        <div id="live-info" style="font-size:12px; color:#95a5a6; margin-top:5px;">Chạm bản đồ xem dự kiến...</div>
+                        
+                        <div style="margin-top:10px;">
+                            <span style="font-size:11px; font-weight:700; color:#95a5a6;">TIỀN SHIP:</span><br>
+                            <input type="number" id="live-fee-input" class="editable-fee" value="0" style="font-size:28px; font-weight:900; border:none; margin:0;" oninput="updateTotalDisplay()">
+                            <span style="font-size:20px; font-weight:900; color:var(--primary);">đ</span>
+                        </div>
+                        
+                        <div id="cod-display" style="margin-top:5px; padding-top:5px; border-top: 1px dashed #ddd; display:none;">
+                            <span style="font-size:11px; font-weight:700; color:var(--red);">CẦN THU KHÁCH (SHIP + COD):</span><br>
+                            <b id="total-collect" style="font-size:18px; color:var(--red);">0đ</b>
+                        </div>
                     </div>
 
                     <div id="pre-arrival-actions">
@@ -97,13 +108,13 @@
                     </div>
 
                     <div id="post-arrival-actions" class="hidden">
-                        <button class="btn btn-green" onclick="finalizeOrder('cash')"><i class="fa-solid fa-check"></i> HOÀN THÀNH - THU TIỀN</button>
-                        <button class="btn btn-orange" onclick="finalizeOrder('debt')"><i class="fa-solid fa-user-clock"></i> GHI NỢ KHÁCH</button>
+                        <button class="btn btn-green" onclick="finalizeOrder('cash')"><i class="fa-solid fa-check"></i> HOÀN THÀNH</button>
+                        <button class="btn btn-orange" onclick="finalizeOrder('debt')"><i class="fa-solid fa-user-clock"></i> GHI NỢ</button>
                     </div>
                     
                     <div style="display:flex; gap:10px;">
                         <button class="btn btn-ghost" style="flex:1" onclick="openGoogleMaps()"><i class="fa-solid fa-diamond-turn-right"></i> DẪN ĐƯỜNG</button>
-                        <button class="btn btn-ghost" style="flex:1; color:var(--red)" onclick="location.reload()">HỦY ĐƠN</button>
+                        <button class="btn btn-ghost" style="flex:1; color:var(--red)" onclick="location.reload()">HỦY</button>
                     </div>
                 </div>
             </div>
@@ -126,10 +137,10 @@
 
         <div id="tab-settings" class="tab-content hidden">
             <div class="main-card">
-                <h3>Cài đặt giá</h3>
+                <h3>Cấu hình giá</h3>
                 <div id="pricing-list"></div>
                 <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC</button>
-                <button class="btn btn-primary" onclick="savePricing()">LƯU CÀI ĐẶT</button>
+                <button class="btn btn-primary" onclick="savePricing()">LƯU LẠI</button>
             </div>
         </div>
     </div>
@@ -146,13 +157,9 @@
         let debts = JSON.parse(localStorage.getItem('shipper_debts') || '[]');
         let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
         let orderActive = null;
-        let map, mStart, mEnd, routeLine, finalDist, finalFee, refLatLng;
+        let map, mStart, mEnd, routeLine, finalDist, refLatLng;
 
-        window.onload = () => {
-            initMap();
-            updateHeader();
-            renderPricing();
-        };
+        window.onload = () => { initMap(); updateHeader(); renderPricing(); };
 
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([10.7626, 106.6601], 13);
@@ -163,18 +170,30 @@
         function startOrder() {
             navigator.geolocation.getCurrentPosition(p => {
                 orderActive = { 
-                    name: document.getElementById('cust-name').value || "Khách lẻ", 
+                    name: document.getElementById('cust-name').value || "Khách lẻ",
+                    cod: Number(document.getElementById('cod-amount').value) || 0,
                     pickup: [p.coords.latitude, p.coords.longitude] 
                 };
                 document.getElementById('idle-view').classList.add('hidden');
                 document.getElementById('running-view').classList.remove('hidden');
                 document.getElementById('active-cust').innerText = orderActive.name;
+                
+                if(orderActive.cod > 0) {
+                    document.getElementById('cod-display').style.display = 'block';
+                    updateTotalDisplay();
+                }
+
                 mStart = L.circleMarker(orderActive.pickup, {color: '#00AA55', radius: 8, fillOpacity: 0.8}).addTo(map);
                 map.setView(orderActive.pickup, 16);
             }, () => alert("Vui lòng bật định vị!"));
         }
 
-        // CHỨC NĂNG CHẠM BẢN ĐỒ: HIỂN THỊ DỰ KIẾN KM VÀ TIỀN
+        function updateTotalDisplay() {
+            let shipFee = Number(document.getElementById('live-fee-input').value) || 0;
+            let totalCollect = shipFee + (orderActive ? orderActive.cod : 0);
+            document.getElementById('total-collect').innerText = totalCollect.toLocaleString() + 'đ';
+        }
+
         async function previewRoute(latlng) {
             refLatLng = latlng;
             const url = `https://router.project-osrm.org/route/v1/driving/${orderActive.pickup[1]},${orderActive.pickup[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
@@ -186,18 +205,16 @@
                     if(mEnd) map.removeLayer(mEnd);
                     routeLine = L.geoJSON(data.routes[0].geometry, {style: {color: '#4285F4', weight: 4, dashArray: '5, 10'}}).addTo(map);
                     mEnd = L.marker(latlng).addTo(map);
-                    
                     let d = (data.routes[0].distance / 1000).toFixed(1);
-                    let f = calculateFee(d);
                     document.getElementById('live-info').innerText = `Dự kiến: ${d} km`;
-                    document.getElementById('live-fee').innerText = f.toLocaleString() + 'đ';
+                    document.getElementById('live-fee-input').value = calculateFee(d);
+                    updateTotalDisplay();
                 }
             } catch(e) {}
         }
 
-        // CHỐT GPS THỰC TẾ KHI ĐẾN NƠI
         function captureArrivalGPS() {
-            document.getElementById('btn-arrive').innerHTML = '<span class="loading-text">ĐANG CHỐT GPS...</span>';
+            document.getElementById('btn-arrive').innerHTML = 'ĐANG CHỐT GPS...';
             navigator.geolocation.getCurrentPosition(async (p) => {
                 const dropoff = [p.coords.latitude, p.coords.longitude];
                 const url = `https://router.project-osrm.org/route/v1/driving/${orderActive.pickup[1]},${orderActive.pickup[0]};${dropoff[1]},${dropoff[0]}?overview=full&geometries=geojson`;
@@ -205,25 +222,19 @@
                     const res = await fetch(url);
                     const data = await res.json();
                     if(data.code === 'Ok') {
-                        const r = data.routes[0];
-                        finalDist = (r.distance / 1000).toFixed(1);
-                        finalFee = calculateFee(finalDist);
+                        finalDist = (data.routes[0].distance / 1000).toFixed(1);
+                        document.getElementById('live-fee-input').value = calculateFee(finalDist);
+                        updateTotalDisplay();
                         
-                        if(routeLine) map.removeLayer(routeLine);
-                        if(mEnd) map.removeLayer(mEnd);
-                        routeLine = L.geoJSON(r.geometry, {style: {color: '#00AA55', weight: 6}}).addTo(map);
-                        mEnd = L.marker(dropoff).addTo(map);
-                        map.fitBounds(routeLine.getBounds(), {padding: [30,30]});
-
                         document.getElementById('job-status').innerText = "ĐÃ ĐẾN NƠI";
-                        document.getElementById('job-status').style.color = "var(--primary)";
-                        document.getElementById('live-info').innerText = `Thực tế: ${finalDist} km`;
-                        document.getElementById('live-fee').innerText = finalFee.toLocaleString() + 'đ';
-                        
+                        document.getElementById('live-info').innerText = `Thực tế: ${finalDist} km (Có thể sửa tiền phí bên dưới)`;
                         document.getElementById('pre-arrival-actions').classList.add('hidden');
                         document.getElementById('post-arrival-actions').classList.remove('hidden');
+                        
+                        if(routeLine) map.removeLayer(routeLine);
+                        routeLine = L.geoJSON(data.routes[0].geometry, {style: {color: '#00AA55', weight: 6}}).addTo(map);
                     }
-                } catch(e) { alert("Lỗi tính toán!"); }
+                } catch(e) { alert("Lỗi!"); }
             });
         }
 
@@ -234,49 +245,14 @@
         }
 
         function finalizeOrder(type) {
-            const item = { id: Date.now(), name: orderActive.name, fee: finalFee, dist: finalDist, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
+            let finalFee = Number(document.getElementById('live-fee-input').value);
+            const item = { id: Date.now(), name: orderActive.name, fee: finalFee, cod: orderActive.cod, dist: finalDist, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
             if(type === 'debt') { debts.unshift(item); localStorage.setItem('shipper_debts', JSON.stringify(debts)); }
             else { history.unshift(item); localStorage.setItem('shipper_hist', JSON.stringify(history)); }
             location.reload();
         }
 
-        // TAB BÁO CÁO & XÓA ĐƠN
-        function renderStats() {
-            const now = new Date();
-            const getSum = (arr, fn) => arr.filter(fn).reduce((a,b) => a + b.fee, 0);
-            document.getElementById('s-day').innerText = getSum(history, h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
-            document.getElementById('s-week').innerText = getSum(history, h => h.ts > (Date.now() - 7*86400000)).toLocaleString() + 'đ';
-            document.getElementById('s-month').innerText = getSum(history, h => new Date(h.ts).getMonth() === now.getMonth()).toLocaleString() + 'đ';
-            document.getElementById('s-year').innerText = getSum(history, h => new Date(h.ts).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
-            document.getElementById('history-list').innerHTML = history.map((h, i) => `<div class="list-item"><div><b>${h.name}</b><br><small>${h.date} - ${h.dist}km</small></div><div style="text-align:right"><b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br><i class="fa-solid fa-trash" style="color:var(--red); font-size:12px; padding:5px" onclick="deleteHistory(${i})"></i></div></div>`).join('');
-        }
-
-        function deleteHistory(i) { if(confirm("Xóa đơn này khỏi lịch sử?")) { history.splice(i,1); localStorage.setItem('shipper_hist', JSON.stringify(history)); renderStats(); updateHeader(); } }
-
-        // TAB SỔ NỢ: CHẠM ĐỂ THANH TOÁN
-        function renderDebts() {
-            document.getElementById('debt-list').innerHTML = debts.length ? debts.map((d, i) => `
-                <div class="list-item" onclick="collectDebt(${i})">
-                    <div><b>${d.name}</b><br><small>${d.date} - ${d.dist}km</small></div>
-                    <div style="text-align:right">
-                        <b style="color:var(--orange)">${d.fee.toLocaleString()}đ</b><br>
-                        <small style="color:var(--blue)">Bấm để thu tiền</small>
-                    </div>
-                </div>
-            `).join('') : '<p style="text-align:center;color:#95a5a6">Không có nợ nào</p>';
-        }
-
-        function collectDebt(i) {
-            if(confirm(`Xác nhận khách ${debts[i].name} đã trả ${debts[i].fee.toLocaleString()}đ?`)) {
-                let d = debts.splice(i, 1)[0];
-                history.unshift(d); // Chuyển vào lịch sử thu nhập
-                localStorage.setItem('shipper_debts', JSON.stringify(debts));
-                localStorage.setItem('shipper_hist', JSON.stringify(history));
-                renderDebts(); updateHeader();
-            }
-        }
-
-        // CÀI ĐẶT GIÁ & TAB
+        // CÁC HÀM PHỤ TRỢ GIỮ NGUYÊN
         function showTab(tab, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
@@ -287,11 +263,24 @@
             if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
         }
 
+        function renderStats() {
+            const now = new Date();
+            const getSum = (arr, fn) => arr.filter(fn).reduce((a,b) => a + b.fee, 0);
+            document.getElementById('s-day').innerText = getSum(history, h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
+            document.getElementById('s-week').innerText = getSum(history, h => h.ts > (Date.now() - 7*86400000)).toLocaleString() + 'đ';
+            document.getElementById('s-month').innerText = getSum(history, h => new Date(h.ts).getMonth() === now.getMonth()).toLocaleString() + 'đ';
+            document.getElementById('s-year').innerText = getSum(history, h => new Date(h.ts).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
+            document.getElementById('history-list').innerHTML = history.map((h, i) => `<div class="list-item"><div><b>${h.name}</b><br><small>${h.date} - ${h.dist}km</small></div><div style="text-align:right"><b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br><i class="fa-solid fa-trash" style="color:var(--red); font-size:12px; padding:5px" onclick="deleteHistory(${i})"></i></div></div>`).join('');
+        }
+
+        function deleteHistory(i) { if(confirm("Xóa đơn?")) { history.splice(i,1); localStorage.setItem('shipper_hist', JSON.stringify(history)); renderStats(); updateHeader(); } }
+        function renderDebts() { document.getElementById('debt-list').innerHTML = debts.length ? debts.map((d, i) => `<div class="list-item" onclick="collectDebt(${i})"><div><b>${d.name}</b><br><small>${d.date}</small></div><div style="text-align:right"><b style="color:var(--orange)">${(d.fee + d.cod).toLocaleString()}đ</b><br><small>Ship:${d.fee} + COD:${d.cod}</small></div></div>`).join('') : '<p style="text-align:center;color:#95a5a6">Không có nợ</p>'; }
+        function collectDebt(i) { if(confirm("Đã thu tiền nợ?")) { let d = debts.splice(i, 1)[0]; history.unshift(d); localStorage.setItem('shipper_debts', JSON.stringify(debts)); localStorage.setItem('shipper_hist', JSON.stringify(history)); renderDebts(); updateHeader(); } }
         function renderPricing() { document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="number" style="flex:1" value="${p.km}" onchange="pricing[${i}].km=Number(this.value)"><input type="number" style="flex:2" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)"><button onclick="pricing.splice(${i},1); renderPricing()" style="border:none; background:none; color:var(--red)"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
         function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu giá mới!"); }
+        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
         function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
-        function openGoogleMaps() { if(refLatLng) window.open(`https://www.google.com/maps/dir/?api=1&origin=${orderActive.pickup[0]},${orderActive.pickup[1]}&destination=${refLatLng.lat},${refLatLng.lng}&travelmode=motorcycle`); }
+        function openGoogleMaps() { if(refLatLng) window.open(`http://googleusercontent.com/maps.google.com/4{orderActive.pickup[0]},${orderActive.pickup[1]}&destination=${refLatLng.lat},${refLatLng.lng}&travelmode=motorcycle`); }
     </script>
 </body>
 </html>

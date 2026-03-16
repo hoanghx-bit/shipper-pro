@@ -18,8 +18,8 @@
 
     <style>
         :root { --primary: #00AA55; --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --red: #ff4757; --orange: #ffa502; --blue: #4285F4; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; overflow-x: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
         
         header { padding: 10px 20px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo-box { display: flex; align-items: center; gap: 10px; }
@@ -32,7 +32,7 @@
         .main-card { background: var(--card); border-radius: 30px; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; border: 1px solid rgba(0,0,0,0.03); }
         
         input { background: #f1f3f5; border: 2px solid transparent; padding: 16px; border-radius: 18px; width: 100%; margin-bottom: 12px; font-size: 16px; font-weight: 600; }
-        input:focus { border-color: var(--primary); background: white; }
+        input:focus { border-color: var(--primary); background: white; outline: none; }
 
         .btn { border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; text-transform: uppercase; }
         .btn-primary { background: var(--primary); color: white; }
@@ -46,7 +46,7 @@
         .stat-label { font-size: 11px; color: #95a5a6; font-weight: 700; }
         .stat-val { font-size: 18px; font-weight: 800; color: var(--primary); }
 
-        .list-item { background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .list-item { background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
         nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 5px 25px; border-top: 1px solid #f1f3f5; z-index: 1000; }
         .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; gap: 5px; }
@@ -54,9 +54,12 @@
         .nav-item i { font-size: 1.5rem; }
 
         .hidden { display: none; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body>
+
+    <div id="loading-overlay" class="hidden">ĐANG TÍNH TIỀN...</div>
 
     <header>
         <div class="logo-box">
@@ -79,26 +82,28 @@
                 <div id="idle-view">
                     <input type="text" id="cust-name" placeholder="Tên khách hàng...">
                     <button class="btn btn-primary" onclick="startOrder()"><i class="fa-solid fa-motorcycle"></i> BẮT ĐẦU NHẬN ĐƠN</button>
-                    <p style="font-size: 12px; color: #95a5a6; text-align: center; margin: 0;">Vị trí hiện tại sẽ được lưu làm điểm nhận hàng.</p>
                 </div>
 
                 <div id="running-view" class="hidden">
                     <div style="background:#f8f9fa; padding:15px; border-radius:20px; margin-bottom:15px;">
                         <div style="display:flex; justify-content:space-between;">
                             <b id="active-cust">Khách</b>
-                            <span id="job-status" style="color:var(--orange); font-size:12px; font-weight:800;">ĐANG DI CHUYỂN</span>
+                            <span id="job-status" style="color:var(--orange); font-size:12px; font-weight:800;">ĐANG GIAO</span>
                         </div>
-                        <div id="live-info" style="font-size:12px; color:#95a5a6; margin-top:5px;">Chạm bản đồ tại điểm giao...</div>
-                        <div id="live-fee" style="font-size:30px; font-weight:900; color:var(--primary); margin-top: 5px;">0đ</div>
+                        <div id="live-info" style="font-size:12px; color:#95a5a6; margin-top:5px;">GPS đang theo dõi vị trí của bạn...</div>
+                        <div id="live-fee" style="font-size:32px; font-weight:900; color:var(--primary); margin-top: 5px;">0đ</div>
                     </div>
 
-                    <button class="btn btn-blue" id="btn-arrive" onclick="arriveAtDestination()"><i class="fa-solid fa-location-dot"></i> TÔI ĐÃ ĐẾN NƠI</button>
-                    <button class="btn btn-green hidden" id="btn-finish" onclick="finalizeOrder('cash')"><i class="fa-solid fa-check-double"></i> XÁC NHẬN HOÀN THÀNH</button>
-                    <button class="btn btn-orange hidden" id="btn-debt" onclick="finalizeOrder('debt')"><i class="fa-solid fa-user-clock"></i> KHÁCH NỢ TIỀN</button>
+                    <button class="btn btn-blue" id="btn-arrive" onclick="calculateFinalArrival()"><i class="fa-solid fa-location-crosshairs"></i> TÔI ĐÃ ĐẾN NƠI</button>
                     
+                    <div id="finish-actions" class="hidden">
+                        <button class="btn btn-green" onclick="finalizeOrder('cash')"><i class="fa-solid fa-check"></i> HOÀN THÀNH - THU TIỀN</button>
+                        <button class="btn btn-orange" onclick="finalizeOrder('debt')"><i class="fa-solid fa-user-clock"></i> KHÁCH NỢ TIỀN</button>
+                    </div>
+
                     <div style="display:flex; gap:10px;">
-                        <button class="btn btn-ghost" style="flex:1" onclick="openGoogleMaps()"><i class="fa-solid fa-map"></i> MAPS</button>
-                        <button class="btn btn-ghost" style="flex:1; color:var(--red)" onclick="location.reload()">HỦY</button>
+                        <button class="btn btn-ghost" style="flex:1" onclick="openGoogleMaps()"><i class="fa-solid fa-map"></i> CHỈ ĐƯỜNG</button>
+                        <button class="btn btn-ghost" style="flex:1; color:var(--red)" onclick="location.reload()">HỦY ĐƠN</button>
                     </div>
                 </div>
             </div>
@@ -121,10 +126,10 @@
 
         <div id="tab-settings" class="tab-content hidden">
             <div class="main-card">
-                <h3>Cài đặt giá</h3>
+                <h3>Cấu hình phí</h3>
                 <div id="pricing-list"></div>
-                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC KM</button>
-                <button class="btn btn-primary" onclick="savePricing()">LƯU CÀI ĐẶT</button>
+                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC</button>
+                <button class="btn btn-primary" onclick="savePricing()">LƯU LẠI</button>
             </div>
         </div>
     </div>
@@ -141,7 +146,7 @@
         let debts = JSON.parse(localStorage.getItem('shipper_debts') || '[]');
         let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
         let orderActive = null;
-        let map, mStart, mEnd, routeLine, destLatLng, calculatedDist, calculatedFee;
+        let map, mStart, mEnd, routeLine, finalDist, finalFee;
 
         window.onload = () => {
             initMap();
@@ -152,7 +157,8 @@
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([10.7626, 106.6601], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            map.on('click', e => { if(orderActive) previewPoint(e.latlng); });
+            // Vẫn cho phép chạm để chỉ đường tham khảo
+            map.on('click', e => { if(orderActive) previewRoute(e.latlng); });
         }
 
         function startOrder() {
@@ -168,33 +174,59 @@
                 if(mStart) map.removeLayer(mStart);
                 mStart = L.circleMarker(orderActive.pickup, {color: '#00AA55', radius: 8, fillOpacity: 0.8}).addTo(map);
                 map.setView(orderActive.pickup, 16);
-            }, () => alert("Vui lòng bật định vị!"));
+            }, () => alert("Vui lòng cho phép truy cập GPS để nhận đơn!"));
         }
 
-        async function previewPoint(latlng) {
-            destLatLng = latlng;
-            const url = `https://router.project-osrm.org/route/v1/driving/${orderActive.pickup[1]},${orderActive.pickup[1] === undefined ? orderActive.pickup.lng : orderActive.pickup[1]},${orderActive.pickup[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
-            // Sửa lỗi tham chiếu tọa độ OSRM:
-            const fixUrl = `https://router.project-osrm.org/route/v1/driving/${orderActive.pickup[1]},${orderActive.pickup[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
-            
+        async function previewRoute(latlng) {
+            const url = `https://router.project-osrm.org/route/v1/driving/${orderActive.pickup[1]},${orderActive.pickup[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
             try {
-                const res = await fetch(fixUrl);
+                const res = await fetch(url);
                 const data = await res.json();
                 if(data.code === 'Ok') {
-                    const r = data.routes[0];
-                    calculatedDist = (r.distance / 1000).toFixed(1);
-                    calculatedFee = calculateFee(calculatedDist);
-                    
                     if(routeLine) map.removeLayer(routeLine);
                     if(mEnd) map.removeLayer(mEnd);
-                    
-                    routeLine = L.geoJSON(r.geometry, {style: {color: '#4285F4', weight: 5, dashArray: '5, 10'}}).addTo(map);
+                    routeLine = L.geoJSON(data.routes[0].geometry, {style: {color: '#4285F4', weight: 4, dashArray: '5, 10'}}).addTo(map);
                     mEnd = L.marker(latlng).addTo(map);
-                    
-                    document.getElementById('live-info').innerText = `Dự kiến: ${calculatedDist} km`;
-                    document.getElementById('live-fee').innerText = calculatedFee.toLocaleString() + 'đ';
                 }
             } catch(e) {}
+        }
+
+        // --- CẢI TIẾN QUAN TRỌNG: TÍNH TIỀN KHI BẤM "ĐẾN NƠI" ---
+        function calculateFinalArrival() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            
+            navigator.geolocation.getCurrentPosition(async (p) => {
+                const dropoff = [p.coords.latitude, p.coords.longitude];
+                const url = `https://router.project-osrm.org/route/v1/driving/${orderActive.pickup[1]},${orderActive.pickup[0]};${dropoff[1]},${dropoff[0]}?overview=full&geometries=geojson`;
+                
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if(data.code === 'Ok') {
+                        const r = data.routes[0];
+                        finalDist = (r.distance / 1000).toFixed(1);
+                        finalFee = calculateFee(finalDist);
+                        
+                        // Cập nhật giao diện
+                        if(routeLine) map.removeLayer(routeLine);
+                        if(mEnd) map.removeLayer(mEnd);
+                        routeLine = L.geoJSON(r.geometry, {style: {color: '#00AA55', weight: 6}}).addTo(map);
+                        mEnd = L.marker(dropoff).addTo(map);
+                        map.fitBounds(routeLine.getBounds(), {padding: [30,30]});
+
+                        document.getElementById('job-status').innerText = "ĐÃ ĐẾN NƠI";
+                        document.getElementById('live-info').innerText = `Khoảng cách thực tế: ${finalDist} km`;
+                        document.getElementById('live-fee').innerText = finalFee.toLocaleString() + 'đ';
+                        
+                        document.getElementById('btn-arrive').classList.add('hidden');
+                        document.getElementById('finish-actions').classList.remove('hidden');
+                    }
+                } catch(e) { alert("Lỗi tính toán lộ trình!"); }
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }, () => {
+                alert("Không lấy được vị trí hiện tại!");
+                document.getElementById('loading-overlay').classList.add('hidden');
+            });
         }
 
         function calculateFee(d) {
@@ -203,42 +235,14 @@
             return s[s.length-1].price;
         }
 
-        // CHỨC NĂNG CHỐT TIỀN KHI ĐẾN NƠI
-        function arriveAtDestination() {
-            if(!destLatLng) {
-                alert("Hãy chạm vào điểm giao trên bản đồ trước!");
-                return;
-            }
-            // Khóa lộ trình và hiển thị nút hoàn thành
-            document.getElementById('job-status').innerText = "ĐÃ ĐẾN NƠI";
-            document.getElementById('job-status').style.color = "var(--primary)";
-            document.getElementById('btn-arrive').classList.add('hidden');
-            document.getElementById('btn-finish').classList.remove('hidden');
-            document.getElementById('btn-debt').classList.remove('hidden');
-            
-            if(routeLine) routeLine.setStyle({color: '#00AA55', dashArray: null});
-        }
-
         function finalizeOrder(type) {
-            const item = { 
-                id: Date.now(), 
-                name: orderActive.name, 
-                fee: calculatedFee, 
-                dist: calculatedDist, 
-                date: new Date().toLocaleDateString('vi-VN'), 
-                ts: Date.now() 
-            };
-            if(type === 'debt') {
-                debts.unshift(item);
-                localStorage.setItem('shipper_debts', JSON.stringify(debts));
-            } else {
-                history.unshift(item);
-                localStorage.setItem('shipper_hist', JSON.stringify(history));
-            }
+            const item = { id: Date.now(), name: orderActive.name, fee: finalFee, dist: finalDist, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
+            if(type === 'debt') { debts.unshift(item); localStorage.setItem('shipper_debts', JSON.stringify(debts)); }
+            else { history.unshift(item); localStorage.setItem('shipper_hist', JSON.stringify(history)); }
             location.reload();
         }
 
-        // --- CÁC HÀM PHỤ TRỢ GIỮ NGUYÊN ---
+        // --- CÁC HÀM CƠ BẢN GIỮ NGUYÊN ---
         function showTab(tab, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
@@ -256,56 +260,17 @@
             document.getElementById('s-week').innerText = getSum(history, h => h.ts > (Date.now() - 7*86400000)).toLocaleString() + 'đ';
             document.getElementById('s-month').innerText = getSum(history, h => new Date(h.ts).getMonth() === now.getMonth()).toLocaleString() + 'đ';
             document.getElementById('s-year').innerText = getSum(history, h => new Date(h.ts).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
-
-            document.getElementById('history-list').innerHTML = history.map((h, i) => `
-                <div class="list-item">
-                    <div><b>${h.name}</b><br><small>${h.date} - ${h.dist}km</small></div>
-                    <div style="text-align:right"><b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br><i class="fa-solid fa-trash" style="color:var(--red); font-size:12px; padding:5px" onclick="deleteHistory(${i})"></i></div>
-                </div>
-            `).join('');
+            document.getElementById('history-list').innerHTML = history.map((h, i) => `<div class="list-item"><div><b>${h.name}</b><br><small>${h.date} - ${h.dist}km</small></div><div style="text-align:right"><b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br><i class="fa-solid fa-trash" style="color:var(--red); font-size:12px;" onclick="deleteHistory(${i})"></i></div></div>`).join('');
         }
 
         function deleteHistory(i) { if(confirm("Xóa đơn này?")) { history.splice(i,1); localStorage.setItem('shipper_hist', JSON.stringify(history)); renderStats(); updateHeader(); } }
-
-        function renderDebts() {
-            document.getElementById('debt-list').innerHTML = debts.length ? debts.map((d, i) => `
-                <div class="list-item" onclick="collectDebt(${i})">
-                    <div><b>${d.name}</b><br><small>${d.date} - ${d.dist}km</small></div>
-                    <b style="color:var(--orange)">${d.fee.toLocaleString()}đ</b>
-                </div>
-            `).join('') : '<p style="text-align:center;color:#95a5a6">Không có nợ</p>';
-        }
-
-        function collectDebt(i) {
-            if(confirm("Xác nhận đã thu tiền?")) {
-                let d = debts.splice(i, 1)[0];
-                history.unshift(d);
-                localStorage.setItem('shipper_debts', JSON.stringify(debts));
-                localStorage.setItem('shipper_hist', JSON.stringify(history));
-                renderDebts(); updateHeader();
-            }
-        }
-
-        function renderPricing() {
-            document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `
-                <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <input type="number" style="margin:0; flex:1" value="${p.km}" onchange="pricing[${i}].km=Number(this.value)">
-                    <input type="number" style="margin:0; flex:2" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)">
-                    <button onclick="pricing.splice(${i},1); renderPricing()" style="border:none; background:none; color:var(--red)"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
-        }
-
+        function renderDebts() { document.getElementById('debt-list').innerHTML = debts.length ? debts.map((d, i) => `<div class="list-item" onclick="collectDebt(${i})"><div><b>${d.name}</b><br><small>${d.date}</small></div><b style="color:var(--orange)">${d.fee.toLocaleString()}đ</b></div>`).join('') : '<p style="text-align:center;color:#95a5a6">Không có nợ</p>'; }
+        function collectDebt(i) { if(confirm("Đã thu tiền?")) { let d = debts.splice(i, 1)[0]; history.unshift(d); localStorage.setItem('shipper_debts', JSON.stringify(debts)); localStorage.setItem('shipper_hist', JSON.stringify(history)); renderDebts(); updateHeader(); } }
+        function renderPricing() { document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="number" style="flex:1" value="${p.km}" onchange="pricing[${i}].km=Number(this.value)"><input type="number" style="flex:2" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)"><button onclick="pricing.splice(${i},1); renderPricing()" style="border:none; background:none; color:var(--red)"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
         function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
         function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
-        function updateHeader() {
-            const today = new Date().toLocaleDateString('vi-VN');
-            const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0);
-            document.getElementById('header-today').innerText = total.toLocaleString() + 'đ';
-        }
-        function openGoogleMaps() { 
-            if(destLatLng) window.open(`https://www.google.com/maps/dir/?api=1&origin=${orderActive.pickup[0]},${orderActive.pickup[1]}&destination=${destLatLng.lat},${destLatLng.lng}&travelmode=motorcycle`);
-        }
+        function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
+        function openGoogleMaps() { navigator.geolocation.getCurrentPosition(p => window.open(`https://www.google.com/maps/dir/${p.coords.latitude},${p.coords.longitude}`)); }
     </script>
 </body>
 </html>

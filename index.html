@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shipper Pro Ultimate</title>
+    <title>Shipper Pro V3 - Quy Trình Vận Đơn</title>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -12,12 +12,12 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+
     <style>
-        #map { height: 250px; border-radius: 20px; z-index: 1; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-        body { -webkit-tap-highlight-color: transparent; }
+        #map { height: 250px; border-radius: 24px; z-index: 10; }
+        .tab-active { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        body { background-color: #000; color: #fff; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body>
@@ -25,193 +25,245 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
+        const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = Recharts;
 
         const App = () => {
-            // --- STATE ---
-            const [activeTab, setActiveTab] = useState('calc');
+            const [activeTab, setActiveTab] = useState('order');
             const [isMenuOpen, setIsMenuOpen] = useState(false);
-            const [history, setHistory] = useState(JSON.parse(localStorage.getItem('ship_logs') || '[]'));
-            const [config, setConfig] = useState(JSON.parse(localStorage.getItem('ship_cfg') || '{"baseKm":3,"basePrice":15000,"extraPrice":5000}'));
-            const [distance, setDistance] = useState('');
+            
+            // Dữ liệu đơn hàng & Cấu hình
+            const [history, setHistory] = useState(JSON.parse(localStorage.getItem('ship_logs_v3') || '[]'));
+            const [pricing, setPricing] = useState(JSON.parse(localStorage.getItem('ship_price_v3') || '[{"from":0,"to":3,"price":15000},{"from":3,"to":10,"price":5000}]'));
+            
+            // Trạng thái đơn hiện tại
+            const [currentOrder, setCurrentOrder] = useState(JSON.parse(localStorage.getItem('current_ship') || 'null'));
+            const [points, setPoints] = useState({ start: null, end: null });
             const [customer, setCustomer] = useState('');
-            const [points, setPoints] = useState([]);
+            const [distance, setDistance] = useState(0);
+
             const mapRef = useRef(null);
-            const markersRef = useRef([]);
 
-            // --- LƯU TRỮ ---
+            // Lưu LocalStorage
             useEffect(() => {
-                localStorage.setItem('ship_logs', JSON.stringify(history));
-                localStorage.setItem('ship_cfg', JSON.stringify(config));
-            }, [history, config]);
+                localStorage.setItem('ship_logs_v3', JSON.stringify(history));
+                localStorage.setItem('ship_price_v3', JSON.stringify(pricing));
+                localStorage.setItem('current_ship', JSON.stringify(currentOrder));
+            }, [history, pricing, currentOrder]);
 
-            // --- BẢN ĐỒ ---
+            // Khởi tạo bản đồ
             useEffect(() => {
-                if (activeTab === 'calc' && !mapRef.current) {
+                if (activeTab === 'order' && !mapRef.current) {
                     mapRef.current = L.map('map').setView([10.7626, 106.6601], 13);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
-                    
-                    mapRef.current.on('click', (e) => {
-                        setPoints(prev => {
-                            const newPoints = prev.length >= 2 ? [e.latlng] : [...prev, e.latlng];
-                            return newPoints;
-                        });
-                    });
                 }
             }, [activeTab]);
 
+            // Lấy tọa độ GPS thực tế
+            const getGPS = (type) => {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setPoints(prev => ({ ...prev, [type]: latlng }));
+                    L.marker(latlng).addTo(mapRef.current).bindPopup(type === 'start' ? "Điểm nhận" : "Điểm giao").openPopup();
+                    mapRef.current.setView(latlng, 15);
+                });
+            };
+
+            // Tính khoảng cách khi có 2 điểm
             useEffect(() => {
-                if (!mapRef.current) return;
-                markersRef.current.forEach(m => mapRef.current.removeLayer(m));
-                markersRef.current = points.map(p => L.marker(p).addTo(mapRef.current));
-                
-                if (points.length === 2) {
-                    const d = mapRef.current.distance(points[0], points[1]) / 1000;
-                    setDistance((d * 1.2).toFixed(1)); // Cộng 20% trừ hao đường vòng
+                if (points.start && points.end) {
+                    const d = (L.latLng(points.start).distanceTo(L.latLng(points.end)) / 1000 * 1.2).toFixed(1);
+                    setDistance(parseFloat(d));
                 }
             }, [points]);
 
-            // --- LOGIC ---
-            const fee = useMemo(() => {
-                const d = parseFloat(distance) || 0;
-                return d <= config.baseKm ? config.basePrice : config.basePrice + Math.ceil(d - config.baseKm) * config.extraPrice;
-            }, [distance, config]);
-
-            const saveOrder = () => {
-                if (!distance) return;
-                const newOrder = { id: Date.now(), customer: customer || 'Khách lẻ', distance, fee, date: new Date().toLocaleDateString('vi-VN') };
-                setHistory([newOrder, ...history]);
-                setDistance(''); setCustomer(''); setPoints([]);
-                alert("Đã lưu thành công!");
+            // Tính phí dựa trên các mốc km cài đặt
+            const calculateFee = (d) => {
+                let total = 0;
+                if (d <= 0) return 0;
+                
+                // Mốc đầu tiên (thường là giá mở cửa)
+                const base = pricing[0];
+                total = base.price;
+                
+                if (d > base.to) {
+                    const extraKm = d - base.to;
+                    const nextPrice = pricing[1]?.price || 5000;
+                    total += extraKm * nextPrice;
+                }
+                return Math.round(total);
             };
 
-            const shareZalo = () => {
-                const msg = `Chào bạn, phí ship là ${fee.toLocaleString()}đ (${distance}km).`;
-                window.open(`https://zalo.me/0?text=${encodeURIComponent(msg)}`);
+            const fee = useMemo(() => calculateFee(distance), [distance, pricing]);
+
+            // Quản lý trạng thái đơn
+            const handleOrderAction = () => {
+                if (!currentOrder) {
+                    // Nhận đơn
+                    if (distance <= 0) return alert("Vui lòng nhập/chọn quãng đường");
+                    setCurrentOrder({
+                        id: Date.now(),
+                        customer: customer || "Khách lẻ",
+                        distance,
+                        fee,
+                        status: 'DELIVERING',
+                        startTime: new Date().toISOString()
+                    });
+                } else {
+                    // Kết thúc đơn
+                    const completedOrder = { ...currentOrder, status: 'COMPLETED', date: new Date().toLocaleDateString('vi-VN') };
+                    setHistory([completedOrder, ...history]);
+                    setCurrentOrder(null);
+                    setPoints({ start: null, end: null });
+                    setDistance(0); setCustomer('');
+                    alert("Đã hoàn thành & ghi vào lịch sử!");
+                }
             };
 
-            const deleteHistory = (id) => {
-                if(confirm("Xóa đơn này?")) setHistory(history.filter(h => h.id !== id));
-            };
+            // Dữ liệu cho biểu đồ
+            const chartData = useMemo(() => {
+                const groups = history.reduce((acc, obj) => {
+                    acc[obj.date] = (acc[obj.date] || 0) + obj.fee;
+                    return acc;
+                }, {});
+                return Object.keys(groups).map(date => ({ name: date, total: groups[date] })).reverse().slice(-7);
+            }, [history]);
 
-            // --- UI COMPONENTS ---
-            const TabButton = ({id, icon, label}) => (
-                <div onClick={() => {setActiveTab(id); setIsMenuOpen(false)}} className={`flex items-center space-x-4 p-4 rounded-2xl cursor-pointer transition ${activeTab === id ? 'bg-blue-600 text-white' : 'hover:bg-gray-800 text-gray-400'}`}>
-                    <i data-lucide={icon}></i>
-                    <span className="font-bold">{label}</span>
-                </div>
-            );
-
-            useEffect(() => { lucide.createIcons(); }, [activeTab, isMenuOpen]);
+            useEffect(() => { lucide.createIcons(); }, [activeTab, isMenuOpen, currentOrder]);
 
             return (
-                <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
-                    {/* Sidebar Overlay */}
-                    {isMenuOpen && <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setIsMenuOpen(false)} />}
-                    
+                <div className="min-h-screen pb-24">
+                    {/* Header */}
+                    <header className="p-4 flex justify-between items-center border-b border-gray-800 bg-black/80 sticky top-0 z-50 backdrop-blur-md">
+                        <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-900 rounded-xl text-blue-500"><i data-lucide="menu"></i></button>
+                        <h1 className="font-black italic text-xl tracking-tighter text-blue-500 underline decoration-2 underline-offset-4">SHIPPER PRO</h1>
+                        <div className="w-10 text-right"><i data-lucide="bell" size={18}></i></div>
+                    </header>
+
                     {/* Sidebar */}
-                    <aside className={`fixed inset-y-0 left-0 w-72 bg-gray-900 z-50 transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 p-6`}>
-                        <h2 className="text-2xl font-black text-blue-500 mb-8 tracking-tighter italic">SHIPPER PRO</h2>
+                    <aside className={`fixed inset-y-0 left-0 w-72 bg-gray-900 z-[100] transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform p-6 shadow-2xl`}>
+                        <div className="flex justify-between items-center mb-10 text-blue-500">
+                             <h2 className="text-xl font-black italic">DANH MỤC</h2>
+                             <X onClick={()=>setIsMenuOpen(false)} />
+                        </div>
                         <nav className="space-y-2">
-                            <TabButton id="calc" icon="calculator" label="Máy tính phí" />
-                            <TabButton id="history" icon="history" label="Lịch sử đơn" />
-                            <TabButton id="stats" icon="bar-chart-2" label="Thống kê" />
-                            <TabButton id="settings" icon="settings" label="Cấu hình giá" />
+                            {[
+                                { id: 'order', icon: 'navigation', label: 'Vận đơn' },
+                                { id: 'history', icon: 'clipboard-list', label: 'Lịch sử' },
+                                { id: 'stats', icon: 'pie-chart', label: 'Báo cáo' },
+                                { id: 'settings', icon: 'settings-2', label: 'Cài đặt giá' }
+                            ].map(item => (
+                                <div key={item.id} onClick={() => {setActiveTab(item.id); setIsMenuOpen(false)}} className={`flex items-center space-x-4 p-4 rounded-2xl cursor-pointer ${activeTab === item.id ? 'tab-active font-bold text-blue-500' : 'text-gray-400'}`}>
+                                    <i data-lucide={item.icon}></i> <span>{item.label}</span>
+                                </div>
+                            ))}
                         </nav>
                     </aside>
 
-                    {/* Header */}
-                    <header className="p-4 flex items-center justify-between border-b border-gray-800 bg-black sticky top-0 z-30">
-                        <button onClick={() => setIsMenuOpen(true)} className="p-2 bg-gray-900 rounded-xl"><i data-lucide="menu"></i></button>
-                        <h1 className="font-bold text-blue-500 uppercase">
-                            {activeTab === 'calc' ? 'Tính Tiền' : activeTab === 'history' ? 'Lịch Sử' : activeTab === 'stats' ? 'Báo Cáo' : 'Cài Đặt'}
-                        </h1>
-                        <div className="w-10"></div>
-                    </header>
-
-                    <main className="max-w-md mx-auto p-4">
-                        {activeTab === 'calc' && (
-                            <div className="space-y-4">
-                                <div id="map" className="border-2 border-blue-500/20 shadow-lg shadow-blue-500/10"></div>
-                                <div className="bg-gray-900 p-6 rounded-[2.5rem] space-y-4">
-                                    <input type="text" placeholder="Tên khách hàng..." value={customer} onChange={e => setCustomer(e.target.value)} className="w-full bg-gray-800 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500" />
-                                    <div className="flex items-center space-x-2">
-                                        <input type="number" placeholder="Số km" value={distance} onChange={e => setDistance(e.target.value)} className="flex-1 bg-gray-800 border-none rounded-2xl p-4 text-2xl font-bold text-blue-400 outline-none" />
-                                        <span className="font-bold text-gray-500">KM</span>
-                                    </div>
-                                    <div className="text-center py-4 bg-blue-600/10 rounded-3xl border border-blue-500/20">
-                                        <p className="text-xs uppercase text-gray-400 font-bold">Thành tiền</p>
-                                        <p className="text-4xl font-black text-blue-500">{fee.toLocaleString()}đ</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                        <button onClick={saveOrder} className="flex-1 bg-blue-600 py-4 rounded-2xl font-black text-lg active:scale-95 transition">LƯU ĐƠN</button>
-                                        <button onClick={shareZalo} className="bg-green-600 p-4 rounded-2xl active:scale-95"><i data-lucide="share-2"></i></button>
-                                    </div>
+                    {/* Main Content */}
+                    <main className="max-w-md mx-auto p-4 space-y-4">
+                        {activeTab === 'order' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div id="map" className="mb-4 border-2 border-gray-800"></div>
+                                
+                                <div className="bg-gray-900 p-6 rounded-[2rem] border border-gray-800 shadow-xl">
+                                    {!currentOrder ? (
+                                        <div className="space-y-4">
+                                            <input placeholder="Tên khách..." value={customer} onChange={e=>setCustomer(e.target.value)} className="w-full bg-gray-800 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-600 transition-all"/>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button onClick={()=>getGPS('start')} className="bg-gray-800 p-3 rounded-xl text-xs font-bold text-gray-400 flex items-center justify-center gap-2 border border-gray-700 active:scale-95"><i data-lucide="map-pin" size={14}></i> GPS Nhận</button>
+                                                <button onClick={()=>getGPS('end')} className="bg-gray-800 p-3 rounded-xl text-xs font-bold text-gray-400 flex items-center justify-center gap-2 border border-gray-700 active:scale-95"><i data-lucide="flag" size={14}></i> GPS Giao</button>
+                                            </div>
+                                            <div className="flex items-center justify-between bg-black p-4 rounded-2xl border border-gray-800">
+                                                <div className="text-2xl font-black text-blue-500">{distance} <span className="text-sm font-normal text-gray-500">km</span></div>
+                                                <div className="text-right">
+                                                    <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Ước tính phí</div>
+                                                    <div className="text-xl font-bold">{fee.toLocaleString()}đ</div>
+                                                </div>
+                                            </div>
+                                            <button onClick={handleOrderAction} className="w-full bg-blue-600 p-5 rounded-2xl font-black text-lg tracking-widest shadow-lg shadow-blue-900/40 active:scale-95 transition-all uppercase">Bắt đầu nhận đơn</button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 space-y-6">
+                                            <div className="inline-block px-4 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-xs font-bold animate-pulse">ĐANG GIAO HÀNG...</div>
+                                            <div>
+                                                <h3 className="text-2xl font-black">{currentOrder.customer}</h3>
+                                                <p className="text-gray-400 text-sm">{currentOrder.distance} km - {currentOrder.fee.toLocaleString()}đ</p>
+                                            </div>
+                                            <button onClick={handleOrderAction} className="w-full bg-green-600 p-5 rounded-2xl font-black text-lg shadow-lg shadow-green-900/40 active:scale-95 transition-all uppercase">Hoàn thành & Thu tiền</button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'history' && (
-                            <div className="space-y-3 custom-scrollbar">
-                                {history.length === 0 && <p className="text-center text-gray-500 mt-20">Chưa có dữ liệu</p>}
-                                {history.map(item => (
-                                    <div key={item.id} className="bg-gray-900 p-4 rounded-2xl flex justify-between items-center border border-gray-800">
+                             <div className="space-y-3">
+                                {history.map(h => (
+                                    <div key={h.id} className="bg-gray-900 p-4 rounded-2xl border border-gray-800 flex justify-between items-center animate-in slide-in-from-right duration-300">
                                         <div>
-                                            <p className="font-bold">{item.customer}</p>
-                                            <p className="text-xs text-gray-500">{item.date} • {item.distance}km</p>
+                                            <div className="font-bold flex items-center gap-2">{h.customer} <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] rounded uppercase">Xong</span></div>
+                                            <div className="text-[10px] text-gray-500">{h.date} • {h.distance} km</div>
                                         </div>
-                                        <div className="flex items-center space-x-4">
-                                            <span className="font-black text-blue-500">{item.fee.toLocaleString()}đ</span>
-                                            <button onClick={() => deleteHistory(item.id)} className="text-red-500"><i data-lucide="trash-2" size="18"></i></button>
+                                        <div className="text-right">
+                                            <div className="font-black text-blue-500">+{h.fee.toLocaleString()}đ</div>
+                                            <button onClick={()=>{setHistory(history.filter(x=>x.id!==h.id))}} className="text-red-900"><i data-lucide="trash-2" size={14}></i></button>
                                         </div>
                                     </div>
                                 ))}
-                            </div>
+                             </div>
                         )}
 
                         {activeTab === 'stats' && (
-                            <div className="space-y-6">
-                                <div className="bg-blue-600 p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/20">
-                                    <p className="text-sm font-bold opacity-80 uppercase tracking-widest">Tổng thu nhập</p>
-                                    <p className="text-5xl font-black mt-2">{history.reduce((a,b)=>a+b.fee, 0).toLocaleString()}đ</p>
-                                    <p className="text-sm mt-4 font-bold bg-white/20 inline-block px-3 py-1 rounded-full">Tổng: {history.length} đơn hàng</p>
+                            <div className="space-y-4">
+                                <div className="bg-gray-900 p-6 rounded-[2.5rem] h-80 border border-gray-800 shadow-inner">
+                                    <h3 className="text-xs font-bold text-gray-500 mb-6 uppercase tracking-widest">Doanh thu tuần</h3>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData}>
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} tick={{fill: '#4b5563'}} />
+                                            <Tooltip cursor={{fill: 'transparent'}} contentStyle={{backgroundColor: '#111827', border: 'none', borderRadius: '12px'}} />
+                                            <Bar dataKey="total" fill="#3b82f6" radius={[10, 10, 10, 10]} barSize={20} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
-                                <div className="bg-gray-900 p-6 rounded-[2.5rem] border border-gray-800">
-                                    <h3 className="font-bold mb-4">Giao dịch gần đây</h3>
-                                    <div className="space-y-4">
-                                        {history.slice(0, 5).map(h => (
-                                            <div key={h.id} className="flex justify-between items-center text-sm border-b border-gray-800 pb-2">
-                                                <span className="text-gray-400">{h.date}</span>
-                                                <span className="font-bold">+{h.fee.toLocaleString()}đ</span>
-                                            </div>
-                                        ))}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-blue-600 p-6 rounded-3xl shadow-lg shadow-blue-900/20">
+                                        <div className="text-[10px] font-bold uppercase opacity-60">Tổng tháng</div>
+                                        <div className="text-2xl font-black">{history.reduce((a,b)=>a+b.fee,0).toLocaleString()}đ</div>
+                                    </div>
+                                    <div className="bg-gray-900 p-6 rounded-3xl border border-gray-800">
+                                        <div className="text-[10px] font-bold uppercase text-gray-500">Tổng đơn</div>
+                                        <div className="text-2xl font-black">{history.length}</div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'settings' && (
-                            <div className="bg-gray-900 p-6 rounded-[2.5rem] space-y-6 border border-gray-800">
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500 uppercase">3km đầu tiên (VNĐ)</label>
-                                    <input type="number" value={config.basePrice} onChange={e => setConfig({...config, basePrice: parseInt(e.target.value)})} className="w-full bg-gray-800 border-none rounded-xl p-4 mt-1 outline-none font-bold" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500 uppercase">Giá mỗi km tiếp theo (VNĐ)</label>
-                                    <input type="number" value={config.extraPrice} onChange={e => setConfig({...config, extraPrice: parseInt(e.target.value)})} className="w-full bg-gray-800 border-none rounded-xl p-4 mt-1 outline-none font-bold" />
-                                </div>
-                                <div className="pt-4">
-                                    <p className="text-[10px] text-gray-500 italic text-center italic">Dữ liệu được lưu tự động trên trình duyệt này.</p>
-                                </div>
+                            <div className="bg-gray-900 p-6 rounded-[2.5rem] border border-gray-800 space-y-6">
+                                <h3 className="font-black italic text-blue-500 underline decoration-gray-700">CẤU HÌNH CƯỚC</h3>
+                                {pricing.map((p, idx) => (
+                                    <div key={idx} className="space-y-2 p-4 bg-black rounded-2xl border border-gray-800 relative">
+                                        <div className="text-[10px] font-bold text-blue-500">Mốc {idx === 0 ? "Mở cửa" : "Tiếp theo"} ({p.from} - {p.to} km)</div>
+                                        <input type="number" value={p.price} onChange={e => {
+                                            const newPricing = [...pricing];
+                                            newPricing[idx].price = parseInt(e.target.value);
+                                            setPricing(newPricing);
+                                        }} className="w-full bg-transparent text-xl font-black outline-none border-b border-gray-800 focus:border-blue-500 transition-all" />
+                                        <span className="absolute right-4 bottom-4 text-xs text-gray-500">VNĐ</span>
+                                    </div>
+                                ))}
+                                <p className="text-[10px] text-center text-gray-600 italic">Mốc 1 áp dụng giá cố định cho quãng đường đầu. Mốc 2 áp dụng đơn giá cho mỗi km cộng thêm.</p>
                             </div>
                         )}
                     </main>
 
-                    {/* Bottom Nav cho Mobile */}
-                    <nav className="fixed bottom-0 inset-x-0 bg-black/80 backdrop-blur-md border-t border-gray-800 flex justify-around p-2 z-30 lg:hidden">
-                        <button onClick={()=>setActiveTab('calc')} className={`p-3 rounded-xl ${activeTab==='calc'?'text-blue-500 bg-blue-500/10':'text-gray-500'}`}><i data-lucide="calculator"></i></button>
-                        <button onClick={()=>setActiveTab('history')} className={`p-3 rounded-xl ${activeTab==='history'?'text-blue-500 bg-blue-500/10':'text-gray-500'}`}><i data-lucide="history"></i></button>
-                        <button onClick={()=>setActiveTab('stats')} className={`p-3 rounded-xl ${activeTab==='stats'?'text-blue-500 bg-blue-500/10':'text-gray-500'}`}><i data-lucide="bar-chart-2"></i></button>
-                        <button onClick={()=>setActiveTab('settings')} className={`p-3 rounded-xl ${activeTab==='settings'?'text-blue-500 bg-blue-500/10':'text-gray-500'}`}><i data-lucide="settings"></i></button>
+                    {/* Navbar Mobile */}
+                    <nav className="fixed bottom-0 inset-x-0 bg-black/80 backdrop-blur-xl border-t border-gray-800 flex justify-around p-3 z-50">
+                        {['order', 'history', 'stats', 'settings'].map(t => (
+                            <button key={t} onClick={()=>setActiveTab(t)} className={`p-3 rounded-2xl transition-all ${activeTab === t ? 'text-blue-500 bg-blue-500/10' : 'text-gray-600'}`}>
+                                <i data-lucide={t === 'order' ? 'navigation' : t === 'history' ? 'clipboard-list' : t === 'stats' ? 'pie-chart' : 'settings-2'}></i>
+                            </button>
+                        ))}
                     </nav>
                 </div>
             );

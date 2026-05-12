@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO V20</title>
+    <title>SHIPPER PRO V21</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -70,8 +70,8 @@
                         <div class="input-group">
                             <b>Khách hàng 1</b>
                             <input type="text" class="c-name" placeholder="Tên khách...">
-                            <input type="text" class="c-note" placeholder="Ghi chú (vị trí, lời nhắn)..." style="font-size:13px; font-weight:400;">
-                            <input type="number" class="c-goods" placeholder="Tiền hàng (COD)...">
+                            <input type="text" class="c-note" placeholder="Ghi chú...">
+                            <input type="number" class="c-goods" placeholder="Tiền hàng (Bạn nợ khách)...">
                         </div>
                     </div>
                     <button class="btn btn-ghost" onclick="addCustomerInput()"><i class="fa-solid fa-plus"></i> THÊM KHÁCH</button>
@@ -91,31 +91,31 @@
         </div>
 
         <div id="tab-report" class="tab-content hidden">
-            <h3 style="margin-left:10px">Báo cáo</h3>
+            <h3 style="margin-left:10px">Báo cáo thu nhập</h3>
             <div class="filter-btns">
                 <button id="btn-day" class="active" onclick="setReportPeriod('day')">NGÀY</button>
                 <button id="btn-week" onclick="setReportPeriod('week')">TUẦN</button>
                 <button id="btn-month" onclick="setReportPeriod('month')">THÁNG</button>
             </div>
             <div class="report-box">
-                <div id="report-label" style="font-weight: 700; color: #95a5a6;">THU NHẬP</div>
+                <div id="report-label" style="font-weight: 700; color: #95a5a6;">THU NHẬP SHIP</div>
                 <div id="report-val" class="report-val">0đ</div>
                 <div id="report-count" style="font-size: 14px; color: #666;">Số lượng: 0 đơn</div>
             </div>
         </div>
 
         <div id="tab-debt" class="tab-content hidden">
-            <h3 style="margin-left:10px">Sổ nợ</h3>
-            <input type="text" id="filter-debt" placeholder="Tìm khách chưa trả nợ..." oninput="renderDebts()" style="margin-bottom:15px">
+            <h3 style="margin-left:10px">Nợ khách (Tiền hàng)</h3>
+            <input type="text" id="filter-debt" placeholder="Tìm tên khách..." oninput="renderDebts()" style="margin-bottom:15px">
             <div id="debt-list"></div>
         </div>
 
         <div id="tab-settings" class="tab-content hidden">
             <div class="main-card">
-                <h3>Cài đặt giá</h3>
+                <h3>Cấu hình giá theo KM</h3>
                 <div id="pricing-list"></div>
-                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC KM</button>
-                <button class="btn btn-primary" onclick="savePricing()">LƯU LẠI</button>
+                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC MỚI</button>
+                <button class="btn btn-primary" onclick="savePricing()">LƯU CÀI ĐẶT</button>
             </div>
         </div>
     </div>
@@ -124,14 +124,14 @@
         <div class="nav-item active" onclick="showTab('order', this)"><i class="fa-solid fa-route"></i>Đơn</div>
         <div class="nav-item" onclick="showTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
         <div class="nav-item" onclick="showTab('report', this)"><i class="fa-solid fa-chart-line"></i>Báo cáo</div>
-        <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-wallet"></i>Nợ</div>
+        <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-wallet"></i>Nợ khách</div>
         <div class="nav-item" onclick="showTab('settings', this)"><i class="fa-solid fa-gear"></i>Giá</div>
     </nav>
 
     <script>
-        let history = JSON.parse(localStorage.getItem('shipper_hist_v20') || '[]');
-        let debts = JSON.parse(localStorage.getItem('shipper_debts_v20') || '[]');
-        let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
+        let history = JSON.parse(localStorage.getItem('shipper_hist_v21') || '[]');
+        let debts = JSON.parse(localStorage.getItem('shipper_debts_v21') || '[]');
+        let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"from":0, "to":2,"price":15000},{"from":2, "to":5,"price":30000},{"from":5, "to":100,"price":50000}]');
         let activeOrders = [];
         let pickupPos = null;
         let map, currentPeriod = 'day';
@@ -145,10 +145,10 @@
 
         function addCustomerInput() {
             const count = document.querySelectorAll('.input-group').length;
-            if(count >= 3) return;
+            if(count >= 5) return;
             const div = document.createElement('div');
             div.className = 'input-group';
-            div.innerHTML = `<b>Khách hàng ${count+1}</b><input type="text" class="c-name" placeholder="Tên khách..."><input type="text" class="c-note" placeholder="Ghi chú..."><input type="number" class="c-goods" placeholder="Tiền hàng (COD)...">`;
+            div.innerHTML = `<b>Khách hàng ${count+1}</b><input type="text" class="c-name" placeholder="Tên khách..."><input type="text" class="c-note" placeholder="Ghi chú..."><input type="number" class="c-goods" placeholder="Tiền hàng...">`;
             document.getElementById('customer-inputs').appendChild(div);
         }
 
@@ -176,7 +176,7 @@
         function renderActiveOrders() {
             const container = document.getElementById('active-orders-list');
             container.innerHTML = activeOrders.map(o => `
-                <div class="order-block" style="opacity: ${o.status==='completed' ? '0.5' : '1'}">
+                <div class="order-block" id="block-${o.id}" style="opacity: ${o.status==='completed' ? '0.5' : '1'}">
                     <div style="display:flex; justify-content:space-between;">
                         <b>${o.name}</b> 
                         <span style="font-size:10px;">${o.note ? '['+o.note+']' : ''}</span>
@@ -184,13 +184,22 @@
                     <div style="font-size:12px; color:#666; margin-bottom:5px;">Tiền hàng: ${o.goods.toLocaleString()}đ</div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-size:11px; font-weight:700;">SHIP:</span>
-                        <input type="number" value="${o.fee}" oninput="updateManualFee(${o.id}, this.value)" style="width:90px; margin:0; padding:5px; border:none; border-bottom:2px solid var(--primary);">
+                        <input type="number" id="fee-input-${o.id}" value="${o.fee}" oninput="updateManualFee(${o.id}, this.value)" style="width:100px; margin:0; padding:5px; border:none; border-bottom:2px solid var(--primary);">
                         <b style="color:var(--red); flex:1; text-align:right;">Thu: ${(o.goods + o.fee).toLocaleString()}đ</b>
                     </div>
                     ${o.status === 'delivering' ? `<button class="btn btn-blue" onclick="arriveOrder(${o.id})">ĐẾN NƠI (GPS)</button>` : 
-                    (o.status === 'arrived' ? `<div style="display:flex; gap:5px;"><button class="btn btn-primary" onclick="finishOrder(${o.id}, 'cash')">XONG</button><button class="btn btn-orange" onclick="finishOrder(${o.id}, 'debt')">NỢ</button></div>` : `<b>ĐÃ XONG ✓</b>`)}
+                    (o.status === 'arrived' ? `<div style="display:flex; gap:5px;"><button class="btn btn-primary" onclick="finishOrder(${o.id}, 'cash')">XONG</button><button class="btn btn-orange" onclick="finishOrder(${o.id}, 'debt')">NỢ TIỀN HÀNG</button></div>` : `<b>ĐÃ XONG ✓</b>`)}
                 </div>
             `).join('');
+        }
+
+        function updateManualFee(id, val) {
+            const order = activeOrders.find(o => o.id === id);
+            order.fee = Number(val) || 0;
+            // Cập nhật text hiển thị tiền "Thu" mà không render lại toàn bộ (để không mất focus bàn phím)
+            const block = document.getElementById(`block-${id}`);
+            const thuText = block.querySelector('b[style*="text-align:right"]');
+            thuText.innerText = 'Thu: ' + (order.goods + order.fee).toLocaleString() + 'đ';
         }
 
         function arriveOrder(id) {
@@ -208,30 +217,30 @@
         function finishOrder(id, type) {
             const order = activeOrders.find(o => o.id === id);
             const record = { ...order, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
-            if(type === 'debt') { debts.unshift(record); localStorage.setItem('shipper_debts_v20', JSON.stringify(debts)); }
-            else { history.unshift(record); localStorage.setItem('shipper_hist_v20', JSON.stringify(history)); }
+            
+            // Luôn cộng tiền ship vào lịch sử thu nhập
+            history.unshift(record);
+            localStorage.setItem('shipper_hist_v21', JSON.stringify(history));
+
+            // Nếu là nợ, chỉ ghi nợ Tiền Hàng (COD)
+            if(type === 'debt' && order.goods > 0) {
+                debts.unshift({ ...record, debtAmount: order.goods });
+                localStorage.setItem('shipper_debts_v21', JSON.stringify(debts));
+            }
+            
             order.status = 'completed';
             renderActiveOrders(); updateHeader();
 
-            // KIỂM TRA NẾU ĐÃ XONG TẤT CẢ ĐƠN THÌ RESET
             if(activeOrders.every(o => o.status === 'completed')) {
-                setTimeout(() => {
-                    alert("Tất cả đơn đã hoàn thành! Hệ thống sẽ làm mới.");
-                    location.reload();
-                }, 800);
+                setTimeout(() => { alert("Tất cả đơn đã xong!"); location.reload(); }, 600);
             }
         }
 
         function calculateFee(d) {
-            let s = [...pricing].sort((a,b) => a.km - b.km);
-            for(let p of s) { if(d <= p.km) return p.price; }
-            return s[s.length-1].price;
-        }
-
-        function updateManualFee(id, val) {
-            const order = activeOrders.find(o => o.id === id);
-            order.fee = Number(val) || 0;
-            renderActiveOrders();
+            for(let p of pricing) {
+                if(d >= p.from && d <= p.to) return p.price;
+            }
+            return pricing[pricing.length-1].price;
         }
 
         function renderHistoryList() {
@@ -245,7 +254,7 @@
             `).join('');
         }
 
-        function deleteHistory(i) { if(confirm("Xóa đơn này?")) { history.splice(i,1); localStorage.setItem('shipper_hist_v20', JSON.stringify(history)); renderHistoryList(); updateHeader(); } }
+        function deleteHistory(i) { if(confirm("Xóa?")) { history.splice(i,1); localStorage.setItem('shipper_hist_v21', JSON.stringify(history)); renderHistoryList(); updateHeader(); } }
 
         function renderDebts() {
             const filter = document.getElementById('filter-debt').value.toLowerCase();
@@ -253,17 +262,17 @@
             document.getElementById('debt-list').innerHTML = filtered.length ? filtered.map((d, i) => `
                 <div class="list-item" onclick="collectDebt('${d.ts}')">
                     <div><b>${d.name}</b><br><small>${d.date}</small></div>
-                    <div style="text-align:right"><b style="color:var(--orange)">${(d.fee + d.goods).toLocaleString()}đ</b><br><small>Bấm thu nợ</small></div>
+                    <div style="text-align:right"><b style="color:var(--orange)">${d.debtAmount.toLocaleString()}đ</b><br><small>Bấm khi đã trả</small></div>
                 </div>
-            `).join('') : '<p style="text-align:center;">Không tìm thấy nợ</p>';
+            `).join('') : '<p style="text-align:center;">Trống</p>';
         }
 
         function collectDebt(timestamp) {
-            if(confirm("Xác nhận đã thu nợ?")) {
+            if(confirm("Đã trả tiền hàng cho khách?")) {
                 const idx = debts.findIndex(d => d.ts == timestamp);
-                let d = debts.splice(idx, 1)[0]; history.unshift(d);
-                localStorage.setItem('shipper_debts_v20', JSON.stringify(debts)); localStorage.setItem('shipper_hist_v20', JSON.stringify(history));
-                renderDebts(); updateHeader();
+                debts.splice(idx, 1);
+                localStorage.setItem('shipper_debts_v21', JSON.stringify(debts));
+                renderDebts();
             }
         }
 
@@ -297,9 +306,22 @@
             if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
         }
 
-        function renderPricing() { document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="number" style="flex:1" value="${p.km}" onchange="pricing[${i}].km=Number(this.value)"><input type="number" style="flex:2" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)"><button onclick="pricing.splice(${i},1); renderPricing()" style="border:none; background:none; color:var(--red)"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
-        function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Lưu thành công!"); }
+        function renderPricing() {
+            document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `
+                <div style="background:#f8f9fa; padding:10px; border-radius:15px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                        Từ <input type="number" style="width:60px; padding:5px; margin:0;" value="${p.from}" onchange="pricing[${i}].from=Number(this.value)"> 
+                        đến <input type="number" style="width:60px; padding:5px; margin:0;" value="${p.to}" onchange="pricing[${i}].to=Number(this.value)"> km
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        Giá: <input type="number" style="flex:1; padding:5px; margin:0;" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)"> đ
+                        <i class="fa-solid fa-trash" style="color:var(--red)" onclick="pricing.splice(${i},1); renderPricing()"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function addPriceStep() { pricing.push({from: 0, to: 0, price: 0}); renderPricing(); }
+        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
         function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO V22</title>
+    <title>SHIPPER PRO V24</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -109,10 +109,10 @@
         <div id="tab-debt" class="tab-content hidden">
             <h3 style="margin-left:10px">Nợ khách (Tiền hàng)</h3>
             <div class="total-debt-banner">
-                <div style="font-size: 11px; font-weight: 700; opacity: 0.9;">TỔNG NỢ ĐANG CHỌN</div>
+                <div id="debt-label-dynamic" style="font-size: 11px; font-weight: 700; opacity: 0.9; text-transform: uppercase;">TỔNG NỢ KHÁCH HÀNG</div>
                 <div id="sum-debt-val" style="font-size: 24px; font-weight: 900;">0đ</div>
             </div>
-            <input type="text" id="filter-debt" placeholder="Lọc theo tên khách hàng..." oninput="renderDebts()" style="margin-bottom:15px">
+            <input type="text" id="filter-debt" placeholder="Nhập tên khách để đối soát..." oninput="renderDebts()" style="margin-bottom:15px">
             <div id="debt-list"></div>
         </div>
 
@@ -140,13 +140,31 @@
         let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"from":0, "to":2,"price":15000},{"from":2, "to":5,"price":30000},{"from":5, "to":100,"price":50000}]');
         let activeOrders = [];
         let pickupPos = null;
-        let map, currentPeriod = 'day';
+        let map, userMarker, currentPeriod = 'day';
 
         window.onload = () => { initMap(); updateHeader(); renderPricing(); };
 
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([10.7626, 106.6601], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            // Tự động lấy vị trí khi mở app
+            map.locate({setView: true, maxZoom: 16, watch: true});
+
+            map.on('locationfound', e => {
+                const radius = e.accuracy / 2;
+                if (!userMarker) {
+                    userMarker = L.circleMarker(e.latlng, {color: '#4285F4', radius: 8, fillOpacity: 0.8}).addTo(map);
+                } else {
+                    userMarker.setLatLng(e.latlng);
+                }
+                // Luôn cập nhật tâm bản đồ theo vị trí hiện tại
+                map.panTo(e.latlng);
+            });
+
+            map.on('locationerror', e => {
+                console.log("Không thể truy cập GPS.");
+            });
         }
 
         function addCustomerInput() {
@@ -174,8 +192,7 @@
                 document.getElementById('idle-view').classList.add('hidden');
                 document.getElementById('running-view').classList.remove('hidden');
                 renderActiveOrders();
-                L.circleMarker(pickupPos, {color: '#00AA55', radius: 8}).addTo(map);
-                map.setView(pickupPos, 15);
+                L.circleMarker(pickupPos, {color: '#00AA55', radius: 8, fillOpacity: 0.5}).addTo(map);
             });
         }
 
@@ -254,13 +271,13 @@
         function deleteHistory(i) { if(confirm("Xóa?")) { history.splice(i,1); localStorage.setItem('shipper_hist_v21', JSON.stringify(history)); renderHistoryList(); updateHeader(); } }
 
         function renderDebts() {
-            const filter = document.getElementById('filter-debt').value.toLowerCase();
-            const filtered = debts.filter(d => d.name.toLowerCase().includes(filter));
-            
-            // TÍNH TỔNG TIỀN NỢ THEO BỘ LỌC
+            const filterInput = document.getElementById('filter-debt').value.trim();
+            const filterLower = filterInput.toLowerCase();
+            const filtered = debts.filter(d => d.name.toLowerCase().includes(filterLower));
+            const labelEl = document.getElementById('debt-label-dynamic');
+            labelEl.innerText = (filterInput === "") ? "TỔNG NỢ KHÁCH HÀNG" : `NỢ CỦA: ${filterInput}`;
             const sumDebt = filtered.reduce((a, b) => a + b.debtAmount, 0);
             document.getElementById('sum-debt-val').innerText = sumDebt.toLocaleString() + 'đ';
-
             document.getElementById('debt-list').innerHTML = filtered.length ? filtered.map((d) => `
                 <div class="list-item" onclick="collectDebt('${d.ts}')">
                     <div><b>${d.name}</b><br><small>${d.date}</small></div>
@@ -317,7 +334,7 @@
             `).join('');
         }
         function addPriceStep() { pricing.push({from: 0, to: 0, price: 0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Lưu thành công!"); }
+        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
         function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
     </script>
 </body>

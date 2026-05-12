@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO V18 - MULTI</title>
+    <title>SHIPPER PRO V19</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -25,42 +25,37 @@
         .main-card { background: var(--card); border-radius: 30px; padding: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; border: 1px solid rgba(0,0,0,0.03); }
         
         .input-group { background: #f8f9fa; padding: 15px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #eee; }
-        input, select { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
+        input { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
         
         .btn { border: none; padding: 15px; border-radius: 18px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; text-transform: uppercase; font-size: 13px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-green { background: #238636; color: white; }
         .btn-blue { background: var(--blue); color: white; }
         .btn-orange { background: var(--orange); color: white; }
         .btn-ghost { background: #f1f3f5; color: #747d8c; }
         
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-item { background: white; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid #eee; }
-        .stat-label { font-size: 10px; color: #95a5a6; font-weight: 700; }
-        .stat-val { font-size: 16px; font-weight: 800; color: var(--primary); }
+        /* BÁO CÁO TAB */
+        .report-box { background: white; border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #eee; margin-top: 10px; }
+        .report-val { font-size: 32px; font-weight: 900; color: var(--primary); margin: 10px 0; }
+        .filter-btns { display: flex; gap: 5px; margin-bottom: 15px; }
+        .filter-btns button { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #eee; background: white; font-weight: 700; font-size: 12px; }
+        .filter-btns button.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .list-item { background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
         
         nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 5px 25px; border-top: 1px solid #f1f3f5; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; gap: 5px; }
+        .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 10px; font-weight: 700; display: flex; flex-direction: column; gap: 5px; }
         .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.4rem; }
+        .nav-item i { font-size: 1.3rem; }
 
-        .order-block { border-left: 4px solid var(--primary); padding-left: 12px; margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 10px; }
+        .order-block { border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hidden { display: none; }
-        .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #eee; }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo-box">
-            <svg class="logo-svg" viewBox="0 0 100 100">
-                <rect width="100" height="100" rx="20" fill="#00AA55"/>
-                <path d="M20 70 L40 70 L45 75 L55 75 L60 70 L80 70 M30 70 Q30 50 50 50 L70 50 L70 60" stroke="white" stroke-width="5" fill="none"/>
-                <circle cx="35" cy="75" r="7" fill="white"/><circle cx="65" cy="75" r="7" fill="white"/>
-                <path d="M50 30 L75 30 L65 50 L40 50 Z" fill="#C0C0C0"/>
-            </svg>
+            <svg class="logo-svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#00AA55"/><path d="M20 70 L40 70 L45 75 L55 75 L60 70 L80 70 M30 70 Q30 50 50 50 L70 50 L70 60" stroke="white" stroke-width="5" fill="none"/><circle cx="35" cy="75" r="7" fill="white"/><circle cx="65" cy="75" r="7" fill="white"/><path d="M50 30 L75 30 L65 50 L40 50 Z" fill="#C0C0C0"/></svg>
             <div class="logo-text">SHIPPER PRO</div>
         </div>
         <div id="header-today" style="font-weight: 800; color: var(--primary);">0đ</div>
@@ -78,36 +73,39 @@
                             <input type="number" class="c-goods" placeholder="Tiền hàng (COD)...">
                         </div>
                     </div>
-                    <button class="btn btn-ghost" onclick="addCustomerInput()"><i class="fa-solid fa-plus"></i> THÊM KHÁCH (TỐI ĐA 3)</button>
+                    <button class="btn btn-ghost" onclick="addCustomerInput()"><i class="fa-solid fa-plus"></i> THÊM KHÁCH</button>
                     <button class="btn btn-primary" onclick="startOrders()"><i class="fa-solid fa-motorcycle"></i> BẮT ĐẦU GIAO</button>
                 </div>
-
                 <div id="running-view" class="hidden">
                     <div id="active-orders-list"></div>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button class="btn btn-ghost" style="flex:1" onclick="openGoogleMaps()"><i class="fa-solid fa-map"></i> DẪN ĐƯỜNG</button>
-                        <button class="btn btn-ghost" style="flex:1; color:var(--red)" onclick="location.reload()">HỦY HẾT</button>
-                    </div>
+                    <button class="btn btn-ghost" onclick="location.reload()" style="color:var(--red)">HỦY HẾT ĐƠN</button>
                 </div>
             </div>
         </div>
 
-        <div id="tab-stats" class="tab-content hidden">
-            <div class="stat-grid">
-                <div class="stat-item"><div class="stat-label">NGÀY</div><div id="s-day" class="stat-val">0đ</div></div>
-                <div class="stat-item"><div class="stat-label">TUẦN</div><div id="s-week" class="stat-val">0đ</div></div>
-                <div class="stat-item"><div class="stat-label">THÁNG</div><div id="s-month" class="stat-val">0đ</div></div>
-                <div class="stat-item"><div class="stat-label">NĂM</div><div id="s-year" class="stat-val">0đ</div></div>
+        <div id="tab-history" class="tab-content hidden">
+            <h3 style="margin-left:10px">Lịch sử giao hàng</h3>
+            <input type="text" id="filter-name" placeholder="Tìm tên khách hàng..." oninput="renderHistoryList()" style="margin-bottom:15px">
+            <div id="history-list"></div>
+        </div>
+
+        <div id="tab-report" class="tab-content hidden">
+            <h3 style="margin-left:10px">Báo cáo thu nhập</h3>
+            <div class="filter-btns">
+                <button id="btn-day" class="active" onclick="setReportPeriod('day')">NGÀY</button>
+                <button id="btn-week" onclick="setReportPeriod('week')">TUẦN</button>
+                <button id="btn-month" onclick="setReportPeriod('month')">THÁNG</button>
+                <button id="btn-year" onclick="setReportPeriod('year')">NĂM</button>
             </div>
-            
-            <div class="main-card" style="margin-top:0; padding:15px; border-radius:20px;">
-                <input type="text" id="filter-name" placeholder="Lọc theo tên khách..." oninput="renderHistory()">
-                <div id="history-list" style="margin-top:10px;"></div>
+            <div class="report-box">
+                <div id="report-label" style="font-weight: 700; color: #95a5a6; text-transform: uppercase;">THU NHẬP HÔM NAY</div>
+                <div id="report-val" class="report-val">0đ</div>
+                <div id="report-count" style="font-size: 14px; color: #666;">Số lượng: 0 đơn</div>
             </div>
         </div>
 
         <div id="tab-debt" class="tab-content hidden">
-            <h3 style="margin-left:10px;">Sổ nợ</h3>
+            <h3 style="margin-left:10px">Sổ nợ</h3>
             <div id="debt-list"></div>
         </div>
 
@@ -115,33 +113,33 @@
             <div class="main-card">
                 <h3>Cấu hình giá</h3>
                 <div id="pricing-list"></div>
-                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC</button>
-                <button class="btn btn-primary" onclick="savePricing()">LƯU LẠI</button>
+                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC KM</button>
+                <button class="btn btn-primary" onclick="savePricing()">LƯU CÀI ĐẶT</button>
             </div>
         </div>
     </div>
 
     <nav>
         <div class="nav-item active" onclick="showTab('order', this)"><i class="fa-solid fa-route"></i>Đơn</div>
-        <div class="nav-item" onclick="showTab('stats', this)"><i class="fa-solid fa-chart-pie"></i>Báo cáo</div>
-        <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-wallet"></i>Sổ nợ</div>
+        <div class="nav-item" onclick="showTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
+        <div class="nav-item" onclick="showTab('report', this)"><i class="fa-solid fa-chart-line"></i>Báo cáo</div>
+        <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-wallet"></i>Nợ</div>
         <div class="nav-item" onclick="showTab('settings', this)"><i class="fa-solid fa-gear"></i>Giá</div>
     </nav>
 
     <script>
-        let history = JSON.parse(localStorage.getItem('shipper_hist_v18') || '[]');
-        let debts = JSON.parse(localStorage.getItem('shipper_debts_v18') || '[]');
+        let history = JSON.parse(localStorage.getItem('shipper_hist_v19') || '[]');
+        let debts = JSON.parse(localStorage.getItem('shipper_debts_v19') || '[]');
         let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"km":2,"price":15000},{"km":5,"price":30000},{"km":100,"price":50000}]');
         let activeOrders = [];
         let pickupPos = null;
-        let map, mStart, mEnd, routeLine, refLatLng;
+        let map, routeLine, currentPeriod = 'day';
 
         window.onload = () => { initMap(); updateHeader(); renderPricing(); };
 
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([10.7626, 106.6601], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            map.on('click', e => { if(activeOrders.length > 0) previewCurrentOrder(e.latlng); });
         }
 
         function addCustomerInput() {
@@ -158,28 +156,17 @@
                 pickupPos = [p.coords.latitude, p.coords.longitude];
                 const names = document.querySelectorAll('.c-name');
                 const goods = document.querySelectorAll('.c-goods');
-                
                 activeOrders = [];
                 names.forEach((n, i) => {
                     if(n.value.trim() !== "") {
-                        activeOrders.push({
-                            id: i,
-                            name: n.value,
-                            goods: Number(goods[i].value) || 0,
-                            fee: 0,
-                            dist: 0,
-                            status: 'delivering' // 'arrived', 'completed'
-                        });
+                        activeOrders.push({ id: i, name: n.value, goods: Number(goods[i].value) || 0, fee: 0, dist: 0, status: 'delivering' });
                     }
                 });
-
-                if(activeOrders.length === 0) return alert("Nhập ít nhất 1 tên khách!");
-                
+                if(activeOrders.length === 0) return alert("Vui lòng nhập tên khách!");
                 document.getElementById('idle-view').classList.add('hidden');
                 document.getElementById('running-view').classList.remove('hidden');
                 renderActiveOrders();
-                
-                mStart = L.circleMarker(pickupPos, {color: '#00AA55', radius: 8, fillOpacity: 0.8}).addTo(map);
+                L.circleMarker(pickupPos, {color: '#00AA55', radius: 8}).addTo(map);
                 map.setView(pickupPos, 15);
             });
         }
@@ -188,57 +175,27 @@
             const container = document.getElementById('active-orders-list');
             container.innerHTML = activeOrders.map(o => `
                 <div class="order-block" style="opacity: ${o.status==='completed' ? '0.5' : '1'}">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${o.name}</b>
-                        <span class="badge">${o.status === 'delivering' ? 'ĐANG GIAO' : 'ĐÃ ĐẾN'}</span>
+                    <div style="display:flex; justify-content:space-between;"><b>${o.name}</b> <span>${o.status==='delivering' ? '🚚' : '📍'}</span></div>
+                    <div style="font-size:12px; color:#666; margin-bottom:5px;">Tiền hàng: ${o.goods.toLocaleString()}đ</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:11px; font-weight:700;">SHIP:</span>
+                        <input type="number" value="${o.fee}" oninput="updateManualFee(${o.id}, this.value)" style="width:90px; margin:0; padding:5px; border:none; border-bottom:2px solid var(--primary);">
+                        <b style="color:var(--red); flex:1; text-align:right;">Thu: ${(o.goods + o.fee).toLocaleString()}đ</b>
                     </div>
-                    <div style="font-size:12px; color:#666;">Tiền hàng: ${o.goods.toLocaleString()}đ | KM: ${o.dist}</div>
-                    
-                    <div style="margin: 8px 0;">
-                        <span style="font-size:11px;">TIỀN SHIP:</span>
-                        <input type="number" value="${o.fee}" oninput="updateManualFee(${o.id}, this.value)" 
-                            style="width:100px; padding:5px; margin:0; border-bottom:2px solid var(--primary);">
-                        <b style="color:var(--red); float:right;">Thu: ${(o.goods + o.fee).toLocaleString()}đ</b>
-                    </div>
-
-                    ${o.status === 'delivering' ? 
-                        `<button class="btn btn-blue" onclick="arriveOrder(${o.id})">TÔI ĐÃ ĐẾN NƠI</button>` : 
-                        (o.status === 'arrived' ? `
-                            <div style="display:flex; gap:5px;">
-                                <button class="btn btn-green" style="flex:1" onclick="finishOrder(${o.id}, 'cash')">XONG</button>
-                                <button class="btn btn-orange" style="flex:1" onclick="finishOrder(${o.id}, 'debt')">NỢ</button>
-                            </div>
-                        ` : `<div style="color:var(--primary); font-weight:800; text-align:center;">✓ HOÀN THÀNH</div>`)
-                    }
+                    ${o.status === 'delivering' ? `<button class="btn btn-blue" onclick="arriveOrder(${o.id})">ĐẾN NƠI (GPS)</button>` : 
+                    (o.status === 'arrived' ? `<div style="display:flex; gap:5px;"><button class="btn btn-primary" onclick="finishOrder(${o.id}, 'cash')">XONG</button><button class="btn btn-orange" onclick="finishOrder(${o.id}, 'debt')">NỢ</button></div>` : `<b>ĐÃ XONG</b>`)}
                 </div>
             `).join('');
         }
 
-        async function previewCurrentOrder(latlng) {
-            refLatLng = latlng;
-            const url = `https://router.project-osrm.org/route/v1/driving/${pickupPos[1]},${pickupPos[0]};${latlng.lng},${latlng.lat}?overview=full&geometries=geojson`;
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                if(data.code === 'Ok') {
-                    if(routeLine) map.removeLayer(routeLine);
-                    routeLine = L.geoJSON(data.routes[0].geometry, {style: {color: '#4285F4', weight: 4, dashArray: '5, 10'}}).addTo(map);
-                }
-            } catch(e) {}
-        }
-
         function arriveOrder(id) {
             navigator.geolocation.getCurrentPosition(async p => {
-                const dropPos = [p.coords.latitude, p.coords.longitude];
-                const url = `https://router.project-osrm.org/route/v1/driving/${pickupPos[1]},${pickupPos[0]};${dropPos[1]},${dropPos[0]}?overview=full`;
-                const res = await fetch(url);
-                const data = await res.json();
-                
                 const order = activeOrders.find(o => o.id === id);
+                const url = `https://router.project-osrm.org/route/v1/driving/${pickupPos[1]},${pickupPos[0]};${p.coords.longitude},${p.coords.latitude}?overview=full`;
+                const res = await fetch(url); const data = await res.json();
                 order.dist = (data.routes[0].distance / 1000).toFixed(1);
                 order.fee = calculateFee(order.dist);
                 order.status = 'arrived';
-                
                 renderActiveOrders();
             });
         }
@@ -252,17 +209,10 @@
         function finishOrder(id, type) {
             const order = activeOrders.find(o => o.id === id);
             const record = { ...order, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
-            
-            if(type === 'debt') { debts.unshift(record); localStorage.setItem('shipper_debts_v18', JSON.stringify(debts)); }
-            else { history.unshift(record); localStorage.setItem('shipper_hist_v18', JSON.stringify(history)); }
-            
+            if(type === 'debt') { debts.unshift(record); localStorage.setItem('shipper_debts_v19', JSON.stringify(debts)); }
+            else { history.unshift(record); localStorage.setItem('shipper_hist_v19', JSON.stringify(history)); }
             order.status = 'completed';
-            renderActiveOrders();
-            updateHeader();
-            
-            if(activeOrders.every(o => o.status === 'completed')) {
-                setTimeout(() => { if(confirm("Tất cả đơn đã xong! Làm mới ứng dụng?")) location.reload(); }, 1000);
-            }
+            renderActiveOrders(); updateHeader();
         }
 
         function calculateFee(d) {
@@ -271,46 +221,65 @@
             return s[s.length-1].price;
         }
 
-        function renderHistory() {
+        // PHẦN LỊCH SỬ
+        function renderHistoryList() {
             const filter = document.getElementById('filter-name').value.toLowerCase();
             const filtered = history.filter(h => h.name.toLowerCase().includes(filter));
-            
             document.getElementById('history-list').innerHTML = filtered.map((h, i) => `
                 <div class="list-item">
                     <div><b>${h.name}</b><br><small>${h.date} - ${h.dist}km</small></div>
-                    <div style="text-align:right">
-                        <b style="color:var(--primary)">+${h.fee.toLocaleString()}đ</b>
-                        <br><i class="fa-solid fa-trash" style="color:var(--red); font-size:11px;" onclick="deleteHistory(${i})"></i>
-                    </div>
+                    <div style="text-align:right"><b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br><i class="fa-solid fa-trash" style="color:var(--red); font-size:12px;" onclick="deleteHistory(${i})"></i></div>
                 </div>
             `).join('');
-            
-            // Tính lại số liệu báo cáo
-            const now = new Date();
-            const getSum = (fn) => history.filter(fn).reduce((a,b) => a + b.fee, 0);
-            document.getElementById('s-day').innerText = getSum(h => h.date === now.toLocaleDateString('vi-VN')).toLocaleString() + 'đ';
-            document.getElementById('s-week').innerText = getSum(h => h.ts > (Date.now() - 7*86400000)).toLocaleString() + 'đ';
-            document.getElementById('s-month').innerText = getSum(h => new Date(h.ts).getMonth() === now.getMonth()).toLocaleString() + 'đ';
-            document.getElementById('s-year').innerText = getSum(h => new Date(h.ts).getFullYear() === now.getFullYear()).toLocaleString() + 'đ';
+        }
+        function deleteHistory(i) { if(confirm("Xóa đơn này?")) { history.splice(i,1); localStorage.setItem('shipper_hist_v19', JSON.stringify(history)); renderHistoryList(); updateHeader(); } }
+
+        // PHẦN BÁO CÁO MỚI
+        function setReportPeriod(period) {
+            currentPeriod = period;
+            document.querySelectorAll('.filter-btns button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + period).classList.add('active');
+            renderReport();
         }
 
-        function deleteHistory(i) { if(confirm("Xóa?")) { history.splice(i,1); localStorage.setItem('shipper_hist_v18', JSON.stringify(history)); renderHistory(); updateHeader(); } }
+        function renderReport() {
+            const now = new Date();
+            let label = "Thu nhập ";
+            let filtered = [];
 
+            if(currentPeriod === 'day') {
+                label += "hôm nay";
+                filtered = history.filter(h => h.date === now.toLocaleDateString('vi-VN'));
+            } else if(currentPeriod === 'week') {
+                label += "tuần này";
+                filtered = history.filter(h => h.ts > (Date.now() - 7*86400000));
+            } else if(currentPeriod === 'month') {
+                label += "tháng này";
+                filtered = history.filter(h => new Date(h.ts).getMonth() === now.getMonth() && new Date(h.ts).getFullYear() === now.getFullYear());
+            } else {
+                label += "năm này";
+                filtered = history.filter(h => new Date(h.ts).getFullYear() === now.getFullYear());
+            }
+
+            const total = filtered.reduce((a, b) => a + b.fee, 0);
+            document.getElementById('report-label').innerText = label;
+            document.getElementById('report-val').innerText = total.toLocaleString() + 'đ';
+            document.getElementById('report-count').innerText = `Số lượng: ${filtered.length} đơn`;
+        }
+
+        // SỔ NỢ
         function renderDebts() {
             document.getElementById('debt-list').innerHTML = debts.length ? debts.map((d, i) => `
                 <div class="list-item" onclick="collectDebt(${i})">
                     <div><b>${d.name}</b><br><small>${d.date}</small></div>
-                    <div style="text-align:right"><b style="color:var(--orange)">${(d.fee + d.goods).toLocaleString()}đ</b></div>
+                    <div style="text-align:right"><b style="color:var(--orange)">${(d.fee + d.goods).toLocaleString()}đ</b><br><small>Thu nợ</small></div>
                 </div>
             `).join('') : '<p style="text-align:center;">Trống</p>';
         }
-
         function collectDebt(i) {
-            if(confirm("Thu tiền nợ?")) {
-                let d = debts.splice(i, 1)[0];
-                history.unshift(d);
-                localStorage.setItem('shipper_debts_v18', JSON.stringify(debts));
-                localStorage.setItem('shipper_hist_v18', JSON.stringify(history));
+            if(confirm("Xác nhận đã thu tiền nợ?")) {
+                let d = debts.splice(i, 1)[0]; history.unshift(d);
+                localStorage.setItem('shipper_debts_v19', JSON.stringify(debts)); localStorage.setItem('shipper_hist_v19', JSON.stringify(history));
                 renderDebts(); updateHeader();
             }
         }
@@ -320,16 +289,16 @@
             document.getElementById('tab-' + tab).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            if(tab === 'stats') renderHistory();
+            if(tab === 'history') renderHistoryList();
+            if(tab === 'report') renderReport();
             if(tab === 'debt') renderDebts();
             if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
         }
 
         function renderPricing() { document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="number" style="flex:1" value="${p.km}" onchange="pricing[${i}].km=Number(this.value)"><input type="number" style="flex:2" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)"><button onclick="pricing.splice(${i},1); renderPricing()" style="border:none; background:none; color:var(--red)"><i class="fa-solid fa-trash"></i></button></div>`).join(''); }
         function addPriceStep() { pricing.push({km: 0, price: 0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Lưu!"); }
+        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Lưu giá thành công!"); }
         function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
-        function openGoogleMaps() { if(refLatLng) window.open(`http://googleusercontent.com/maps.google.com/5{pickupPos[0]},${pickupPos[1]}&destination=${refLatLng.lat},${refLatLng.lng}&travelmode=motorcycle`); }
     </script>
 </body>
 </html>

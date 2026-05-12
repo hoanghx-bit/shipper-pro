@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO V21</title>
+    <title>SHIPPER PRO V22</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -49,6 +49,8 @@
         .order-block { border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .hidden { display: none; }
         .note-text { font-size: 11px; color: #747d8c; font-style: italic; background: #f1f3f5; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        
+        .total-debt-banner { background: var(--orange); color: white; padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -106,7 +108,11 @@
 
         <div id="tab-debt" class="tab-content hidden">
             <h3 style="margin-left:10px">Nợ khách (Tiền hàng)</h3>
-            <input type="text" id="filter-debt" placeholder="Tìm tên khách..." oninput="renderDebts()" style="margin-bottom:15px">
+            <div class="total-debt-banner">
+                <div style="font-size: 11px; font-weight: 700; opacity: 0.9;">TỔNG NỢ ĐANG CHỌN</div>
+                <div id="sum-debt-val" style="font-size: 24px; font-weight: 900;">0đ</div>
+            </div>
+            <input type="text" id="filter-debt" placeholder="Lọc theo tên khách hàng..." oninput="renderDebts()" style="margin-bottom:15px">
             <div id="debt-list"></div>
         </div>
 
@@ -196,7 +202,6 @@
         function updateManualFee(id, val) {
             const order = activeOrders.find(o => o.id === id);
             order.fee = Number(val) || 0;
-            // Cập nhật text hiển thị tiền "Thu" mà không render lại toàn bộ (để không mất focus bàn phím)
             const block = document.getElementById(`block-${id}`);
             const thuText = block.querySelector('b[style*="text-align:right"]');
             thuText.innerText = 'Thu: ' + (order.goods + order.fee).toLocaleString() + 'đ';
@@ -217,29 +222,21 @@
         function finishOrder(id, type) {
             const order = activeOrders.find(o => o.id === id);
             const record = { ...order, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
-            
-            // Luôn cộng tiền ship vào lịch sử thu nhập
             history.unshift(record);
             localStorage.setItem('shipper_hist_v21', JSON.stringify(history));
-
-            // Nếu là nợ, chỉ ghi nợ Tiền Hàng (COD)
             if(type === 'debt' && order.goods > 0) {
                 debts.unshift({ ...record, debtAmount: order.goods });
                 localStorage.setItem('shipper_debts_v21', JSON.stringify(debts));
             }
-            
             order.status = 'completed';
             renderActiveOrders(); updateHeader();
-
             if(activeOrders.every(o => o.status === 'completed')) {
-                setTimeout(() => { alert("Tất cả đơn đã xong!"); location.reload(); }, 600);
+                setTimeout(() => { alert("Xong tất cả đơn!"); location.reload(); }, 600);
             }
         }
 
         function calculateFee(d) {
-            for(let p of pricing) {
-                if(d >= p.from && d <= p.to) return p.price;
-            }
+            for(let p of pricing) { if(d >= p.from && d <= p.to) return p.price; }
             return pricing[pricing.length-1].price;
         }
 
@@ -259,16 +256,21 @@
         function renderDebts() {
             const filter = document.getElementById('filter-debt').value.toLowerCase();
             const filtered = debts.filter(d => d.name.toLowerCase().includes(filter));
-            document.getElementById('debt-list').innerHTML = filtered.length ? filtered.map((d, i) => `
+            
+            // TÍNH TỔNG TIỀN NỢ THEO BỘ LỌC
+            const sumDebt = filtered.reduce((a, b) => a + b.debtAmount, 0);
+            document.getElementById('sum-debt-val').innerText = sumDebt.toLocaleString() + 'đ';
+
+            document.getElementById('debt-list').innerHTML = filtered.length ? filtered.map((d) => `
                 <div class="list-item" onclick="collectDebt('${d.ts}')">
                     <div><b>${d.name}</b><br><small>${d.date}</small></div>
-                    <div style="text-align:right"><b style="color:var(--orange)">${d.debtAmount.toLocaleString()}đ</b><br><small>Bấm khi đã trả</small></div>
+                    <div style="text-align:right"><b style="color:var(--orange)">${d.debtAmount.toLocaleString()}đ</b><br><small>Trả khách</small></div>
                 </div>
             `).join('') : '<p style="text-align:center;">Trống</p>';
         }
 
         function collectDebt(timestamp) {
-            if(confirm("Đã trả tiền hàng cho khách?")) {
+            if(confirm("Đã trả nợ cho khách?")) {
                 const idx = debts.findIndex(d => d.ts == timestamp);
                 debts.splice(idx, 1);
                 localStorage.setItem('shipper_debts_v21', JSON.stringify(debts));
@@ -282,18 +284,12 @@
             if(currentPeriod === 'day') filtered = history.filter(h => h.date === now.toLocaleDateString('vi-VN'));
             else if(currentPeriod === 'week') filtered = history.filter(h => h.ts > (Date.now() - 7*86400000));
             else filtered = history.filter(h => new Date(h.ts).getMonth() === now.getMonth());
-            
             const total = filtered.reduce((a, b) => a + b.fee, 0);
             document.getElementById('report-val').innerText = total.toLocaleString() + 'đ';
             document.getElementById('report-count').innerText = `Số lượng: ${filtered.length} đơn`;
         }
 
-        function setReportPeriod(p) { 
-            currentPeriod = p; 
-            document.querySelectorAll('.filter-btns button').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-'+p).classList.add('active');
-            renderReport(); 
-        }
+        function setReportPeriod(p) { currentPeriod = p; document.querySelectorAll('.filter-btns button').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+p).classList.add('active'); renderReport(); }
 
         function showTab(tab, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
@@ -321,7 +317,7 @@
             `).join('');
         }
         function addPriceStep() { pricing.push({from: 0, to: 0, price: 0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
+        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Lưu thành công!"); }
         function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
     </script>
 </body>

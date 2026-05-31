@@ -27,17 +27,14 @@
         .input-label { font-weight: 600; color: #475569; font-size: 14px; }
         .text-right { text-align: right; font-weight: bold; color: #0066b3; }
 
-        /* --- Nút gợi ý số 0 (COD) --- */
-        .zero-suggestions { display: flex; gap: 8px; justify-content: flex-end; margin-top: -5px; margin-bottom: 15px;}
-        .btn-zero { padding: 6px 10px; font-size: 13px; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; cursor: pointer; font-weight: 500;}
-        .btn-zero:active { background: #bae6fd; }
+        /* --- Gợi ý giá tiền động --- */
+        .input-wrapper { position: relative; max-width: 180px; flex: 1;}
+        .suggestions-box { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 20; max-height: 150px; overflow-y: auto; }
+        .suggestion-item { padding: 10px 12px; font-size: 14px; color: #0066b3; font-weight: 500; cursor: pointer; text-align: right; border-bottom: 1px solid #f8fafc; }
+        .suggestion-item:hover { background-color: #e0f2fe; }
 
-        /* --- Toggles & Buttons --- */
-        .toggle-group, .tip-group { display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px; gap: 4px; }
-        .toggle-btn, .tip-btn { flex: 1; padding: 8px 0; text-align: center; border: none; background: transparent; font-size: 14px; cursor: pointer; color: #64748b; font-weight: 500; border-radius: 6px;}
-        .toggle-btn.active, .tip-btn.active { background: #fff; color: #0066b3; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
-        .btn-primary { width: calc(100% - 30px); margin: 10px 15px; padding: 15px; background: #0066b3; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 102, 179, 0.2); }
+        /* --- Buttons --- */
+        .btn-primary { width: calc(100% - 30px); margin: 10px 15px; padding: 15px; background: #0066b3; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 102, 179, 0.2); transition: 0.2s;}
         .btn-primary:active { transform: scale(0.98); }
 
         /* --- Tab Ghi Nợ --- */
@@ -47,19 +44,31 @@
         .summary-item.red { color: #ef4444; }
         .summary-item.blue { color: #0066b3; }
         .summary-value { font-size: 18px; font-weight: 700; margin-top: 5px; }
-        .debt-list-item { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 4px solid #0066b3; box-shadow: 0 1px 3px rgba(0,0,0,0.03);}
         
+        .debt-list-item { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #0066b3; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        .debt-info { display: flex; justify-content: space-between; margin-bottom: 12px; }
+        .debt-actions { display: flex; gap: 8px; border-top: 1px dashed #e2e8f0; padding-top: 12px; }
+        
+        .action-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-thu-ship { background: #fee2e2; color: #ef4444; }
+        .btn-tra-cod { background: #e0f2fe; color: #0066b3; }
+        .btn-done { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; cursor: not-allowed; }
+
         /* --- Bottom Navigation --- */
         .bottom-nav { position: absolute; bottom: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #e2e8f0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 10;}
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #64748b; text-decoration: none; font-size: 12px; font-weight: 500; cursor: pointer; padding: 5px 20px;}
         .nav-item.active { color: #0066b3; }
         .nav-icon { font-size: 20px; margin-bottom: 3px; }
+        
+        /* Utility */
+        .toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none;}
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    
+    <div id="toast-msg" class="toast">Đã lưu đơn thành công!</div>
+
     <div class="header">
         <h1 id="header-title">Tạo Đơn Hàng</h1>
     </div>
@@ -79,43 +88,30 @@
 
             <div class="card">
                 <div class="flex-row">
-                    <input type="text" class="input-box" placeholder="👤 Người nhận">
-                    <input type="tel" class="input-box" placeholder="📞 Điện thoại">
+                    <input type="text" id="cus-name" class="input-box" placeholder="👤 Người nhận">
+                    <input type="tel" id="cus-phone" class="input-box" placeholder="📞 Điện thoại">
                 </div>
 
                 <div class="flex-between" style="margin-top: 15px;">
-                    <span class="input-label">Thu hộ (COD) đ</span>
-                    <input type="text" id="cod-input" class="input-box text-right" style="max-width: 180px;" placeholder="0" oninput="formatCurrency(this)">
-                </div>
-                
-                <div class="zero-suggestions">
-                    <button class="btn-zero" onclick="appendZeros('000')">+000 (Nghìn)</button>
-                    <button class="btn-zero" onclick="appendZeros('0000')">+0.000 (Chục)</button>
-                    <button class="btn-zero" onclick="appendZeros('00000')">+00.000 (Trăm)</button>
-                </div>
-
-                <input type="text" class="input-box" placeholder="Ghi chú cho tài xế..." style="margin-bottom: 15px;">
-
-                <div class="flex-between">
-                    <span class="input-label">Yêu cầu thêm</span>
-                    <div class="toggle-group">
-                        <button class="toggle-btn active" onclick="toggleActive(this)">Không</button>
-                        <button class="toggle-btn" onclick="toggleActive(this)">Cần thùng</button>
+                    <span class="input-label">Thu hộ (COD)</span>
+                    <div class="input-wrapper">
+                        <input type="text" id="cod-input" class="input-box text-right" placeholder="0 đ" oninput="handleSmartInput(this, 'cod-suggestions')" autocomplete="off">
+                        <div id="cod-suggestions" class="suggestions-box"></div>
                     </div>
                 </div>
 
-                <div class="flex-between" style="margin-top: 15px;">
-                    <span class="input-label">Thưởng xế</span>
-                    <div class="tip-group">
-                        <button class="tip-btn active" onclick="toggleTip(this)">0đ</button>
-                        <button class="tip-btn" onclick="toggleTip(this)">5K</button>
-                        <button class="tip-btn" onclick="toggleTip(this)">10K</button>
-                        <button class="tip-btn" onclick="toggleTip(this)">20K</button>
+                <div class="flex-between" style="margin-top: 10px;">
+                    <span class="input-label">Phí Ship</span>
+                    <div class="input-wrapper">
+                        <input type="text" id="ship-input" class="input-box text-right" placeholder="0 đ" oninput="handleSmartInput(this, 'ship-suggestions')" autocomplete="off">
+                        <div id="ship-suggestions" class="suggestions-box"></div>
                     </div>
                 </div>
+
+                <input type="text" class="input-box" placeholder="Ghi chú cho tài xế..." style="margin-top: 15px;">
             </div>
 
-            <button class="btn-primary" onclick="alert('Đã lưu đơn hàng thành công!')">Lưu Đơn</button>
+            <button class="btn-primary" onclick="saveOrder()">Lưu Đơn Mới</button>
         </div>
 
         <div id="tab-debt" class="tab-pane">
@@ -124,62 +120,22 @@
                 
                 <div class="debt-summary">
                     <div class="summary-item red">
-                        <div style="font-size: 13px;">Khách nợ phí Ship</div>
-                        <div class="summary-value">135,000đ</div>
+                        <div style="font-size: 13px;">Khách nợ Ship</div>
+                        <div class="summary-value" id="total-ship-debt">0 đ</div>
                     </div>
                     <div class="summary-item blue">
                         <div style="font-size: 13px;">Nợ khách COD</div>
-                        <div class="summary-value">3,450,000đ</div>
+                        <div class="summary-value" id="total-cod-debt">0 đ</div>
                     </div>
                 </div>
-
-                <h3 style="font-size: 15px; color: #475569; margin-bottom: 10px;">Chi tiết công nợ</h3>
                 
-                <div id="debt-list">
-                    <div class="debt-list-item">
-                        <div>
-                            <div style="font-weight: 600; margin-bottom: 5px;">Nguyễn Văn A</div>
-                            <div style="font-size: 12px; color: #64748b;">0988 123 456</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="color: #ef4444; font-size: 13px; font-weight: 500;">Ship: -30,000đ</div>
-                            <div style="color: #0066b3; font-size: 13px; font-weight: 500;">COD: +1,500,000đ</div>
-                        </div>
-                    </div>
-                    
-                    <div class="debt-list-item">
-                        <div>
-                            <div style="font-weight: 600; margin-bottom: 5px;">Trần Thị B</div>
-                            <div style="font-size: 12px; color: #64748b;">0909 999 888</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="color: #ef4444; font-size: 13px; font-weight: 500;">Ship: -15,000đ</div>
-                            <div style="color: #0066b3; font-size: 13px; font-weight: 500;">COD: 0đ</div>
-                        </div>
-                    </div>
-                </div>
+                <div id="debt-list"></div>
             </div>
         </div>
 
         <div id="tab-report" class="tab-pane">
-            <div style="padding: 15px;">
-                <div class="card" style="margin: 0 0 15px 0; text-align: center;">
-                    <div style="color: #64748b; margin-bottom: 5px;">Doanh thu phí ship tháng này</div>
-                    <div style="font-size: 28px; font-weight: bold; color: #10b981;">1,250,000đ</div>
-                </div>
-                <div class="card" style="margin: 0 0 15px 0;">
-                    <div class="flex-between" style="border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
-                        <span>Tổng số đơn đã giao:</span>
-                        <strong>142 đơn</strong>
-                    </div>
-                    <div class="flex-between" style="padding-top: 10px;">
-                        <span>Tổng COD đã thu:</span>
-                        <strong style="color: #0066b3;">15,600,000đ</strong>
-                    </div>
-                </div>
-                <div class="card" style="margin: 0; display: flex; justify-content: center; align-items: center; height: 150px; background: #f8fafc; color: #94a3b8;">
-                    [Biểu đồ thống kê sẽ hiển thị ở đây]
-                </div>
+            <div style="padding: 15px; text-align:center; color: #64748b;">
+                Tính năng báo cáo đang phát triển...
             </div>
         </div>
     </div>
@@ -201,73 +157,165 @@
 </div>
 
 <script>
+    // --- Biến toàn cục lưu trữ tổng nợ ---
+    let totalShipDebt = 0;
+    let totalCodDebt = 0;
+
     // --- Xử lý chuyển Tab ---
     function switchTab(tabId, element, title) {
-        // Cập nhật tiêu đề Header
         document.getElementById('header-title').innerText = title;
-
-        // Ẩn tất cả nội dung
-        document.querySelectorAll('.tab-pane').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        // Bỏ active tất cả icon dưới đáy
-        document.querySelectorAll('.nav-item').forEach(nav => {
-            nav.classList.remove('active');
-        });
-
-        // Hiển thị tab được chọn
+        document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         element.classList.add('active');
+        
+        // Ẩn các hộp gợi ý nếu đang mở
+        document.getElementById('cod-suggestions').style.display = 'none';
+        document.getElementById('ship-suggestions').style.display = 'none';
     }
 
-    // --- Xử lý định dạng tiền tệ khi nhập ---
-    function formatCurrency(input) {
-        // Xóa tất cả các ký tự không phải số
-        let value = input.value.replace(/\D/g, '');
-        if (value === '') {
-            input.value = '';
+    // --- Định dạng tiền tệ ---
+    function formatMoney(num) {
+        return new Intl.NumberFormat('vi-VN').format(num);
+    }
+
+    // --- Xử lý Gợi Ý Tiền Tự Động ---
+    function handleSmartInput(inputEl, suggestionBoxId) {
+        // Định dạng số đang nhập
+        let rawValue = inputEl.value.replace(/\D/g, '');
+        if (rawValue !== '') {
+            inputEl.value = formatMoney(rawValue);
+        } else {
+            inputEl.value = '';
+        }
+
+        let box = document.getElementById(suggestionBoxId);
+        box.innerHTML = '';
+
+        if (rawValue && parseInt(rawValue) > 0) {
+            let baseNum = parseInt(rawValue);
+            // Tạo 3 mốc gợi ý: x1.000, x10.000, x100.000
+            let suggestions = [baseNum * 1000, baseNum * 10000, baseNum * 100000];
+            
+            suggestions.forEach(val => {
+                let div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerText = formatMoney(val) + ' đ';
+                div.onclick = function() {
+                    inputEl.value = formatMoney(val);
+                    box.style.display = 'none';
+                };
+                box.appendChild(div);
+            });
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    }
+
+    // Ẩn hộp gợi ý khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        if(!e.target.closest('.input-wrapper')) {
+            document.getElementById('cod-suggestions').style.display = 'none';
+            document.getElementById('ship-suggestions').style.display = 'none';
+        }
+    });
+
+    // --- Chức Năng Lưu Đơn ---
+    function saveOrder() {
+        let name = document.getElementById('cus-name').value.trim() || 'Khách vãng lai';
+        let phone = document.getElementById('cus-phone').value.trim() || '---';
+        
+        let codRaw = parseInt(document.getElementById('cod-input').value.replace(/\D/g, '')) || 0;
+        let shipRaw = parseInt(document.getElementById('ship-input').value.replace(/\D/g, '')) || 0;
+
+        if (codRaw === 0 && shipRaw === 0) {
+            alert('Vui lòng nhập COD hoặc Phí Ship để tạo đơn nợ!');
             return;
         }
-        // Định dạng lại theo chuẩn VN (có dấu chấm phân cách)
-        input.value = new Intl.NumberFormat('vi-VN').format(value);
+
+        // Tạo phần tử HTML cho đơn nợ
+        let debtItem = document.createElement('div');
+        debtItem.className = 'debt-list-item';
+        debtItem.innerHTML = `
+            <div class="debt-info">
+                <div>
+                    <div style="font-weight: 600; font-size: 15px;">${name}</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 3px;">📞 ${phone}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #ef4444; font-size: 14px; font-weight: 600; margin-bottom: 2px;">Ship: ${formatMoney(shipRaw)}đ</div>
+                    <div style="color: #0066b3; font-size: 14px; font-weight: 600;">COD: ${formatMoney(codRaw)}đ</div>
+                </div>
+            </div>
+            <div class="debt-actions">
+                <button class="action-btn btn-thu-ship" onclick="collectShip(this, ${shipRaw})" ${shipRaw === 0 ? 'disabled class="action-btn btn-done"' : ''}>
+                    ${shipRaw === 0 ? 'Không có Ship' : 'Đã thu Ship'}
+                </button>
+                <button class="action-btn btn-tra-cod" onclick="payCod(this, ${codRaw})" ${codRaw === 0 ? 'disabled class="action-btn btn-done"' : ''}>
+                    ${codRaw === 0 ? 'Không có COD' : 'Đã thanh toán COD'}
+                </button>
+            </div>
+        `;
+
+        // Thêm vào đầu danh sách
+        let list = document.getElementById('debt-list');
+        list.insertBefore(debtItem, list.firstChild);
+
+        // Cập nhật tổng nợ
+        totalShipDebt += shipRaw;
+        totalCodDebt += codRaw;
+        updateSummary();
+
+        // Xóa form tạo đơn
+        document.getElementById('cus-name').value = '';
+        document.getElementById('cus-phone').value = '';
+        document.getElementById('cod-input').value = '';
+        document.getElementById('ship-input').value = '';
+
+        // Hiển thị thông báo
+        let toast = document.getElementById('toast-msg');
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 2000);
     }
 
-    // --- Xử lý Gợi ý thêm số 0 ---
-    function appendZeros(zeros) {
-        let input = document.getElementById('cod-input');
-        // Lấy số hiện tại (bỏ dấu chấm)
-        let currentValue = input.value.replace(/\D/g, '');
-        if (currentValue === '') {
-            currentValue = '1'; // Nếu chưa nhập gì, mặc định là 1 (VD: bấm +000 ra 1.000)
+    // --- Các nút thao tác thanh toán trong phần Ghi Nợ ---
+    function collectShip(btnEl, amount) {
+        if(confirm(`Xác nhận đã thu ${formatMoney(amount)}đ tiền Ship của khách?`)) {
+            totalShipDebt -= amount;
+            updateSummary();
+            // Đổi trạng thái nút
+            btnEl.innerText = "Xong Ship ✓";
+            btnEl.className = "action-btn btn-done";
+            btnEl.onclick = null; // Hủy click
         }
-        // Nối thêm số 0
-        let newValue = currentValue + zeros;
-        // Định dạng và gán lại
-        input.value = new Intl.NumberFormat('vi-VN').format(newValue);
     }
 
-    // --- Xử lý Toggle Buttons UI (Không / Cần thùng) ---
-    function toggleActive(element) {
-        let siblings = element.parentNode.children;
-        for (let el of siblings) el.classList.remove('active');
-        element.classList.add('active');
+    function payCod(btnEl, amount) {
+        if(confirm(`Xác nhận đã thanh toán ${formatMoney(amount)}đ tiền COD cho khách?`)) {
+            totalCodDebt -= amount;
+            updateSummary();
+            // Đổi trạng thái nút
+            btnEl.innerText = "Xong COD ✓";
+            btnEl.className = "action-btn btn-done";
+            btnEl.onclick = null;
+        }
     }
 
-    function toggleTip(element) {
-        let siblings = element.parentNode.children;
-        for (let el of siblings) el.classList.remove('active');
-        element.classList.add('active');
+    function updateSummary() {
+        document.getElementById('total-ship-debt').innerText = formatMoney(totalShipDebt) + ' đ';
+        document.getElementById('total-cod-debt').innerText = formatMoney(totalCodDebt) + ' đ';
     }
 
-    // --- Xử lý Lọc danh sách nợ đơn giản ---
+    // --- Lọc tìm kiếm ---
     function filterDebt() {
         let input = document.getElementById('search-debt').value.toLowerCase();
         let items = document.getElementsByClassName('debt-list-item');
         
         for (let i = 0; i < items.length; i++) {
-            let name = items[i].querySelector('div > div:first-child').innerText.toLowerCase();
+            let name = items[i].querySelector('.debt-info > div:first-child').innerText.toLowerCase();
             if (name.includes(input)) {
-                items[i].style.display = "flex";
+                items[i].style.display = "block";
             } else {
                 items[i].style.display = "none";
             }

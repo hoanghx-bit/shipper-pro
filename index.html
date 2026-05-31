@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Giao Hàng-Lê Hoàng</title>
+    <title>Hoàng Shipper</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -26,7 +26,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #cbd5e1; display: flex; justify-content: center; min-height: 100vh; }
         
-        /* Đã sửa: Tối ưu chống tràn tuyệt đối trên Mobile */
         .app-container { width: 100vw; max-width: 430px; background-color: var(--slate-100); height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; z-index: 10; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); flex-shrink: 0; }
@@ -45,7 +44,6 @@
         .card { background: #fff; margin: 12px; padding: 15px; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid rgba(241, 245, 249, 0.8); }
         .card-title { font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
         
-        /* Flex row chống tràn */
         .flex-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; position: relative; width: 100%; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
         
@@ -55,7 +53,6 @@
         .text-right { text-align: right; font-weight: 700; color: var(--primary); font-size: 15px;}
         .readonly { background-color: var(--slate-100); color: var(--slate-600); cursor: not-allowed; }
 
-        /* Fix nút Tính km vừa vặn phần viền bên phải */
         .btn-api { position: absolute; right: 5px; padding: 7px 10px; background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.2s; z-index: 2; }
         .btn-api:hover { background: var(--primary); color: white; }
         .btn-api:disabled { background: var(--slate-100); color: var(--slate-400); border-color: var(--slate-200); cursor: wait; }
@@ -100,7 +97,6 @@
         .badge.warning { background: var(--warning-light); color: var(--warning); }
 
         .toast { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: var(--slate-800); color: white; padding: 9px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; box-shadow: 0 8px 12px rgba(0,0,0,0.2); white-space: nowrap;}
-        .small-hint { font-size: 11px; color: var(--slate-400); margin-top: 4px; text-align: right; font-weight: 500; }
         .no-data { text-align: center; color: var(--slate-400); font-size: 13px; padding: 20px 0; font-weight: 500; }
     </style>
 </head>
@@ -163,17 +159,16 @@
                 </div>
 
                 <div class="flex-between" style="margin-top: 12px; border-top: 1px solid var(--slate-100); padding-top: 12px;">
-                    <span class="input-label">Khoảng cách gốc (km)</span>
+                    <span class="input-label">Số km tính tiền (Đã x1.2)</span>
                     <div class="input-wrapper">
                         <input type="number" id="distance-input" class="input-box text-right" placeholder="0" step="0.1" oninput="calculateShippingFee()">
                     </div>
                 </div>
 
                 <div class="flex-between">
-                    <span class="input-label">Phí Ship </span>
+                    <span class="input-label">Cước phí thanh toán</span>
                     <div class="input-wrapper">
                         <input type="text" id="ship-input" class="input-box text-right readonly" placeholder="0 đ" readonly>
-                        <div id="distance-hint" class="small-hint">Km tính tiền: 0 km</div>
                     </div>
                 </div>
 
@@ -312,7 +307,7 @@
         calculateShippingFee();
     }
 
-    // --- TỐI ƯU API: KHÓA PHẠM VI TÌM KIẾM TRONG QUẢNG TRỊ ---
+    // --- TỐI ƯU API: TÍNH KM VÀ TỰ ĐỘNG NHÂN LUÔN HỆ SỐ 1.2 ---
     async function getDistanceAPI() {
         let pickup = document.getElementById('pickup-address').value.trim();
         let dropoffRaw = document.getElementById('dropoff-address').value.trim();
@@ -320,20 +315,16 @@
         
         if(!pickup || !dropoffRaw) { alert("Vui lòng điền thông tin điểm đi/đến!"); return; }
         
-        // Tự động chèn từ khóa ", Quảng Trị" để định vị chuẩn xác
         let dropoff = dropoffRaw.toLowerCase().includes("quảng trị") ? dropoffRaw : dropoffRaw + ", Quảng Trị";
-        
         btn.disabled = true; btn.innerText = "⏳...";
 
         try {
-            // Tối ưu hóa API: Bổ sung tọa độ giới hạn (viewbox) bao quanh tỉnh Quảng Trị
             const getCoords = async (addr) => {
                 let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1&viewbox=106.3,17.2,107.4,16.3&bounded=1`;
                 let res = await fetch(url);
                 let data = await res.json();
                 if(data && data.length > 0) return { lat: data[0].lat, lon: data[0].lon };
                 
-                // Nếu tìm giới hạn không thấy, thử tìm kiếm mở rộng phòng trường hợp giáp ranh
                 let backupRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`);
                 let backupData = await backupRes.json();
                 if(backupData && backupData.length > 0) return { lat: backupData[0].lat, lon: backupData[0].lon };
@@ -348,28 +339,27 @@
             const rData = await osrm.json();
 
             if(rData && rData.routes && rData.routes.length > 0) {
-                const km = (rData.routes[0].distance / 1000).toFixed(1);
-                document.getElementById('distance-input').value = km;
+                const baseKm = rData.routes[0].distance / 1000;
+                // SỬA TẠI ĐÂY: Kết quả đổ thẳng vào ô nhập đã được nhân sẵn hệ số 1.2
+                const finalKm = (baseKm * 1.2).toFixed(1);
+                document.getElementById('distance-input').value = finalKm;
                 calculateShippingFee();
-                showToast(`Bản đồ đo được: ${km} km`);
+                showToast(`Đã tính km kèm hệ số bù: ${finalKm} km`);
             } else { throw new Error("Không thể tính lộ trình di chuyển đường bộ."); }
         } catch (e) {
             alert(e.message || "Lỗi kết nối mạng. Hãy nhập thủ công Km.");
         } finally { btn.disabled = false; btn.innerText = "Tính km"; }
     }
 
-    // --- ĐÃ SỬA: NHÂN HỆ SỐ 1.2 TRỰC TIẾP VÀO GIÁ TIỀN ---
+    // --- SỬA LOGIC: LẤY THẲNG SỐ KM ĐỂ TÍNH TIỀN (VÌ ĐÃ LÀ KM HỆ SỐ) ---
     function calculateShippingFee() {
-        let raw = parseFloat(document.getElementById('distance-input').value);
+        let realKm = parseFloat(document.getElementById('distance-input').value);
         let shipInput = document.getElementById('ship-input');
-        let hint = document.getElementById('distance-hint');
 
-        if(isNaN(raw) || raw <= 0) { shipInput.value = ''; hint.innerText = "Km tính tiền: 0 km"; return; }
+        if(isNaN(realKm) || realKm <= 0) { shipInput.value = ''; return; }
 
-        // Nhân trực tiếp hệ số bù quãng đường 1.2 luôn
-        let realKm = raw * 1.2;
         let money = 0;
-
+        // Sử dụng trực tiếp con số hiển thị trong ô nhập
         if(realKm <= config.baseKm) {
             money = config.basePrice;
         } else {
@@ -377,7 +367,6 @@
         }
 
         shipInput.value = formatMoney(Math.round(money)) + " đ";
-        hint.innerText = `Km tính tiền (Đã x1.2): ${realKm.toFixed(2)} km`;
     }
 
     function getCurrentGPS() {
@@ -455,10 +444,8 @@
         document.getElementById('distance-input').value = '';
         document.getElementById('ship-input').value = '';
         document.getElementById('cod-input').value = '';
-        document.getElementById('distance-hint').innerText = "Km tính tiền: 0 km";
     }
 
-    // --- TÌM KIẾM THEO TÊN REALTIME ---
     function renderDebtTab() {
         let listContainer = document.getElementById('debt-list');
         let searchKey = document.getElementById('search-debt').value.toLowerCase().trim();

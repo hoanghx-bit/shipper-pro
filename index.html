@@ -3,92 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIFAST - Quản lý vận chuyển</title>
+    <title>UNIFAST - Thông tin đơn hàng</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 15px; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h2 { color: #007bff; margin-top: 0; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .summary-box { background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
-        .status-debt { color: red; font-weight: bold; }
-        .status-paid { color: green; font-weight: bold; }
+        /* Reset CSS cơ bản */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #e9ecef; display: flex; justify-content: center; }
+        
+        /* Giả lập khung màn hình điện thoại */
+        .app-container { width: 100%; max-width: 414px; background-color: #f4f6f8; min-height: 100vh; position: relative; padding-bottom: 90px; }
+
+        /* Thanh tiêu đề trên cùng */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #fff; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .header h1 { font-size: 17px; font-weight: 600; flex-grow: 1; text-align: center; color: #333; }
+        .btn-outline { border: 1px solid #0066b3; color: #0066b3; background: transparent; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .back-icon { font-size: 20px; font-weight: bold; color: #333; cursor: pointer; text-decoration: none; }
+
+        /* Các khối nội dung (Cards) */
+        .card { background: #fff; margin: 15px; padding: 18px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+
+        /* Tiện ích Flexbox */
+        .flex-row { display: flex; gap: 12px; align-items: center; margin-bottom: 15px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        
+        /* Khung nhập liệu (Inputs) */
+        .input-box { flex: 1; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; width: 100%; background: #fdfdfd; transition: 0.2s; }
+        .input-box:focus { border-color: #0066b3; background: #fff; }
+        .input-label { font-weight: 600; color: #0066b3; font-size: 15px; }
+
+        /* Chọn địa điểm */
+        .location-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+        .location-item:not(:last-child) { border-bottom: 1px solid #f0f0f0; }
+        .loc-icon { font-size: 18px; }
+
+        /* Nút Toggles (Không / Cần thùng) */
+        .toggle-group { display: flex; background: #f1f5f9; border-radius: 25px; padding: 3px; width: 160px; }
+        .toggle-btn { flex: 1; padding: 8px 0; text-align: center; border: none; background: transparent; font-size: 14px; cursor: pointer; color: #64748b; font-weight: 500; }
+        .toggle-btn.active { background: #fff; border-radius: 20px; color: #0066b3; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
+
+        /* Nút Tip thưởng xế */
+        .tip-group { display: flex; gap: 10px; }
+        .tip-btn { padding: 8px 16px; text-align: center; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 20px; cursor: pointer; color: #475569; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .tip-btn:hover, .tip-btn.active { border-color: #10b981; color: #10b981; background: #ecfdf5; }
+
+        /* Tổng kết hóa đơn */
+        .bill-text { font-size: 15px; color: #475569; }
+        .bill-amount { font-size: 15px; color: #1e293b; font-weight: 500; }
+        .bill-total { font-size: 20px; font-weight: 700; color: #0066b3; }
+        .divider { border: 0; border-top: 1px dashed #cbd5e1; margin: 15px 0; }
+
+        /* Thanh điều hướng/Nút đặt xe dưới cùng */
+        .bottom-bar { position: absolute; bottom: 0; width: 100%; background: #fff; padding: 15px 20px; display: flex; gap: 12px; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); }
+        .btn-promo { flex: 1; padding: 15px; border: 1px solid #e2e8f0; background: #fff; border-radius: 30px; font-weight: 600; color: #333; font-size: 15px; cursor: pointer; }
+        .btn-primary { flex: 2; padding: 15px; background: #0066b3; color: #fff; border: none; border-radius: 30px; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 102, 179, 0.2); }
     </style>
 </head>
 <body>
 
-    <h2>UNIFAST - Đặt đơn</h2>
-    <div class="card">
-        <input type="text" id="custName" placeholder="Tên khách hàng">
-        <input type="number" id="distance" placeholder="Nhập quãng đường (km)">
-        <input type="number" id="cod" placeholder="Tiền thu hộ (COD)">
-        <button onclick="saveOrder()">Lưu đơn hàng</button>
+<div class="app-container">
+    
+    <div class="header">
+        <a href="#" class="back-icon">&lsaquo;</a>
+        <h1>Thông tin đơn hàng</h1>
+        <button class="btn-outline">Hướng dẫn</button>
     </div>
 
-    <h2>Báo cáo & Ghi nợ</h2>
     <div class="card">
-        <input type="text" id="filter" placeholder="Tìm kiếm theo tên khách..." oninput="renderOrders()">
-        <div id="stats" class="summary-box"></div>
-        <table id="table">
-            <thead><tr><th>Khách</th><th>Phí/COD</th><th>TT</th><th>Xóa</th></tr></thead>
-            <tbody></tbody>
-        </table>
+        <div class="location-item">
+            <span class="loc-icon" style="color: #0066b3;">🔵</span>
+            <div style="flex:1; font-size: 15px;">29a Đường Nguyễn Hữu Khiếu</div>
+        </div>
+        <div class="location-item">
+            <span class="loc-icon" style="color: #ef4444;">🔴</span>
+            <input type="text" class="input-box" style="border:none; padding:0; background:transparent; font-size: 15px;" placeholder="Chọn điểm đến ....">
+        </div>
     </div>
 
-<script>
-    let orders = JSON.parse(localStorage.getItem('orders')) || [];
+    <div class="card">
+        <div class="flex-between">
+            <span class="input-label">Trọng lượng</span>
+            <select class="input-box" style="width: auto; padding: 10px; flex: none;">
+                <option>Dưới 10kg</option>
+                <option>10kg - 20kg</option>
+            </select>
+        </div>
 
-    function saveOrder() {
-        const name = document.getElementById('custName').value;
-        const dist = parseFloat(document.getElementById('distance').value);
-        const cod = parseFloat(document.getElementById('cod').value);
+        <div class="flex-row">
+            <input type="text" class="input-box" placeholder="👤 Người nhận">
+            <input type="tel" class="input-box" placeholder="📞 Điện thoại">
+        </div>
+
+        <div class="flex-between" style="border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 5px;">
+            <span class="input-label">Thu hộ (COD)</span>
+            <span style="color: #0066b3; font-weight: 600;">1,500,000 VNĐ</span>
+        </div>
+
+        <input type="text" class="input-box" placeholder="Thêm các yêu cầu của bạn cho tài xế" style="margin-top: 15px;">
+
+        <div class="flex-between" style="margin-top: 20px;">
+            <span style="color: #475569;">Yêu cầu thêm</span>
+            <div class="toggle-group">
+                <button class="toggle-btn active">Không</button>
+                <button class="toggle-btn">Cần thùng</button>
+            </div>
+        </div>
+
+        <div class="flex-between" style="margin-top: 20px;">
+            <span style="color: #10b981; font-weight: 600;">Thưởng xế</span>
+            <div class="tip-group">
+                <button class="tip-btn">5K</button>
+                <button class="tip-btn">10K</button>
+                <button class="tip-btn">20K</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="flex-between" style="margin-bottom: 10px;">
+            <span class="bill-text">Phí vận chuyển <small style="color:#0066b3; font-weight:600;">[2,9 km]</small></span>
+            <span class="bill-amount">13,000</span>
+        </div>
+        <div class="flex-between">
+            <span class="bill-text">Phí thu hộ</span>
+            <span class="bill-amount">5,000</span>
+        </div>
         
-        if(!name || !dist) return alert("Vui lòng nhập đầy đủ");
+        <hr class="divider">
+        
+        <div class="flex-between">
+            <span style="font-weight: 600; font-size: 16px;">Tổng cộng</span>
+            <span class="bill-total">18,000</span>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="#" style="color: #94a3b8; font-size: 13px; text-decoration: none;">Bấm vào đây để xuất hóa đơn điện tử</a>
+        </div>
+    </div>
 
-        // Công thức: 10k + 5k/km sau 2km, nhân hệ số 1.2
-        const realDist = dist * 1.2;
-        let fee = 10000;
-        if (realDist > 2) fee += (realDist - 2) * 5000;
+    <div class="bottom-bar">
+        <button class="btn-promo">Khuyến mãi</button>
+        <button class="btn-primary">Gọi xe</button>
+    </div>
 
-        const order = { id: Date.now(), name, fee, cod, status: 'Nợ' };
-        orders.push(order);
-        localStorage.setItem('orders', JSON.stringify(orders));
-        renderOrders();
-    }
+</div>
 
-    function renderOrders() {
-        const keyword = document.getElementById('filter').value.toLowerCase();
-        const tbody = document.querySelector('#table tbody');
-        tbody.innerHTML = '';
-        let totalFee = 0, totalCod = 0;
-
-        orders.filter(o => o.name.toLowerCase().includes(keyword)).forEach(o => {
-            tbody.innerHTML += `<tr>
-                <td>${o.name}</td>
-                <td>${o.fee.toLocaleString()} / ${o.cod.toLocaleString()}</td>
-                <td class="${o.status === 'Nợ' ? 'status-debt' : 'status-paid'}" onclick="toggleStatus(${o.id})">${o.status}</td>
-                <td><button style="background:red; padding:5px" onclick="deleteOrder(${o.id})">X</button></td>
-            </tr>`;
-            if(o.status === 'Nợ') { totalFee += o.fee; totalCod += o.cod; }
-        });
-        document.getElementById('stats').innerHTML = `Tổng còn nợ: <b>${totalFee.toLocaleString()}đ</b> phí / <b>${totalCod.toLocaleString()}đ</b> COD`;
-    }
-
-    function toggleStatus(id) {
-        orders = orders.map(o => o.id === id ? {...o, status: o.status === 'Nợ' ? 'Đã thu' : 'Nợ'} : o);
-        localStorage.setItem('orders', JSON.stringify(orders));
-        renderOrders();
-    }
-
-    function deleteOrder(id) {
-        orders = orders.filter(o => o.id !== id);
-        localStorage.setItem('orders', JSON.stringify(orders));
-        renderOrders();
-    }
-
-    renderOrders();
-</script>
 </body>
 </html>

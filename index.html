@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Giao Hàng Pro</title>
+    <title>App Giao Hàng Pro V3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,7 +11,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Nút xoay khi đang tải tọa độ */
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -107,13 +106,12 @@
             </div>
 
             <div id="so-no" class="tab-content">
-                <h2 class="text-lg font-bold text-gray-800 mb-4 px-1">Khách hàng ghi nợ</h2>
+                <h2 class="text-lg font-bold text-gray-800 mb-4 px-1">Khách hàng nợ cước</h2>
                 <div id="danh-sach-no"></div>
             </div>
 
             <div id="bao-cao" class="tab-content space-y-4">
-                <h2 class="text-lg font-bold text-gray-800 mb-2 px-1">Tổng quan</h2>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3 mb-2">
                     <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                         <p class="text-xs text-blue-600 font-semibold mb-1">Tổng số đơn</p>
                         <p id="bc-tong-don" class="text-2xl font-bold text-blue-800">0</p>
@@ -122,16 +120,30 @@
                         <p class="text-xs text-green-600 font-semibold mb-1">Doanh thu cước</p>
                         <p id="bc-doanh-thu" class="text-xl font-bold text-green-800">0 đ</p>
                     </div>
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 col-span-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs text-orange-600 font-semibold mb-1">COD đang giữ (Chưa trả khách)</p>
+                                <p id="bc-tong-cod" class="text-2xl font-bold text-orange-800">0 đ</p>
+                            </div>
+                            <i class="fa-solid fa-wallet text-orange-300 text-3xl"></i>
+                        </div>
+                    </div>
                 </div>
 
-                <h3 class="font-bold text-gray-800 mt-6 mb-3 px-1">Lịch sử đơn (Sửa phí sau giao)</h3>
-                <p class="text-xs text-gray-500 italic mb-2 px-1">Chạm vào mức giá của đơn để thay đổi phí cước vận chuyển.</p>
-                <div id="lich-su-don" class="space-y-2 pb-10"></div>
+                <h3 class="font-bold text-gray-800 mt-6 mb-2 px-1">Quản lý & Lịch sử đơn</h3>
+                
+                <div class="relative mb-3">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="search-name" oninput="renderReports()" placeholder="Lọc theo tên khách hàng..." class="w-full bg-white pl-9 pr-4 py-2 rounded-xl border border-gray-200 shadow-sm outline-none text-sm focus:border-blue-400">
+                </div>
+
+                <div id="lich-su-don" class="space-y-3 pb-10"></div>
             </div>
 
             <div id="cai-dat" class="tab-content space-y-4">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                    <h2 class="font-bold text-gray-800 border-b pb-2 mb-4">Cấu hình giá cước tự động</h2>
+                    <h2 class="font-bold text-gray-800 border-b pb-2 mb-4">Cấu hình giá & Hệ số</h2>
                     
                     <div>
                         <label class="text-xs font-bold text-gray-500 mb-1 block">Giá mở cửa (VND)</label>
@@ -145,9 +157,13 @@
                         <label class="text-xs font-bold text-gray-500 mb-1 block">Giá mỗi KM tiếp theo (VND/km)</label>
                         <input type="number" id="cfg-extra-fee" class="w-full p-2 bg-gray-50 border rounded-lg outline-none font-bold text-blue-600">
                     </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">Hệ số nhân KM (Bù trừ đường vòng/chim bay)</label>
+                        <input type="number" id="cfg-dist-mult" class="w-full p-2 bg-gray-50 border rounded-lg outline-none font-bold text-orange-600" step="0.1" placeholder="VD: 1.2">
+                    </div>
 
                     <button onclick="saveSettings()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl mt-4">
-                        Lưu cấu hình giá
+                        Lưu cấu hình
                     </button>
                     <p id="cfg-msg" class="text-green-600 text-xs text-center font-bold hidden">Đã lưu cấu hình!</p>
                 </div>
@@ -157,23 +173,22 @@
     </div>
 
     <script>
-        /* QUẢN LÝ DỮ LIỆU & CẤU HÌNH */
         let orders = JSON.parse(localStorage.getItem('gh_orders_pro')) || [];
-        let currentGPS = null; // {lat, lon}
+        let currentGPS = null; 
         let isDebtCurrent = false;
 
-        // Cấu hình giá mặc định
-        let pricingConf = JSON.parse(localStorage.getItem('gh_pricing_pro')) || {
+        let pricingConf = JSON.parse(localStorage.getItem('gh_pricing_pro_v3')) || {
             baseFee: 13000,
             baseKm: 2,
-            extraFee: 5000
+            extraFee: 5000,
+            distMult: 1.0 // Mặc định hệ số nhân là 1
         };
 
-        // Khởi tạo ngay khi tải trang
         window.onload = () => {
             document.getElementById('cfg-base-fee').value = pricingConf.baseFee;
             document.getElementById('cfg-base-km').value = pricingConf.baseKm;
             document.getElementById('cfg-extra-fee').value = pricingConf.extraFee;
+            document.getElementById('cfg-dist-mult').value = pricingConf.distMult || 1.0;
             initGPS();
         };
 
@@ -190,64 +205,56 @@
                         gpsText.classList.add('text-green-600');
                     },
                     (error) => {
-                        gpsText.innerText = "Chưa cấp quyền / Lỗi GPS. Bạn có thể tự nhập tay số KM.";
+                        gpsText.innerText = "Chưa cấp quyền / Lỗi GPS. Tự nhập tay số KM.";
                         gpsText.classList.add('text-red-500');
                     },
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
-            } else {
-                gpsText.innerText = "Trình duyệt không hỗ trợ GPS.";
             }
         }
 
         async function autoCalcDistance() {
             const destInput = document.getElementById('diem-giao').value.trim();
             if (!destInput) return alert("Vui lòng nhập địa chỉ giao để tính toán!");
-            if (!currentGPS) return alert("Chưa lấy được vị trí hiện tại của bạn. Vui lòng bật định vị hoặc tự gõ số KM.");
+            if (!currentGPS) return alert("Chưa có GPS. Vui lòng bật định vị hoặc tự gõ số KM.");
 
             const btn = document.getElementById('btn-calc-dist');
             const icon = btn.querySelector('i');
-            icon.className = "fa-solid fa-spinner spin"; // Xoay icon loading
+            icon.className = "fa-solid fa-spinner spin"; 
 
             try {
-                // 1. Chuyển địa chỉ thành tọa độ (Geocoding API miễn phí)
-                // Ép thêm "Quảng Trị" hoặc địa phương để tăng độ chuẩn xác
                 const searchQuery = encodeURIComponent(destInput + ", Vietnam");
                 const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`;
                 
                 const geoRes = await fetch(geocodeUrl);
                 const geoData = await geoRes.json();
-                
-                if (geoData.length === 0) {
-                    throw new Error("Không tìm thấy tọa độ địa chỉ này trên bản đồ. Vui lòng nhập số KM thủ công.");
-                }
+                if (geoData.length === 0) throw new Error("Không tìm thấy tọa độ. Vui lòng nhập KM thủ công.");
 
                 const destLat = geoData[0].lat;
                 const destLon = geoData[0].lon;
 
-                // 2. Tính khoảng cách đường đi (OSRM Routing API miễn phí)
                 const routeUrl = `https://router.project-osrm.org/route/v1/driving/${currentGPS.lon},${currentGPS.lat};${destLon},${destLat}?overview=false`;
-                
                 const routeRes = await fetch(routeUrl);
                 const routeData = await routeRes.json();
 
-                if (routeData.code !== "Ok") throw new Error("Lỗi khi tính toán tuyến đường.");
+                if (routeData.code !== "Ok") throw new Error("Lỗi khi tính tuyến đường.");
 
-                // Đổi từ mét sang KM
-                let distanceKm = (routeData.routes[0].distance / 1000).toFixed(1);
+                // Đổi ra KM và nhân với hệ số đã cài đặt
+                let rawKm = routeData.routes[0].distance / 1000;
+                let multiplier = pricingConf.distMult || 1.0;
+                let finalKm = (rawKm * multiplier).toFixed(1);
                 
-                document.getElementById('khoang-cach').value = distanceKm;
-                calculateTotal(); // Tự tính lại tiền
+                document.getElementById('khoang-cach').value = finalKm;
+                calculateTotal(); 
 
             } catch (err) {
                 alert(err.message);
             } finally {
-                icon.className = "fa-solid fa-route"; // Trả lại icon cũ
+                icon.className = "fa-solid fa-route"; 
             }
         }
 
-
-        /* 2. LOGIC TÍNH TIỀN & ĐƠN HÀNG */
+        /* 2. CHUYỂN TAB & CÀI ĐẶT */
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
@@ -282,9 +289,10 @@
             pricingConf.baseFee = parseFloat(document.getElementById('cfg-base-fee').value) || 0;
             pricingConf.baseKm = parseFloat(document.getElementById('cfg-base-km').value) || 0;
             pricingConf.extraFee = parseFloat(document.getElementById('cfg-extra-fee').value) || 0;
+            pricingConf.distMult = parseFloat(document.getElementById('cfg-dist-mult').value) || 1.0;
             
-            localStorage.setItem('gh_pricing_pro', JSON.stringify(pricingConf));
-            calculateTotal(); // Update current form immediately
+            localStorage.setItem('gh_pricing_pro_v3', JSON.stringify(pricingConf));
+            calculateTotal(); 
             
             const msg = document.getElementById('cfg-msg');
             msg.classList.remove('hidden');
@@ -295,7 +303,6 @@
             const distance = parseFloat(document.getElementById('khoang-cach').value) || 0;
             let fee = 0;
             
-            // Công thức cấu hình động
             if (distance > 0) {
                 if (distance <= pricingConf.baseKm) {
                     fee = pricingConf.baseFee;
@@ -322,13 +329,13 @@
                 id: Date.now(),
                 date: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
                 name, phone, addr, distance, cod, fee,
-                isDebt: isDebtCurrent
+                isDebt: isDebtCurrent,
+                isCodPaid: cod === 0 // Nếu không có COD thì coi như đã trả xong
             };
 
             orders.unshift(newOrder); 
             localStorage.setItem('gh_orders_pro', JSON.stringify(orders));
 
-            // Reset form
             document.getElementById('khoang-cach').value = '';
             document.getElementById('diem-giao').value = '';
             document.getElementById('ten-khach').value = '';
@@ -342,7 +349,7 @@
             setTimeout(() => { msg.classList.add('hidden'); msg.classList.remove('flex'); }, 3000);
         }
 
-        /* 3. HIỂN THỊ DỮ LIỆU & CHỈNH SỬA LỊCH SỬ */
+        /* 3. SỔ NỢ (Cước Vận Chuyển) */
         function renderDebtList() {
             const listDiv = document.getElementById('danh-sach-no');
             listDiv.innerHTML = '';
@@ -350,10 +357,9 @@
 
             orders.forEach(o => {
                 if(o.isDebt) {
-                    // Dùng tên khách + SĐT làm key nếu không có SĐT
                     const key = o.phone !== 'Không có' ? o.phone : (o.name + '_khachle');
                     if(!debts[key]) debts[key] = { name: o.name, phone: o.phone, total: 0, count: 0 };
-                    debts[key].total += o.fee; // Nợ cước vận chuyển (nếu tính nợ gộp cả COD thì đổi thành o.fee + o.cod)
+                    debts[key].total += o.fee; 
                     debts[key].count += 1;
                 }
             });
@@ -378,7 +384,7 @@
                             </div>
                         </div>
                         <button onclick="payDebt('${key}')" class="w-full py-2 bg-green-50 text-green-700 font-bold text-sm rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-                            Xóa nợ (Đã thu)
+                            Xóa nợ cước (Đã thu)
                         </button>
                     </div>`;
             }
@@ -395,53 +401,99 @@
             }
         }
 
-        // TÍNH NĂNG CHỈNH SỬA PHÍ VẬN CHUYỂN SAU KHI GIAO
+        /* 4. BÁO CÁO & XÁC NHẬN TRẢ COD */
         function editFee(orderId) {
             const order = orders.find(o => o.id === orderId);
             if(!order) return;
             
             const newFeeRaw = prompt(`Sửa cước vận chuyển cho đơn của [${order.name}]:`, order.fee);
-            if(newFeeRaw === null) return; // Bấm cancel
+            if(newFeeRaw === null) return; 
             
             const newFee = parseFloat(newFeeRaw);
             if(!isNaN(newFee) && newFee >= 0) {
                 order.fee = newFee;
                 localStorage.setItem('gh_orders_pro', JSON.stringify(orders));
-                renderReports(); // Update UI
+                renderReports(); 
             } else {
                 alert("Số tiền không hợp lệ!");
             }
         }
 
+        function payCod(orderId) {
+            if(confirm("Xác nhận đã thanh toán tiền thu hộ (COD) này cho khách/shop?")) {
+                const order = orders.find(o => o.id === orderId);
+                if(order) {
+                    order.isCodPaid = true;
+                    localStorage.setItem('gh_orders_pro', JSON.stringify(orders));
+                    renderReports();
+                }
+            }
+        }
+
         function renderReports() {
+            // Lấy từ khóa tìm kiếm
+            const searchTerm = document.getElementById('search-name').value.toLowerCase().trim();
+
             let sumFee = 0;
-            orders.forEach(o => sumFee += o.fee);
+            let sumPendingCod = 0;
+            
+            // Tính tổng quát từ TẤT CẢ đơn hàng (không bị ảnh hưởng bởi bộ lọc)
+            orders.forEach(o => {
+                sumFee += o.fee;
+                if(o.cod > 0 && !o.isCodPaid) sumPendingCod += o.cod;
+            });
 
             document.getElementById('bc-tong-don').innerText = orders.length;
             document.getElementById('bc-doanh-thu').innerText = sumFee.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('bc-tong-cod').innerText = sumPendingCod.toLocaleString('vi-VN') + ' đ';
 
             const historyDiv = document.getElementById('lich-su-don');
             historyDiv.innerHTML = '';
             
-            orders.slice(0, 20).forEach(o => { // Hiển thị 20 đơn gần nhất
+            // Lọc danh sách theo từ khóa tên
+            const filteredOrders = orders.filter(o => o.name.toLowerCase().includes(searchTerm));
+
+            if(filteredOrders.length === 0) {
+                historyDiv.innerHTML = `<p class="text-center text-sm text-gray-400 py-4">Không tìm thấy đơn hàng nào.</p>`;
+                return;
+            }
+            
+            // Hiển thị tối đa 30 đơn kết quả
+            filteredOrders.slice(0, 30).forEach(o => { 
                 const statusBadge = o.isDebt 
-                    ? '<span class="text-[10px] px-2 py-0.5 mt-1 inline-block rounded font-bold bg-red-100 text-red-600 border border-red-200">Ghi nợ</span>'
-                    : '<span class="text-[10px] px-2 py-0.5 mt-1 inline-block rounded font-bold bg-green-100 text-green-600 border border-green-200">Tiền mặt</span>';
+                    ? '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-red-100 text-red-600 border border-red-200">Nợ cước</span>'
+                    : '<span class="text-[10px] px-2 py-0.5 rounded font-bold bg-green-100 text-green-600 border border-green-200">Tiền mặt</span>';
                 
+                // Nút trạng thái trả COD
+                let codSection = '';
+                if(o.cod > 0) {
+                    codSection = `
+                    <div class="border-t border-gray-100 pt-2 mt-2 flex justify-between items-center">
+                        <span class="text-[11px] text-gray-500 font-semibold">Tiền COD: <span class="text-orange-600 text-sm">${o.cod.toLocaleString('vi-VN')} đ</span></span>
+                        ${o.isCodPaid 
+                            ? `<span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded font-bold"><i class="fa-solid fa-check mr-1"></i>Đã trả COD</span>`
+                            : `<button onclick="payCod(${o.id})" class="text-[10px] bg-orange-100 text-orange-700 border border-orange-200 px-3 py-1 rounded font-bold hover:bg-orange-200 shadow-sm transition-colors">Xác nhận trả COD</button>`
+                        }
+                    </div>`;
+                }
+
                 historyDiv.innerHTML += `
-                    <div class="bg-white p-3 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
-                        <div class="flex-1 pr-2">
-                            <p class="font-bold text-sm text-gray-800">${o.name}</p>
-                            <p class="text-[11px] text-gray-500 truncate mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${o.addr}</p>
-                            <p class="text-[10px] text-gray-400">${o.date} - ${o.distance}km</p>
+                    <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 pr-2">
+                                <p class="font-bold text-sm text-gray-800">${o.name}</p>
+                                <p class="text-[11px] text-gray-500 truncate mb-1 mt-0.5"><i class="fa-solid fa-location-dot mr-1"></i> ${o.addr}</p>
+                                <p class="text-[10px] text-gray-400">${o.date} - <span class="font-bold">${o.distance} km</span></p>
+                            </div>
+                            <div class="text-right flex flex-col items-end shrink-0 gap-1.5">
+                                <button onclick="editFee(${o.id})" class="flex items-center gap-1 group bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors" title="Nhấn để sửa cước">
+                                    <span class="font-bold text-blue-700 text-sm group-hover:scale-105 transition-transform">${o.fee.toLocaleString('vi-VN')} đ</span>
+                                    <i class="fa-solid fa-pen text-[10px] text-blue-400 group-hover:text-blue-600"></i>
+                                </button>
+                                ${statusBadge}
+                            </div>
                         </div>
-                        <div class="text-right flex flex-col items-end shrink-0">
-                            <button onclick="editFee(${o.id})" class="flex items-center gap-1 group bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors" title="Nhấn để sửa cước">
-                                <span class="font-bold text-blue-700 text-sm group-hover:scale-105 transition-transform">${o.fee.toLocaleString('vi-VN')} đ</span>
-                                <i class="fa-solid fa-pen text-[10px] text-blue-400 group-hover:text-blue-600"></i>
-                            </button>
-                            ${statusBadge}
-                        </div>
+                        ${codSection}
                     </div>
                 `;
             });

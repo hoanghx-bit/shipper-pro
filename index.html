@@ -3,60 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Giao Hàng</title>
+    <title>App Giao Hàng Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Ẩn thanh cuộn cho mượt */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Nút xoay khi đang tải tọa độ */
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-100 flex justify-center font-sans text-gray-800">
 
     <div class="w-full max-w-md bg-white shadow-xl h-screen flex flex-col relative overflow-hidden">
         
-        <div class="bg-blue-600 p-3 pb-4 rounded-b-xl shadow-md z-10 flex justify-around">
-            <button onclick="switchTab('len-don')" id="tab-btn-len-don" class="flex flex-col items-center px-4 py-2 rounded-xl transition-all bg-white text-blue-600 shadow">
-                <i class="fa-solid fa-file-invoice text-xl"></i>
-                <span class="text-xs mt-1 font-bold">Lên đơn</span>
+        <div class="bg-blue-600 p-2 pb-3 rounded-b-xl shadow-md z-10 flex justify-around items-end">
+            <button onclick="switchTab('len-don')" id="tab-btn-len-don" class="flex flex-col items-center px-3 py-2 rounded-xl transition-all bg-white text-blue-600 shadow w-1/4">
+                <i class="fa-solid fa-file-invoice text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">Lên đơn</span>
             </button>
-            <button onclick="switchTab('so-no')" id="tab-btn-so-no" class="flex flex-col items-center px-4 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500">
-                <i class="fa-solid fa-book text-xl"></i>
-                <span class="text-xs mt-1 font-bold">Sổ nợ</span>
+            <button onclick="switchTab('so-no')" id="tab-btn-so-no" class="flex flex-col items-center px-3 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500 w-1/4">
+                <i class="fa-solid fa-book text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">Sổ nợ</span>
             </button>
-            <button onclick="switchTab('bao-cao')" id="tab-btn-bao-cao" class="flex flex-col items-center px-4 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500">
-                <i class="fa-solid fa-chart-column text-xl"></i>
-                <span class="text-xs mt-1 font-bold">Báo cáo</span>
+            <button onclick="switchTab('bao-cao')" id="tab-btn-bao-cao" class="flex flex-col items-center px-3 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500 w-1/4">
+                <i class="fa-solid fa-chart-column text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">Báo cáo</span>
+            </button>
+            <button onclick="switchTab('cai-dat')" id="tab-btn-cai-dat" class="flex flex-col items-center px-3 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500 w-1/4">
+                <i class="fa-solid fa-gear text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">Cài đặt</span>
             </button>
         </div>
 
         <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
             
-            <div id="success-msg" class="hidden bg-green-100 text-green-700 p-3 rounded-lg items-center mb-4 text-sm font-bold">
-                <i class="fa-solid fa-circle-check mr-2"></i> Tạo đơn hàng thành công!
+            <div id="success-msg" class="hidden bg-green-100 text-green-700 p-3 rounded-lg items-center mb-4 text-sm font-bold shadow-sm border border-green-200">
+                <i class="fa-solid fa-circle-check mr-2"></i> Lên đơn thành công!
             </div>
 
             <div id="len-don" class="tab-content active space-y-4">
-                
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex items-center mb-3">
-                        <i class="fa-solid fa-location-dot text-blue-500 mr-3 text-lg"></i>
-                        <div class="text-sm text-gray-600">
-                            <p class="font-semibold text-gray-800">Điểm lấy hàng mặc định</p>
-                            <p>Đông Hà, Quảng Trị</p>
+                        <i class="fa-solid fa-location-crosshairs text-blue-500 mr-3 text-lg"></i>
+                        <div class="text-sm text-gray-600 flex-1">
+                            <p class="font-bold text-gray-800">Điểm lấy (GPS hiện tại)</p>
+                            <p id="diem-lay-hang" class="text-xs text-blue-600 italic mt-0.5">Đang định vị...</p>
                         </div>
+                        <button onclick="initGPS()" class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100"><i class="fa-solid fa-rotate-right"></i></button>
                     </div>
                     <div class="border-t border-gray-100 my-3"></div>
-                    <div class="flex items-center">
+                    <div class="flex items-center relative">
                         <i class="fa-solid fa-map-location-dot text-red-500 mr-3 text-lg"></i>
-                        <input type="text" id="diem-giao" placeholder="Địa chỉ giao..." class="w-full bg-transparent outline-none text-sm font-semibold">
+                        <input type="text" id="diem-giao" placeholder="Nhập địa chỉ giao cụ thể..." class="w-full bg-transparent outline-none text-sm font-semibold pr-10">
+                        <button onclick="autoCalcDistance()" id="btn-calc-dist" class="absolute right-0 p-2 text-white bg-blue-500 rounded-lg shadow hover:bg-blue-600 transition-colors" title="Tìm tọa độ & Tính KM">
+                            <i class="fa-solid fa-route"></i>
+                        </button>
                     </div>
                     <div class="mt-4 flex items-center gap-2 bg-gray-50 p-2 rounded-lg border focus-within:border-blue-300">
                         <span class="text-sm font-semibold whitespace-nowrap text-gray-600">Khoảng cách:</span>
-                        <input type="number" id="khoang-cach" placeholder="Số km (VD: 3.5)" oninput="calculateTotal()" class="w-full bg-transparent outline-none text-sm font-bold text-blue-600">
+                        <input type="number" id="khoang-cach" placeholder="Số km" oninput="calculateTotal()" class="w-full bg-transparent outline-none text-sm font-bold text-blue-600">
+                        <span class="text-sm text-gray-400 font-semibold">km</span>
                     </div>
                 </div>
 
@@ -64,11 +74,11 @@
                     <div class="flex space-x-2">
                         <div class="flex-1 bg-gray-50 p-2 rounded-lg border focus-within:border-blue-400 flex items-center">
                             <i class="fa-solid fa-user text-gray-400 mr-2"></i>
-                            <input type="text" id="ten-khach" placeholder="Tên khách" class="w-full bg-transparent outline-none text-sm font-semibold">
+                            <input type="text" id="ten-khach" placeholder="Tên khách (Tùy chọn)" class="w-full bg-transparent outline-none text-sm font-semibold">
                         </div>
                         <div class="flex-1 bg-gray-50 p-2 rounded-lg border focus-within:border-blue-400 flex items-center">
                             <i class="fa-solid fa-phone text-gray-400 mr-2"></i>
-                            <input type="tel" id="sdt-khach" placeholder="Số điện thoại" class="w-full bg-transparent outline-none text-sm font-semibold">
+                            <input type="tel" id="sdt-khach" placeholder="SĐT (Tùy chọn)" class="w-full bg-transparent outline-none text-sm font-semibold">
                         </div>
                     </div>
 
@@ -78,43 +88,31 @@
                     </div>
 
                     <div class="flex justify-between items-center px-1">
-                        <span class="font-semibold text-sm text-gray-700">Trạng thái</span>
+                        <span class="font-semibold text-sm text-gray-700">Hình thức</span>
                         <div class="flex bg-gray-100 rounded-lg p-1">
-                            <button id="btn-tien-mat" onclick="setDebt(false)" class="px-3 py-1 text-xs font-bold rounded-md bg-white text-green-600 shadow-sm transition-all">Tiền mặt</button>
+                            <button id="btn-tien-mat" onclick="setDebt(false)" class="px-3 py-1 text-xs font-bold rounded-md bg-white text-green-600 shadow-sm transition-all">Thu ngay</button>
                             <button id="btn-ghi-no" onclick="setDebt(true)" class="px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all">Ghi nợ</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-2 text-sm">
-                    <div class="flex justify-between text-gray-500">
-                        <span>Phí vận chuyển</span>
-                        <span id="phi-ship">0 đ</span>
-                    </div>
-                    <div class="flex justify-between text-gray-500">
-                        <span>Phí dịch vụ</span>
-                        <span>5.000 đ</span>
-                    </div>
-                    <div class="border-t border-dashed my-2"></div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-gray-800 text-base">Tổng cộng</span>
-                        <span id="tong-tien" class="font-bold text-blue-600 text-xl">5.000 đ</span>
-                    </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <span class="font-bold text-gray-800 text-base">Cước vận chuyển</span>
+                    <span id="tong-tien" class="font-bold text-blue-600 text-2xl">0 đ</span>
                 </div>
 
                 <button onclick="submitOrder()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-colors text-lg">
-                    Xác nhận tạo đơn
+                    Hoàn tất & Lưu đơn
                 </button>
             </div>
 
             <div id="so-no" class="tab-content">
-                <h2 class="text-lg font-bold text-gray-800 mb-4 px-1">Danh sách cần thu nợ</h2>
-                <div id="danh-sach-no">
-                    </div>
+                <h2 class="text-lg font-bold text-gray-800 mb-4 px-1">Khách hàng ghi nợ</h2>
+                <div id="danh-sach-no"></div>
             </div>
 
             <div id="bao-cao" class="tab-content space-y-4">
-                <h2 class="text-lg font-bold text-gray-800 mb-2 px-1">Tổng quan doanh thu</h2>
+                <h2 class="text-lg font-bold text-gray-800 mb-2 px-1">Tổng quan</h2>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                         <p class="text-xs text-blue-600 font-semibold mb-1">Tổng số đơn</p>
@@ -124,116 +122,211 @@
                         <p class="text-xs text-green-600 font-semibold mb-1">Doanh thu cước</p>
                         <p id="bc-doanh-thu" class="text-xl font-bold text-green-800">0 đ</p>
                     </div>
-                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 col-span-2">
-                        <p class="text-xs text-orange-600 font-semibold mb-1">Tổng tiền COD đang giữ</p>
-                        <p id="bc-tong-cod" class="text-2xl font-bold text-orange-800">0 đ</p>
-                    </div>
                 </div>
 
-                <h3 class="font-bold text-gray-800 mt-6 mb-3 px-1">Lịch sử đơn hàng</h3>
-                <div id="lich-su-don" class="space-y-2">
+                <h3 class="font-bold text-gray-800 mt-6 mb-3 px-1">Lịch sử đơn (Sửa phí sau giao)</h3>
+                <p class="text-xs text-gray-500 italic mb-2 px-1">Chạm vào mức giá của đơn để thay đổi phí cước vận chuyển.</p>
+                <div id="lich-su-don" class="space-y-2 pb-10"></div>
+            </div>
+
+            <div id="cai-dat" class="tab-content space-y-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <h2 class="font-bold text-gray-800 border-b pb-2 mb-4">Cấu hình giá cước tự động</h2>
+                    
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">Giá mở cửa (VND)</label>
+                        <input type="number" id="cfg-base-fee" class="w-full p-2 bg-gray-50 border rounded-lg outline-none font-bold text-blue-600">
                     </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">Áp dụng cho (KM) đầu tiên</label>
+                        <input type="number" id="cfg-base-km" class="w-full p-2 bg-gray-50 border rounded-lg outline-none font-bold text-blue-600" step="0.1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 mb-1 block">Giá mỗi KM tiếp theo (VND/km)</label>
+                        <input type="number" id="cfg-extra-fee" class="w-full p-2 bg-gray-50 border rounded-lg outline-none font-bold text-blue-600">
+                    </div>
+
+                    <button onclick="saveSettings()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl mt-4">
+                        Lưu cấu hình giá
+                    </button>
+                    <p id="cfg-msg" class="text-green-600 text-xs text-center font-bold hidden">Đã lưu cấu hình!</p>
+                </div>
             </div>
 
         </div>
     </div>
 
     <script>
-        // Khởi tạo dữ liệu từ LocalStorage hoặc dùng dữ liệu mẫu
-        let orders = JSON.parse(localStorage.getItem('giao_hang_db')) || [];
-        if(orders.length === 0) {
-            // Dữ liệu mẫu ban đầu
-            orders = [
-                { id: 1, date: new Date().toLocaleDateString('vi-VN'), name: 'Chị Nậm', phone: '0987654321', distance: 3.5, cod: 150000, fee: 20500, total: 25500, isDebt: true }
-            ];
-            saveData();
-        }
-
+        /* QUẢN LÝ DỮ LIỆU & CẤU HÌNH */
+        let orders = JSON.parse(localStorage.getItem('gh_orders_pro')) || [];
+        let currentGPS = null; // {lat, lon}
         let isDebtCurrent = false;
 
-        // 1. CHUYỂN TAB
+        // Cấu hình giá mặc định
+        let pricingConf = JSON.parse(localStorage.getItem('gh_pricing_pro')) || {
+            baseFee: 13000,
+            baseKm: 2,
+            extraFee: 5000
+        };
+
+        // Khởi tạo ngay khi tải trang
+        window.onload = () => {
+            document.getElementById('cfg-base-fee').value = pricingConf.baseFee;
+            document.getElementById('cfg-base-km').value = pricingConf.baseKm;
+            document.getElementById('cfg-extra-fee').value = pricingConf.extraFee;
+            initGPS();
+        };
+
+        /* 1. ĐỊNH VỊ GPS VÀ TÌM ĐƯỜNG */
+        function initGPS() {
+            const gpsText = document.getElementById('diem-lay-hang');
+            gpsText.innerText = "Đang tìm GPS...";
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentGPS = { lat: position.coords.latitude, lon: position.coords.longitude };
+                        gpsText.innerText = `Đã lấy tọa độ (${currentGPS.lat.toFixed(4)}, ${currentGPS.lon.toFixed(4)})`;
+                        gpsText.classList.remove('text-blue-600');
+                        gpsText.classList.add('text-green-600');
+                    },
+                    (error) => {
+                        gpsText.innerText = "Chưa cấp quyền / Lỗi GPS. Bạn có thể tự nhập tay số KM.";
+                        gpsText.classList.add('text-red-500');
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            } else {
+                gpsText.innerText = "Trình duyệt không hỗ trợ GPS.";
+            }
+        }
+
+        async function autoCalcDistance() {
+            const destInput = document.getElementById('diem-giao').value.trim();
+            if (!destInput) return alert("Vui lòng nhập địa chỉ giao để tính toán!");
+            if (!currentGPS) return alert("Chưa lấy được vị trí hiện tại của bạn. Vui lòng bật định vị hoặc tự gõ số KM.");
+
+            const btn = document.getElementById('btn-calc-dist');
+            const icon = btn.querySelector('i');
+            icon.className = "fa-solid fa-spinner spin"; // Xoay icon loading
+
+            try {
+                // 1. Chuyển địa chỉ thành tọa độ (Geocoding API miễn phí)
+                // Ép thêm "Quảng Trị" hoặc địa phương để tăng độ chuẩn xác
+                const searchQuery = encodeURIComponent(destInput + ", Vietnam");
+                const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`;
+                
+                const geoRes = await fetch(geocodeUrl);
+                const geoData = await geoRes.json();
+                
+                if (geoData.length === 0) {
+                    throw new Error("Không tìm thấy tọa độ địa chỉ này trên bản đồ. Vui lòng nhập số KM thủ công.");
+                }
+
+                const destLat = geoData[0].lat;
+                const destLon = geoData[0].lon;
+
+                // 2. Tính khoảng cách đường đi (OSRM Routing API miễn phí)
+                const routeUrl = `https://router.project-osrm.org/route/v1/driving/${currentGPS.lon},${currentGPS.lat};${destLon},${destLat}?overview=false`;
+                
+                const routeRes = await fetch(routeUrl);
+                const routeData = await routeRes.json();
+
+                if (routeData.code !== "Ok") throw new Error("Lỗi khi tính toán tuyến đường.");
+
+                // Đổi từ mét sang KM
+                let distanceKm = (routeData.routes[0].distance / 1000).toFixed(1);
+                
+                document.getElementById('khoang-cach').value = distanceKm;
+                calculateTotal(); // Tự tính lại tiền
+
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                icon.className = "fa-solid fa-route"; // Trả lại icon cũ
+            }
+        }
+
+
+        /* 2. LOGIC TÍNH TIỀN & ĐƠN HÀNG */
         function switchTab(tabId) {
-            // Ẩn tất cả tab
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
 
-            // Đổi màu nút
-            const btns = ['len-don', 'so-no', 'bao-cao'];
-            btns.forEach(btn => {
+            ['len-don', 'so-no', 'bao-cao', 'cai-dat'].forEach(btn => {
                 const el = document.getElementById('tab-btn-' + btn);
                 if(btn === tabId) {
-                    el.className = "flex flex-col items-center px-4 py-2 rounded-xl transition-all bg-white text-blue-600 shadow";
+                    el.className = "flex flex-col items-center px-3 py-2 rounded-xl transition-all bg-white text-blue-600 shadow w-1/4";
                 } else {
-                    el.className = "flex flex-col items-center px-4 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500";
+                    el.className = "flex flex-col items-center px-3 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500 w-1/4";
                 }
             });
 
-            // Nếu qua tab khác thì render lại dữ liệu
             if(tabId === 'so-no') renderDebtList();
             if(tabId === 'bao-cao') renderReports();
         }
 
-        // 2. CHỌN TRẠNG THÁI NỢ
         function setDebt(status) {
             isDebtCurrent = status;
-            const btnTienMat = document.getElementById('btn-tien-mat');
-            const btnGhiNo = document.getElementById('btn-ghi-no');
-            
-            if(status) { // Nếu chọn Ghi nợ
-                btnGhiNo.className = "px-3 py-1 text-xs font-bold rounded-md bg-red-500 text-white shadow-sm transition-all";
-                btnTienMat.className = "px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all";
-            } else { // Tiền mặt
-                btnTienMat.className = "px-3 py-1 text-xs font-bold rounded-md bg-white text-green-600 shadow-sm transition-all";
-                btnGhiNo.className = "px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all";
+            const bT = document.getElementById('btn-tien-mat');
+            const bG = document.getElementById('btn-ghi-no');
+            if(status) { 
+                bG.className = "px-3 py-1 text-xs font-bold rounded-md bg-red-500 text-white shadow-sm transition-all";
+                bT.className = "px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all";
+            } else { 
+                bT.className = "px-3 py-1 text-xs font-bold rounded-md bg-white text-green-600 shadow-sm transition-all";
+                bG.className = "px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all";
             }
         }
 
-        // 3. TÍNH TOÁN TIỀN SHIP TỰ ĐỘNG
+        function saveSettings() {
+            pricingConf.baseFee = parseFloat(document.getElementById('cfg-base-fee').value) || 0;
+            pricingConf.baseKm = parseFloat(document.getElementById('cfg-base-km').value) || 0;
+            pricingConf.extraFee = parseFloat(document.getElementById('cfg-extra-fee').value) || 0;
+            
+            localStorage.setItem('gh_pricing_pro', JSON.stringify(pricingConf));
+            calculateTotal(); // Update current form immediately
+            
+            const msg = document.getElementById('cfg-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 2000);
+        }
+
         function calculateTotal() {
             const distance = parseFloat(document.getElementById('khoang-cach').value) || 0;
             let fee = 0;
             
-            // Công thức: 2km đầu 13k, các km sau 5k/km
+            // Công thức cấu hình động
             if (distance > 0) {
-                if (distance <= 2) fee = 13000;
-                else fee = 13000 + Math.ceil(distance - 2) * 5000;
+                if (distance <= pricingConf.baseKm) {
+                    fee = pricingConf.baseFee;
+                } else {
+                    fee = pricingConf.baseFee + Math.ceil(distance - pricingConf.baseKm) * pricingConf.extraFee;
+                }
             }
 
-            const total = fee + 5000; // 5000đ phí dịch vụ mặc định
-
-            document.getElementById('phi-ship').innerText = fee.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('tong-tien').innerText = total.toLocaleString('vi-VN') + ' đ';
-            return { fee, total };
+            document.getElementById('tong-tien').innerText = fee.toLocaleString('vi-VN') + ' đ';
+            return fee;
         }
 
-        // 4. TẠO ĐƠN HÀNG MỚI
         function submitOrder() {
             const distance = parseFloat(document.getElementById('khoang-cach').value) || 0;
-            const name = document.getElementById('ten-khach').value.trim();
-            const phone = document.getElementById('sdt-khach').value.trim();
+            let name = document.getElementById('ten-khach').value.trim() || 'Khách lẻ';
+            let phone = document.getElementById('sdt-khach').value.trim() || 'Không có';
+            let addr = document.getElementById('diem-giao').value.trim() || 'Không rõ';
             const cod = parseFloat(document.getElementById('tien-cod').value) || 0;
+            const fee = calculateTotal();
 
-            if(!name || !phone || distance <= 0) {
-                alert("Vui lòng nhập Tên khách, Số điện thoại và Khoảng cách km!");
-                return;
-            }
-
-            const calc = calculateTotal();
+            if(fee <= 0) return alert("Khoảng cách KM không hợp lệ, không thể tính cước!");
 
             const newOrder = {
                 id: Date.now(),
-                date: new Date().toLocaleDateString('vi-VN'),
-                name: name,
-                phone: phone,
-                distance: distance,
-                cod: cod,
-                fee: calc.fee,
-                total: calc.total,
+                date: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
+                name, phone, addr, distance, cod, fee,
                 isDebt: isDebtCurrent
             };
 
-            orders.unshift(newOrder); // Thêm lên đầu danh sách
-            saveData();
+            orders.unshift(newOrder); 
+            localStorage.setItem('gh_orders_pro', JSON.stringify(orders));
 
             // Reset form
             document.getElementById('khoang-cach').value = '';
@@ -244,105 +337,114 @@
             setDebt(false);
             calculateTotal();
 
-            // Hiện thông báo
             const msg = document.getElementById('success-msg');
-            msg.classList.remove('hidden');
-            msg.classList.add('flex');
+            msg.classList.remove('hidden'); msg.classList.add('flex');
             setTimeout(() => { msg.classList.add('hidden'); msg.classList.remove('flex'); }, 3000);
         }
 
-        // 5. RENDER SỔ NỢ GỘP THEO KHÁCH HÀNG
+        /* 3. HIỂN THỊ DỮ LIỆU & CHỈNH SỬA LỊCH SỬ */
         function renderDebtList() {
             const listDiv = document.getElementById('danh-sach-no');
             listDiv.innerHTML = '';
-
-            // Lọc ra các đơn đang nợ và gộp theo Số điện thoại
             const debts = {};
+
             orders.forEach(o => {
                 if(o.isDebt) {
-                    if(!debts[o.phone]) debts[o.phone] = { name: o.name, total: 0, count: 0 };
-                    debts[o.phone].total += o.total;
-                    debts[o.phone].count += 1;
+                    // Dùng tên khách + SĐT làm key nếu không có SĐT
+                    const key = o.phone !== 'Không có' ? o.phone : (o.name + '_khachle');
+                    if(!debts[key]) debts[key] = { name: o.name, phone: o.phone, total: 0, count: 0 };
+                    debts[key].total += o.fee; // Nợ cước vận chuyển (nếu tính nợ gộp cả COD thì đổi thành o.fee + o.cod)
+                    debts[key].count += 1;
                 }
             });
 
             if(Object.keys(debts).length === 0) {
-                listDiv.innerHTML = '<div class="text-center text-gray-400 py-10">Không có khách hàng nào đang nợ.</div>';
+                listDiv.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-face-smile text-3xl mb-2 block"></i> Không có khách hàng nào nợ cước.</div>';
                 return;
             }
 
-            for (const phone in debts) {
-                const khach = debts[phone];
+            for (const key in debts) {
+                const khach = debts[key];
                 listDiv.innerHTML += `
                     <div class="bg-white p-4 rounded-xl shadow-sm mb-3 border border-red-100">
                         <div class="flex justify-between items-start mb-3">
                             <div>
-                                <h3 class="font-bold text-gray-800"><i class="fa-solid fa-user text-gray-500 mr-1"></i> ${khach.name}</h3>
-                                <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-phone mr-1"></i> ${phone}</p>
+                                <h3 class="font-bold text-gray-800"><i class="fa-solid fa-user text-gray-400 mr-1"></i> ${khach.name}</h3>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-phone mr-1"></i> ${khach.phone}</p>
                             </div>
                             <div class="text-right">
                                 <div class="text-red-600 font-bold text-lg">${khach.total.toLocaleString('vi-VN')} đ</div>
-                                <div class="text-xs text-gray-400">${khach.count} đơn nợ</div>
+                                <div class="text-xs text-gray-400">${khach.count} đơn</div>
                             </div>
                         </div>
-                        <button onclick="payDebt('${phone}')" class="w-full py-2 bg-green-50 text-green-700 font-bold text-sm rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-                            Xác nhận đã thu tiền
+                        <button onclick="payDebt('${key}')" class="w-full py-2 bg-green-50 text-green-700 font-bold text-sm rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                            Xóa nợ (Đã thu)
                         </button>
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
-        // 6. TRẢ NỢ (Chuyển trạng thái từ Ghi nợ -> Tiền mặt)
-        function payDebt(phone) {
-            if(confirm("Bạn xác nhận đã thu đủ tiền nợ của khách hàng này?")) {
-                orders = orders.map(o => o.phone === phone ? { ...o, isDebt: false } : o);
-                saveData();
-                renderDebtList(); // Render lại danh sách
+        function payDebt(key) {
+            if(confirm("Xác nhận khách đã trả đủ tiền nợ cước?")) {
+                orders = orders.map(o => {
+                    const oKey = o.phone !== 'Không có' ? o.phone : (o.name + '_khachle');
+                    return oKey === key ? { ...o, isDebt: false } : o;
+                });
+                localStorage.setItem('gh_orders_pro', JSON.stringify(orders));
+                renderDebtList();
             }
         }
 
-        // 7. RENDER BÁO CÁO VÀ LỊCH SỬ
+        // TÍNH NĂNG CHỈNH SỬA PHÍ VẬN CHUYỂN SAU KHI GIAO
+        function editFee(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if(!order) return;
+            
+            const newFeeRaw = prompt(`Sửa cước vận chuyển cho đơn của [${order.name}]:`, order.fee);
+            if(newFeeRaw === null) return; // Bấm cancel
+            
+            const newFee = parseFloat(newFeeRaw);
+            if(!isNaN(newFee) && newFee >= 0) {
+                order.fee = newFee;
+                localStorage.setItem('gh_orders_pro', JSON.stringify(orders));
+                renderReports(); // Update UI
+            } else {
+                alert("Số tiền không hợp lệ!");
+            }
+        }
+
         function renderReports() {
             let sumFee = 0;
-            let sumCod = 0;
-
-            orders.forEach(o => {
-                sumFee += o.fee;
-                sumCod += o.cod;
-            });
+            orders.forEach(o => sumFee += o.fee);
 
             document.getElementById('bc-tong-don').innerText = orders.length;
             document.getElementById('bc-doanh-thu').innerText = sumFee.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('bc-tong-cod').innerText = sumCod.toLocaleString('vi-VN') + ' đ';
 
             const historyDiv = document.getElementById('lich-su-don');
             historyDiv.innerHTML = '';
             
-            // Hiển thị 10 đơn gần nhất
-            orders.slice(0, 10).forEach(o => {
+            orders.slice(0, 20).forEach(o => { // Hiển thị 20 đơn gần nhất
                 const statusBadge = o.isDebt 
-                    ? '<span class="text-[10px] px-2 py-1 rounded-md font-bold bg-red-100 text-red-600">Ghi nợ</span>'
-                    : '<span class="text-[10px] px-2 py-1 rounded-md font-bold bg-green-100 text-green-600">Đã thu</span>';
+                    ? '<span class="text-[10px] px-2 py-0.5 mt-1 inline-block rounded font-bold bg-red-100 text-red-600 border border-red-200">Ghi nợ</span>'
+                    : '<span class="text-[10px] px-2 py-0.5 mt-1 inline-block rounded font-bold bg-green-100 text-green-600 border border-green-200">Tiền mặt</span>';
                 
                 historyDiv.innerHTML += `
-                    <div class="bg-white p-3 rounded-xl border flex justify-between items-center">
-                        <div>
+                    <div class="bg-white p-3 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                        <div class="flex-1 pr-2">
                             <p class="font-bold text-sm text-gray-800">${o.name}</p>
-                            <p class="text-xs text-gray-500">${o.date} - ${o.distance}km</p>
+                            <p class="text-[11px] text-gray-500 truncate mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${o.addr}</p>
+                            <p class="text-[10px] text-gray-400">${o.date} - ${o.distance}km</p>
                         </div>
-                        <div class="text-right flex flex-col items-end gap-1">
-                            <p class="font-bold text-blue-600 text-sm">${o.total.toLocaleString('vi-VN')} đ</p>
+                        <div class="text-right flex flex-col items-end shrink-0">
+                            <button onclick="editFee(${o.id})" class="flex items-center gap-1 group bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors" title="Nhấn để sửa cước">
+                                <span class="font-bold text-blue-700 text-sm group-hover:scale-105 transition-transform">${o.fee.toLocaleString('vi-VN')} đ</span>
+                                <i class="fa-solid fa-pen text-[10px] text-blue-400 group-hover:text-blue-600"></i>
+                            </button>
                             ${statusBadge}
                         </div>
                     </div>
                 `;
             });
-        }
-
-        // LƯU DỮ LIỆU
-        function saveData() {
-            localStorage.setItem('giao_hang_db', JSON.stringify(orders));
         }
     </script>
 </body>

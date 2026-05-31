@@ -52,7 +52,6 @@
         .input-label { font-weight: 600; color: var(--slate-600); font-size: 13px; white-space: nowrap; }
         .text-right { text-align: right; font-weight: 700; color: var(--primary); font-size: 15px;}
         
-        /* Dropdown custom style cho bộ lọc ngày */
         .select-box { padding: 11px 12px; border: 1.5px solid var(--slate-200); border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--slate-600); outline: none; background: #fff; cursor: pointer; }
 
         .btn-api { position: absolute; right: 5px; padding: 7px 10px; background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.2s; z-index: 2; }
@@ -215,9 +214,9 @@
         </div>
 
         <div id="tab-report" class="tab-pane">
-            <div class="search-wrapper" style="justify-content: flex-end;">
-                <span style="font-size:13px; font-weight:700; color:var(--slate-600); align-self:center;">Thời gian: </span>
-                <select id="filter-date-report" class="select-box" style="max-width: 150px;" onchange="renderReportTab()">
+            <div class="search-wrapper">
+                <input type="text" id="search-report" class="input-box" style="box-shadow: 0 3px 6px rgba(0,0,0,0.05);" placeholder="🔍 Nhập tên khách cần lọc tìm..." oninput="renderReportTab()">
+                <select id="filter-date-report" class="select-box" style="max-width: 130px;" onchange="renderReportTab()">
                     <option value="today" selected>Hôm nay</option>
                     <option value="week">Tuần này</option>
                     <option value="month">Tháng này</option>
@@ -260,7 +259,7 @@
                 <div class="flex-between" style="margin-bottom: 14px;">
                     <span class="input-label">Mốc Km tối thiểu</span>
                     <div style="max-width: 100px;">
-                        <input type="number" id="cfg-base-km" class="input-box text-right" value="2" oninput="saveSettings()">
+                        <input type="number" id="cfg-base-km" class="input-box text-right" value="2" oninput="updateSettings()">
                     </div>
                 </div>
 
@@ -279,15 +278,25 @@
                 </div>
             </div>
             <div style="padding: 0 15px; font-size: 11.5px; color: var(--slate-400); font-weight: 500; text-align: center;">
-                * Hệ thống tự động áp dụng biểu phí mới khi bạn nhập xong.
+                * Hệ thống tự động áp dụng biểu phí mới và lưu trữ trên thiết bị.
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let orders = []; 
-    let config = { baseKm: 2, basePrice: 10000, perKm: 5000 };
+    // ĐÃ SỬA: Khôi phục chức năng tự động tải dữ liệu cũ từ bộ nhớ máy localStorage lên app khi load lại trang
+    let orders = JSON.parse(localStorage.getItem('unifast_orders')) || []; 
+    let config = JSON.parse(localStorage.getItem('unifast_config')) || { baseKm: 2, basePrice: 10000, perKm: 5000 };
+
+    // Đồng bộ lại giao diện thiết lập từ bộ nhớ cấu hình cũ
+    document.getElementById('cfg-base-km').value = config.baseKm;
+    document.getElementById('cfg-base-price').value = formatMoney(config.basePrice);
+    document.getElementById('cfg-per-km').value = formatMoney(config.perKm);
+
+    function saveToStorage() {
+        localStorage.setItem('unifast_orders', JSON.stringify(orders));
+    }
 
     function switchTab(tabId, title) {
         document.getElementById('header-title').innerText = title;
@@ -317,19 +326,19 @@
     function handleSettingMoney(el) {
         let val = el.value.replace(/\D/g, '');
         el.value = val ? formatMoney(val) : '';
-        saveSettings();
+        updateSettings();
     }
 
-    // SỬA 1: Hàm định dạng tiền tệ trực tiếp khi người dùng tự tay chỉnh sửa ô phí ship
     function handleManualShipInput(el) {
         let val = el.value.replace(/\D/g, '');
         el.value = val ? formatMoney(val) + " đ" : '';
     }
 
-    function saveSettings() {
+    function updateSettings() {
         config.baseKm = parseFloat(document.getElementById('cfg-base-km').value) || 0;
         config.basePrice = parseMoney(document.getElementById('cfg-base-price').value);
         config.perKm = parseMoney(document.getElementById('cfg-per-km').value);
+        localStorage.setItem('unifast_config', JSON.stringify(config));
         calculateShippingFee();
     }
 
@@ -365,7 +374,6 @@
 
             if(rData && rData.routes && rData.routes.length > 0) {
                 const baseKm = rData.routes[0].distance / 1000;
-                // SỬA 2: Thay đổi hệ số bù nhân từ 1.2 lên 1.3 theo yêu cầu
                 const finalKm = (baseKm * 1.3).toFixed(1);
                 document.getElementById('distance-input').value = finalKm;
                 calculateShippingFee();
@@ -393,14 +401,12 @@
         shipInput.value = formatMoney(money) + " đ";
     }
 
-    // SỬA 3: Hàm bổ trợ tính toán kiểm tra thời gian phục vụ cho bộ lọc xổ xuống
     function isOrderInTimeRange(orderTimestamp, rangeType) {
         let orderDate = new Date(orderTimestamp);
         let now = new Date();
         
         if (rangeType === 'all') return true;
         
-        // Trừ mốc thời gian về 0h00 để so sánh chuẩn xác theo ngày
         let startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
         if (rangeType === 'today') {
@@ -408,7 +414,6 @@
         }
         
         if (rangeType === 'week') {
-            // Tính ngày đầu tuần (Thứ 2)
             let currentDay = now.getDay();
             let distanceToMonday = currentDay === 0 ? 6 : currentDay - 1; 
             let startOfWeek = new Date(startOfToday.getTime() - distanceToMonday * 24 * 60 * 60 * 1000);
@@ -495,6 +500,7 @@
         };
 
         orders.unshift(orderItem);
+        saveToStorage(); // Lưu dữ liệu mới vào máy
         showToast("Đã lưu đơn hàng thành công!");
 
         document.getElementById('dropoff-address').value = '';
@@ -508,13 +514,12 @@
     function renderDebtTab() {
         let listContainer = document.getElementById('debt-list');
         let searchKey = document.getElementById('search-debt').value.toLowerCase().trim();
-        // SỬA 3: Lấy cấu hình khoảng thời gian lọc lựa chọn từ dropdown tab Nợ
         let filterTime = document.getElementById('filter-date-debt').value;
         listContainer.innerHTML = '';
 
         let shipDebtSum = 0, codDebtSum = 0;
 
-        // Tiến hành lọc nâng cao kết hợp cả tên và khoảng thời gian được chọn
+        // Tiến hành lọc đơn nợ phù hợp điều kiện tìm kiếm và thời gian
         let debtOrders = orders.filter(o => {
             let isDebt = (!o.shipPaid && o.ship > 0) || (!o.codPaid && o.cod > 0);
             let matchName = o.name.toLowerCase().includes(searchKey);
@@ -522,12 +527,10 @@
             return isDebt && matchName && matchTime;
         });
 
-        // Tính tổng tiền nợ dựa trên các đơn hàng thoả mãn bộ lọc thời gian
-        orders.forEach(o => {
-            if(isOrderInTimeRange(o.id, filterTime)) {
-                if(!o.shipPaid) shipDebtSum += o.ship;
-                if(!o.codPaid) codDebtSum += o.cod;
-            }
+        // Chỉ cộng dồn tiền của những đơn hàng đang hiển thị tương ứng bộ lọc động
+        debtOrders.forEach(o => {
+            if(!o.shipPaid) shipDebtSum += o.ship;
+            if(!o.codPaid) codDebtSum += o.cod;
         });
 
         document.getElementById('total-ship-debt').innerText = formatMoney(shipDebtSum) + ' đ';
@@ -569,30 +572,44 @@
     function actionCollectShip(id, amount) {
         if(confirm(`Xác nhận đã thu ${formatMoney(amount)}đ tiền Ship?`)) {
             let o = orders.find(x => x.id === id);
-            if(o) { o.shipPaid = true; renderDebtTab(); showToast("Đã thu xong ship."); }
+            if(o) { 
+                o.shipPaid = true; 
+                saveToStorage(); // Cập nhật lại vào máy khi đổi trạng thái nợ
+                renderDebtTab(); 
+                showToast("Đã thu xong ship."); 
+            }
         }
     }
 
     function actionPayCod(id, amount) {
         if(confirm(`Xác nhận đã trả ${formatMoney(amount)}đ tiền COD cho khách?`)) {
             let o = orders.find(x => x.id === id);
-            if(o) { o.codPaid = true; renderDebtTab(); showToast("Đã trả xong COD."); }
+            if(o) { 
+                o.codPaid = true; 
+                saveToStorage(); // Cập nhật lại vào máy khi đổi trạng thái nợ
+                renderDebtTab(); 
+                showToast("Đã trả xong COD."); 
+            }
         }
     }
 
     function renderReportTab() {
         let historyContainer = document.getElementById('history-list');
-        // SỬA 3: Lấy cấu hình khoảng thời gian lọc lựa chọn từ dropdown tab Thống kê
         let filterTime = document.getElementById('filter-date-report').value;
+        let searchKey = document.getElementById('search-report').value.toLowerCase().trim();
         historyContainer.innerHTML = '';
 
-        let revenueShip = 0, revenueCod = 0, doneCount = 0, totalFilteredOrders = 0;
+        let revenueShip = 0, revenueCod = 0, doneCount = 0;
 
-        // Chỉ hiển thị và tính toán số liệu của các đơn thoả mãn điều kiện thời gian
-        let filteredOrders = orders.filter(o => isOrderInTimeRange(o.id, filterTime));
+        // Tiến hành lọc đơn kết hợp đồng thời cả thời gian và tên khách hàng
+        let filteredOrders = orders.filter(o => {
+            let matchTime = isOrderInTimeRange(o.id, filterTime);
+            let matchName = o.name.toLowerCase().includes(searchKey);
+            return matchTime && matchName;
+        });
 
+        // Chỉ tính toán số liệu tổng dựa trên danh sách đơn ĐANG ĐƯỢC LỌC hiển thị
         filteredOrders.forEach(o => {
-            totalFilteredOrders++;
             if(o.shipPaid) revenueShip += o.ship;
             if(o.codPaid) revenueCod += o.cod;
             if(o.shipPaid && o.codPaid) doneCount++;
@@ -600,10 +617,10 @@
 
         document.getElementById('report-ship-revenue').innerText = formatMoney(revenueShip) + ' đ';
         document.getElementById('report-cod-revenue').innerText = formatMoney(revenueCod) + ' đ';
-        document.getElementById('report-total-orders').innerText = `Đã xong: ${doneCount} / ${totalFilteredOrders} đơn`;
+        document.getElementById('report-total-orders').innerText = `Đã xong: ${doneCount} / ${filteredOrders.length} đơn`;
 
         if(filteredOrders.length === 0) {
-            historyContainer.innerHTML = '<div class="no-data">Không có đơn hàng nào trong khoảng thời gian này.</div>';
+            historyContainer.innerHTML = '<div class="no-data">Không có đơn hàng nào khớp bộ lọc lựa chọn.</div>';
             return;
         }
 

@@ -223,7 +223,7 @@
                 <div style="margin: 15px 12px 10px 12px;">
                     <div class="card-title" style="margin-bottom: 10px;">
                         <svg style="width:15px; height:15px; fill:var(--slate-800)" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 7 7 7.07 7.07 0 0 1-6-3H4.26a9 9 0 1 0 8.74-16zm-.75 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12.25z"/></svg>
-                        Nhật Ký Đơn Hàng Hôm Nay
+                        Nhật Ký Đơn Hàng Hôm Hiện Tại
                     </div>
                 </div>
                 <div id="history-list" class="list-container"></div>
@@ -307,7 +307,6 @@
         calculateShippingFee();
     }
 
-    // --- TỐI ƯU API: TÍNH KM VÀ TỰ ĐỘNG NHÂN LUÔN HỆ SỐ 1.2 ---
     async function getDistanceAPI() {
         let pickup = document.getElementById('pickup-address').value.trim();
         let dropoffRaw = document.getElementById('dropoff-address').value.trim();
@@ -340,7 +339,6 @@
 
             if(rData && rData.routes && rData.routes.length > 0) {
                 const baseKm = rData.routes[0].distance / 1000;
-                // SỬA TẠI ĐÂY: Kết quả đổ thẳng vào ô nhập đã được nhân sẵn hệ số 1.2
                 const finalKm = (baseKm * 1.2).toFixed(1);
                 document.getElementById('distance-input').value = finalKm;
                 calculateShippingFee();
@@ -351,7 +349,7 @@
         } finally { btn.disabled = false; btn.innerText = "Tính km"; }
     }
 
-    // --- SỬA LOGIC: LẤY THẲNG SỐ KM ĐỂ TÍNH TIỀN (VÌ ĐÃ LÀ KM HỆ SỐ) ---
+    // --- THAY ĐỔI QUAN TRỌNG: LOGIC TÍNH TIỀN CỘNG DỒN THEO NẤC NGUYÊN KM ---
     function calculateShippingFee() {
         let realKm = parseFloat(document.getElementById('distance-input').value);
         let shipInput = document.getElementById('ship-input');
@@ -359,14 +357,17 @@
         if(isNaN(realKm) || realKm <= 0) { shipInput.value = ''; return; }
 
         let money = 0;
-        // Sử dụng trực tiếp con số hiển thị trong ô nhập
         if(realKm <= config.baseKm) {
+            // Dưới mốc tối thiểu (ví dụ <= 2km) thì lấy giá gốc
             money = config.basePrice;
         } else {
-            money = config.basePrice + (realKm - config.baseKm) * config.perKm;
+            // Vượt quá mốc tối thiểu: Sử dụng hàm Math.ceil để làm tròn lên nấc tiếp theo
+            // Ví dụ: 2.1km hay 2.9km đều tính thành vượt 1 block nguyên -> cộng thêm trọn vẹn 5.000đ
+            let extraKmBlocks = Math.ceil(realKm - config.baseKm);
+            money = config.basePrice + (extraKmBlocks * config.perKm);
         }
 
-        shipInput.value = formatMoney(Math.round(money)) + " đ";
+        shipInput.value = formatMoney(money) + " đ";
     }
 
     function getCurrentGPS() {

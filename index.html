@@ -2,94 +2,92 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Giao Hàng Pro V4</title>
+    <title>App Giao Hàng Pro - Bản Full</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body class="bg-gray-100 flex justify-center font-sans text-gray-800">
-
-    <div class="w-full max-w-md bg-white shadow-xl h-screen flex flex-col relative overflow-hidden">
-        <div class="bg-blue-600 p-2 pb-3 rounded-b-xl shadow-md z-10 flex justify-around items-end">
-            <button onclick="switchTab('len-don')" id="tab-btn-len-don" class="flex flex-col items-center px-3 py-2 rounded-xl bg-white text-blue-600 shadow w-1/4">
-                <i class="fa-solid fa-file-invoice text-lg"></i>
-                <span class="text-[10px] mt-1 font-bold">Lên đơn</span>
-            </button>
-            <button onclick="switchTab('so-no')" id="tab-btn-so-no" class="flex flex-col items-center px-3 py-2 rounded-xl text-blue-100 hover:bg-blue-500 w-1/4">
-                <i class="fa-solid fa-book text-lg"></i>
-                <span class="text-[10px] mt-1 font-bold">Sổ nợ</span>
-            </button>
-            <button onclick="switchTab('bao-cao')" id="tab-btn-bao-cao" class="flex flex-col items-center px-3 py-2 rounded-xl text-blue-100 hover:bg-blue-500 w-1/4">
-                <i class="fa-solid fa-chart-column text-lg"></i>
-                <span class="text-[10px] mt-1 font-bold">Báo cáo</span>
-            </button>
-            <button onclick="switchTab('cai-dat')" id="tab-btn-cai-dat" class="flex flex-col items-center px-3 py-2 rounded-xl text-blue-100 hover:bg-blue-500 w-1/4">
-                <i class="fa-solid fa-gear text-lg"></i>
-                <span class="text-[10px] mt-1 font-bold">Cài đặt</span>
-            </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
-            <div id="len-don" class="tab-content active space-y-4">
-                <div class="bg-white p-4 rounded-xl border">
-                    <p id="diem-lay-hang" class="text-xs text-blue-600 italic">Đang định vị GPS...</p>
-                    <input type="text" id="diem-giao" placeholder="Địa chỉ giao..." class="w-full mt-2 p-2 border rounded">
-                    <button onclick="autoCalcDistance()" id="btn-calc-dist" class="w-full mt-2 bg-blue-500 text-white p-2 rounded">Tính KM tự động</button>
-                    <input type="number" id="khoang-cach" placeholder="Khoảng cách (km)" oninput="calculateTotal()" class="w-full mt-2 p-2 border rounded">
-                </div>
-                <input type="text" id="ten-khach" placeholder="Tên khách" class="w-full p-2 border rounded">
-                <input type="number" id="tien-cod" placeholder="Tiền COD" class="w-full p-2 border rounded">
-                <div class="bg-white p-4 rounded-xl border flex justify-between">
-                    <span class="font-bold">Cước vận chuyển:</span>
-                    <span id="tong-tien" class="font-bold text-blue-600 text-xl">0 đ</span>
-                </div>
-                <button onclick="submitOrder()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Xác nhận tạo đơn</button>
-            </div>
-
-            <div id="cai-dat" class="tab-content space-y-4">
-                <div class="bg-white p-4 rounded-xl border space-y-2">
-                    <input type="number" id="cfg-base-fee" placeholder="Giá mở cửa" class="w-full p-2 border rounded">
-                    <input type="number" id="cfg-base-km" placeholder="KM đầu" class="w-full p-2 border rounded">
-                    <input type="number" id="cfg-extra-fee" placeholder="Giá mỗi KM thêm" class="w-full p-2 border rounded">
-                    <input type="number" id="cfg-dist-mult" placeholder="Hệ số nhân KM (ví dụ 1.2)" class="w-full p-2 border rounded" step="0.1">
-                    <button onclick="saveSettings()" class="w-full bg-green-600 text-white p-2 rounded">Lưu cấu hình</button>
-                </div>
-            </div>
-            </div>
-    </div>
-
     <script>
-        // Logic tính tiền mới: Tăng dần theo KM thực tế
+        // --- DỮ LIỆU & LOGIC TRUNG TÂM ---
+        let orders = JSON.parse(localStorage.getItem('orders_v4')) || [];
+        let config = JSON.parse(localStorage.getItem('config_v4')) || {baseFee: 13000, baseKm: 2, extraFee: 5000, distMult: 1.0};
+
         function calculateTotal() {
-            const distance = parseFloat(document.getElementById('khoang-cach').value) || 0;
-            const pricing = JSON.parse(localStorage.getItem('gh_pricing_pro_v3')) || {baseFee: 13000, baseKm: 2, extraFee: 5000};
-            
+            const dist = parseFloat(document.getElementById('khoang-cach').value) || 0;
             let fee = 0;
-            if (distance > 0) {
-                if (distance <= pricing.baseKm) {
-                    fee = pricing.baseFee;
-                } else {
-                    // CÔNG THỨC MỚI: Không dùng Math.ceil (không làm tròn lên)
-                    // Phí = Giá mở cửa + (Quãng đường dư * Đơn giá KM)
-                    fee = pricing.baseFee + ((distance - pricing.baseKm) * pricing.extraFee);
-                }
+            if (dist <= config.baseKm) {
+                fee = config.baseFee;
+            } else {
+                // TÍNH PHÍ TĂNG DẦN THỰC TẾ: Không làm tròn, cộng dồn đúng số KM lẻ
+                fee = config.baseFee + ((dist - config.baseKm) * config.extraFee);
             }
-            
-            const finalFee = Math.round(fee);
-            document.getElementById('tong-tien').innerText = finalFee.toLocaleString('vi-VN') + ' đ';
-            return finalFee;
+            document.getElementById('tong-tien').innerText = Math.round(fee).toLocaleString('vi-VN') + ' đ';
+            return Math.round(fee);
         }
 
-        // --- Giữ nguyên các hàm còn lại như phiên bản cũ đã thống nhất ---
-        // ... (Các hàm initGPS, autoCalcDistance, submitOrder, renderReports vẫn dùng như code trước)
+        function saveOrder() {
+            const newOrder = {
+                id: Date.now(),
+                name: document.getElementById('ten-khach').value || 'Khách lẻ',
+                dist: parseFloat(document.getElementById('khoang-cach').value),
+                fee: calculateTotal(),
+                cod: parseFloat(document.getElementById('tien-cod').value) || 0,
+                isDebt: document.getElementById('is-debt').checked,
+                codPaid: false,
+                date: new Date().toLocaleDateString()
+            };
+            orders.push(newOrder);
+            localStorage.setItem('orders_v4', JSON.stringify(orders));
+            alert("Đã lưu đơn thành công!");
+            renderReports();
+        }
+
+        function renderReports() {
+            const container = document.getElementById('list-container');
+            const filter = document.getElementById('search-filter').value.toLowerCase();
+            container.innerHTML = '';
+            
+            orders.filter(o => o.name.toLowerCase().includes(filter)).forEach(o => {
+                container.innerHTML += `
+                    <div class="p-4 border-b">
+                        <p class="font-bold">${o.name}</p>
+                        <p>Cước: ${o.fee.toLocaleString()}đ | COD: ${o.cod.toLocaleString()}đ</p>
+                        <button onclick="markCodPaid(${o.id})" class="text-xs bg-green-500 text-white p-1 rounded">Xác nhận đã trả COD</button>
+                    </div>
+                `;
+            });
+        }
+
+        function markCodPaid(id) {
+            orders = orders.map(o => o.id === id ? {...o, codPaid: true} : o);
+            localStorage.setItem('orders_v4', JSON.stringify(orders));
+            renderReports();
+        }
+
+        function updateConfig() {
+            config = {
+                baseFee: parseFloat(document.getElementById('cfg-base').value),
+                baseKm: parseFloat(document.getElementById('cfg-km').value),
+                extraFee: parseFloat(document.getElementById('cfg-extra').value),
+                distMult: parseFloat(document.getElementById('cfg-mult').value)
+            };
+            localStorage.setItem('config_v4', JSON.stringify(config));
+            alert("Đã cập nhật cấu hình!");
+        }
     </script>
+</head>
+<body class="p-4 bg-gray-100">
+    <div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+        <h1 class="text-xl font-bold mb-4">Lên đơn</h1>
+        <input type="text" id="ten-khach" placeholder="Tên khách" class="w-full p-2 border mb-2">
+        <input type="number" id="khoang-cach" placeholder="Khoảng cách (km)" oninput="calculateTotal()" class="w-full p-2 border mb-2">
+        <input type="number" id="tien-cod" placeholder="Tiền COD" class="w-full p-2 border mb-2">
+        <label><input type="checkbox" id="is-debt"> Ghi nợ</label>
+        <div class="my-4 text-lg font-bold">Phí: <span id="tong-tien">0 đ</span></div>
+        <button onclick="saveOrder()" class="w-full bg-blue-600 text-white p-3 rounded">Lưu Đơn</button>
+
+        <hr class="my-6">
+        
+        <h2 class="font-bold mb-2">Báo cáo & Tìm kiếm</h2>
+        <input type="text" id="search-filter" oninput="renderReports()" placeholder="Lọc theo tên khách..." class="w-full p-2 border mb-2">
+        <div id="list-container"></div>
+    </div>
 </body>
 </html>

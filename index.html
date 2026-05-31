@@ -3,91 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIFAST - Quản Lý Giao Hàng</title>
+    <title>UNIFAST Premium - Quản Lý Giao Hàng</title>
     <style>
-        /* --- CSS Cơ Bản --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: #e9ecef; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 414px; background-color: #f4f6f8; height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden;}
-        
-        /* --- Header & Top Navigation --- */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #0066b3; color: white; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header h1 { font-size: 18px; font-weight: 600; margin: 0; }
-        
-        .top-nav { display: flex; gap: 15px; }
-        .nav-item { font-size: 20px; cursor: pointer; opacity: 0.6; transition: 0.2s; position: relative; }
-        .nav-item.active { opacity: 1; transform: scale(1.1); }
-        .nav-item.active::after { content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: white; border-radius: 50%; }
+        /* --- Hệ thống Màu sắc & Font chuyên nghiệp --- */
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-400: #94a3b8;
+            --slate-600: #475569;
+            --slate-800: #1e293b;
+        }
 
-        .content-area { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #cbd5e1; display: flex; justify-content: center; }
+        
+        /* Giao diện mô phỏng Smartphone cao cấp */
+        .app-container { width: 100%; max-width: 420px; background-color: var(--slate-100); height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        
+        /* --- Header đẳng cấp --- */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; z-index: 10; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .header h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
+        
+        /* Navigation với SVG tinh tế */
+        .top-nav { display: flex; gap: 16px; }
+        .nav-item { cursor: pointer; opacity: 0.65; transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; }
+        .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+        .nav-item.active { opacity: 1; background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
+
+        .content-area { flex: 1; overflow-y: auto; padding-bottom: 30px; }
         .tab-pane { display: none; }
-        .tab-pane.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .tab-pane.active { display: block; animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- Cards & Inputs --- */
-        .card { background: #fff; margin: 15px; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .flex-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; position: relative;}
+        /* --- UI Components chỉn chu --- */
+        .card { background: #fff; margin: 15px; padding: 18px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid rgba(241, 245, 249, 0.8); }
+        .card-title { font-size: 14px; font-weight: 700; color: var(--slate-800); margin-bottom: 15px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        .flex-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; position: relative;}
         .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .input-box { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; width: 100%; background: #fdfdfd; transition: 0.2s; }
-        .input-box:focus { border-color: #0066b3; }
-        .input-label { font-weight: 600; color: #475569; font-size: 14px; }
-        .text-right { text-align: right; font-weight: bold; color: #0066b3; }
-        .readonly { background-color: #f1f5f9; color: #334155; cursor: not-allowed; }
-
-        /* --- Các nút đặc biệt --- */
-        .btn-api { position: absolute; right: 0; padding: 8px 12px; background: #e0f2fe; color: #0066b3; border: 1px solid #bae6fd; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;}
-        .btn-api:active { background: #bae6fd; }
-        .btn-api:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: wait; }
         
-        .btn-gps { background: transparent; border: none; font-size: 20px; cursor: pointer; transition: 0.2s; padding-right: 5px; }
-        .btn-gps:active { transform: scale(0.9); }
+        /* Input & Controls */
+        .input-box { flex: 1; padding: 12px 14px; border: 1.5px solid var(--slate-200); border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--slate-800); outline: none; background: var(--slate-50); transition: all 0.2s; }
+        .input-box:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+        .input-label { font-weight: 600; color: var(--slate-600); font-size: 13.5px; }
+        .text-right { text-align: right; font-weight: 700; color: var(--primary); font-size: 15px;}
+        .readonly { background-color: var(--slate-100); color: var(--slate-600); cursor: not-allowed; }
 
-        /* --- Gợi ý giá tiền động --- */
+        /* Nút chức năng Map/GPS tích hợp */
+        .btn-api { position: absolute; right: 6px; padding: 8px 12px; background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.2s;}
+        .btn-api:hover { background: var(--primary); color: white; }
+        .btn-api:disabled { background: var(--slate-100); color: var(--slate-400); border-color: var(--slate-200); cursor: wait; }
+        
+        .btn-gps { background: var(--slate-100); border: 1px solid var(--slate-200); width: 40px; height: 40px; border-radius: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; color: var(--slate-600); }
+        .btn-gps:hover { background: #fee2e2; color: var(--danger); border-color: #fca5a5; }
+
+        /* Hộp gợi ý số tiền */
         .input-wrapper { position: relative; max-width: 180px; flex: 1;}
-        .suggestions-box { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 20; max-height: 150px; overflow-y: auto; }
-        .suggestion-item { padding: 10px 12px; font-size: 14px; color: #0066b3; font-weight: 500; cursor: pointer; text-align: right; border-bottom: 1px solid #f8fafc; }
-        .suggestion-item:hover { background-color: #e0f2fe; }
+        .suggestions-box { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--slate-200); border-top: none; border-radius: 0 0 10px 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 20; max-height: 150px; overflow-y: auto; }
+        .suggestion-item { padding: 10px 14px; font-size: 13.5px; color: var(--primary); font-weight: 600; cursor: pointer; text-align: right; border-bottom: 1px solid var(--slate-100); }
+        .suggestion-item:hover { background-color: var(--primary-light); }
 
-        /* --- Toggles & Buttons --- */
-        .toggle-group { display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px; gap: 4px; width: 100%; margin-bottom: 15px; }
-        .toggle-btn { flex: 1; padding: 10px 0; text-align: center; border: none; background: transparent; font-size: 14px; cursor: pointer; color: #64748b; font-weight: 600; border-radius: 6px; transition: 0.2s;}
-        .toggle-btn.active { background: #fff; color: #0066b3; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        /* Toggles & Buttons */
+        .toggle-group { display: flex; background: var(--slate-200); border-radius: 10px; padding: 4px; gap: 4px; width: 100%; margin-bottom: 15px; }
+        .toggle-btn { flex: 1; padding: 10px 0; text-align: center; border: none; background: transparent; font-size: 13.5px; cursor: pointer; color: var(--slate-600); font-weight: 700; border-radius: 8px; transition: all 0.2s;}
+        .toggle-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        .btn-primary { width: calc(100% - 30px); margin: 10px 15px; padding: 15px; background: #0066b3; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 102, 179, 0.2); transition: 0.2s;}
+        .btn-primary { width: calc(100% - 30px); margin: 10px 15px; padding: 14px; background: linear-gradient(to bottom, var(--primary), var(--primary-dark)); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: all 0.2s;}
         .btn-primary:active { transform: scale(0.98); }
 
-        /* --- Tab Ghi Nợ --- */
+        /* Sổ Nợ / Tìm kiếm */
+        .search-wrapper { padding: 0 15px 10px 15px; position: sticky; top: 0; background: var(--slate-100); z-index: 5; }
         .debt-summary { display: flex; gap: 10px; margin-bottom: 15px; }
-        .summary-item { flex: 1; background: #fff; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #f1f5f9; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
-        .summary-item.red { color: #ef4444; }
-        .summary-item.blue { color: #0066b3; }
-        .summary-value { font-size: 18px; font-weight: 700; margin-top: 5px; }
+        .summary-item { flex: 1; background: #fff; padding: 14px; border-radius: 14px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-bottom: 4px solid var(--slate-200); }
+        .summary-item.red { border-bottom-color: var(--danger); color: var(--danger); }
+        .summary-item.blue { border-bottom-color: var(--primary); color: var(--primary); }
+        .summary-value { font-size: 16px; font-weight: 800; margin-top: 4px; }
         
-        .debt-list-item { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #0066b3; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
-        .debt-info { display: flex; justify-content: space-between; margin-bottom: 12px; }
-        .debt-actions { display: flex; gap: 8px; border-top: 1px dashed #e2e8f0; padding-top: 12px; }
+        /* Items của Sổ nợ & Lịch sử */
+        .list-container { display: flex; flex-direction: column; gap: 12px; }
+        .item-card { background: #fff; padding: 14px; border-radius: 14px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s; }
+        .item-card.debt-style { border-left-color: var(--warning); }
+        .item-card.completed-style { border-left-color: var(--success); opacity: 0.85; }
         
-        .action-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-thu-ship { background: #fee2e2; color: #ef4444; }
-        .btn-tra-cod { background: #e0f2fe; color: #0066b3; }
-        .btn-done { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; cursor: not-allowed; }
+        .item-info { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .item-actions { display: flex; gap: 8px; border-top: 1px dashed var(--slate-200); padding-top: 10px; }
+        
+        .action-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn-thu-ship { background: var(--danger-light); color: var(--danger); border: 1px solid #fecaca; }
+        .btn-tra-cod { background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; }
+        .btn-done { background: var(--slate-100); color: var(--slate-400); cursor: not-allowed; border: 1px solid var(--slate-200); }
 
-        /* Utility */
-        .toast { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none;}
-        .small-hint { font-size: 11px; color: #94a3b8; margin-top: 5px; text-align: right; }
+        /* Badges trạng thái lịch sử */
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge.danger { background: var(--danger-light); color: var(--danger); }
+        .badge.success { background: var(--success-light); color: var(--success); }
+        .badge.warning { background: var(--warning-light); color: var(--warning); }
+
+        /* Phụ trợ */
+        .toast { position: absolute; top: 75px; left: 50%; transform: translateX(-50%); background: var(--slate-800); color: white; padding: 10px 18px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 6px;}
+        .small-hint { font-size: 11px; color: var(--slate-400); margin-top: 4px; text-align: right; font-weight: 500; }
+        .no-data { text-align: center; color: var(--slate-400); font-size: 13.5px; padding: 30px 0; font-weight: 500; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div id="toast-msg" class="toast">Thành công!</div>
+    <div id="toast-msg" class="toast">✓ Thành công!</div>
 
     <div class="header">
         <h1 id="header-title">Tạo Đơn</h1>
         <div class="top-nav">
-            <span class="nav-item active" onclick="switchTab('tab-order', this, 'Tạo Đơn')" title="Tạo Đơn">📦</span>
-            <span class="nav-item" onclick="switchTab('tab-debt', this, 'Ghi Nợ')" title="Ghi Nợ">📓</span>
-            <span class="nav-item" onclick="switchTab('tab-report', this, 'Thống Kê')" title="Báo Cáo">📊</span>
+            <div class="nav-item active" id="nav-order" onclick="switchTab('tab-order', 'Tạo Đơn')" title="Tạo Đơn">
+                <svg viewBox="0 0 24 24"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18s-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18s.41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5L12 10.85l5.96-3.35L12 4.15zM5 9.22v7.06l6 3.38v-7.06l-6-3.38zm14 0l-6 3.38v7.06l6-3.38V9.22z"/></svg>
+            </div>
+            <div class="nav-item" id="nav-debt" onclick="switchTab('tab-debt', 'Ghi Nợ')" title="Ghi Nợ">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            </div>
+            <div class="nav-item" id="nav-report" onclick="switchTab('tab-report', 'Thống Kê')" title="Báo Cáo">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+            </div>
+            <div class="nav-item" id="nav-settings" onclick="switchTab('tab-settings', 'Cài Đặt')" title="Cài Đặt">
+                <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3-1.07-3-3s1.07-3 3-3 3 1.07 3 3-1.07 3-3 3z"/></svg>
+            </div>
         </div>
     </div>
 
@@ -96,45 +143,53 @@
             <div style="padding: 15px 15px 0 15px;">
                 <div class="toggle-group">
                     <button class="toggle-btn active" id="mode-debt" onclick="setPaymentMode('debt')">Ghi Nợ</button>
-                    <button class="toggle-btn" id="mode-paid" onclick="setPaymentMode('paid')">Đã Trả Tiền</button>
+                    <button class="toggle-btn" id="mode-paid" onclick="setPaymentMode('paid')">Đã Thu Tiền</button>
                 </div>
             </div>
 
             <div class="card" style="margin-top: 0; padding-bottom: 10px;">
-                <div class="flex-row" style="border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
-                    <button class="btn-gps" onclick="getCurrentGPS()" title="Bấm để lấy vị trí hiện tại">📍</button>
-                    <input type="text" id="pickup-address" class="input-box" style="border:none; padding:0; background:transparent;" placeholder="Nhập địa chỉ lấy hàng hoặc bấm 📍..." value="29a Nguyễn Hữu Khiếu, Đông Hà, Quảng Trị">
+                <div class="flex-row" style="border-bottom: 1px solid var(--slate-100); padding-bottom: 10px;">
+                    <button class="btn-gps" onclick="getCurrentGPS()">
+                        <svg style="width:20px; height:20px; fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    </button>
+                    <input type="text" id="pickup-address" class="input-box" style="border:none; padding:0; background:transparent;" placeholder="Địa chỉ lấy hàng..." value="29a Nguyễn Hữu Khiếu, Đông Hà, Quảng Trị">
                 </div>
                 <div class="flex-row" style="padding-top: 10px;">
-                    <span style="color: #ef4444; font-size: 20px;">🎯</span>
-                    <input type="text" id="dropoff-address" class="input-box" style="border:none; padding:0; background:transparent; padding-right: 70px;" placeholder="Nhập điểm đến (+ Tỉnh/Thành)...">
-                    <button class="btn-api" onclick="getDistanceAPI()">📍 Tính km</button>
+                    <div style="width:40px; display:flex; justify-content:center; color: var(--danger)">
+                        <svg style="width:22px; height:22px; fill:currentColor" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+                    </div>
+                    <input type="text" id="dropoff-address" class="input-box" style="border:none; padding:0; background:transparent; padding-right: 75px;" placeholder="Nhập điểm đến (+ Tỉnh/Thành)...">
+                    <button class="btn-api" onclick="getDistanceAPI()">Tính km</button>
                 </div>
             </div>
 
             <div class="card">
+                <div class="card-title">
+                    <svg style="width:16px; height:16px; fill:var(--primary)" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-4-8-4z"/></svg>
+                    Thông Tin Người Nhận
+                </div>
                 <div class="flex-row">
-                    <input type="text" id="cus-name" class="input-box" placeholder="👤 Tên người nhận">
-                    <input type="tel" id="cus-phone" class="input-box" placeholder="📞 Điện thoại">
+                    <input type="text" id="cus-name" class="input-box" placeholder="Tên người nhận">
+                    <input type="tel" id="cus-phone" class="input-box" placeholder="Số điện thoại">
                 </div>
 
-                <div class="flex-between" style="margin-top: 15px;">
+                <div class="flex-between" style="margin-top: 15px; border-top: 1px solid var(--slate-100); padding-top: 15px;">
                     <span class="input-label">Quãng đường (km)</span>
                     <div class="input-wrapper">
                         <input type="number" id="distance-input" class="input-box text-right" placeholder="0" step="0.1" oninput="calculateShippingFee()">
                     </div>
                 </div>
 
-                <div class="flex-between" style="margin-top: 10px;">
-                    <span class="input-label">Phí Ship tự tính</span>
+                <div class="flex-between">
+                    <span class="input-label">Phí Ship cấu hình</span>
                     <div class="input-wrapper">
                         <input type="text" id="ship-input" class="input-box text-right readonly" placeholder="0 đ" readonly>
-                        <div id="distance-hint" class="small-hint">Hệ số x1.2 chưa áp dụng</div>
+                        <div id="distance-hint" class="small-hint">Hệ số x1.2 chưa tính</div>
                     </div>
                 </div>
 
-                <div class="flex-between" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
-                    <span class="input-label">Thu hộ (COD)</span>
+                <div class="flex-between" style="margin-top: 10px; border-top: 1px dashed var(--slate-200); padding-top: 15px;">
+                    <span class="input-label">Thu hộ tiền hàng (COD)</span>
                     <div class="input-wrapper">
                         <input type="text" id="cod-input" class="input-box text-right" placeholder="0 đ" oninput="handleSmartInput(this, 'cod-suggestions')" autocomplete="off">
                         <div id="cod-suggestions" class="suggestions-box"></div>
@@ -142,67 +197,125 @@
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="saveOrder()">Lưu Đơn Mới</button>
+            <button class="btn-primary" onclick="saveOrder()">LƯU ĐƠN HÀNG</button>
         </div>
 
         <div id="tab-debt" class="tab-pane">
-            <div style="padding: 15px;">
+            <div class="search-wrapper">
+                <input type="text" id="search-debt" class="input-box" style="box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);" placeholder="🔍 Gõ tìm kiếm tên khách hàng..." oninput="renderDebtTab()">
+            </div>
+
+            <div style="padding: 0 15px;">
                 <div class="debt-summary">
                     <div class="summary-item red">
-                        <div style="font-size: 13px;">Khách nợ Ship</div>
+                        <div style="font-size: 12px; font-weight: 700; color: var(--slate-600)">Ship Khách Nợ</div>
                         <div class="summary-value" id="total-ship-debt">0 đ</div>
                     </div>
                     <div class="summary-item blue">
-                        <div style="font-size: 13px;">Nợ khách COD</div>
+                        <div style="font-size: 12px; font-weight: 700; color: var(--slate-600)">Phải Trả COD</div>
                         <div class="summary-value" id="total-cod-debt">0 đ</div>
                     </div>
                 </div>
-                <div id="debt-list"></div>
+                
+                <div id="debt-list" class="list-container"></div>
             </div>
         </div>
 
         <div id="tab-report" class="tab-pane">
             <div style="padding: 15px;">
-                <div class="card" style="text-align: center;">
-                    <div style="color: #64748b; margin-bottom: 5px;">Doanh thu phí Ship</div>
-                    <div style="font-size: 28px; font-weight: bold; color: #10b981;" id="report-ship-revenue">0 đ</div>
+                <div class="card" style="text-align: center; background: linear-gradient(to bottom, #fff, var(--slate-50));">
+                    <div style="color: var(--slate-600); font-size: 13px; font-weight: 700; text-transform: uppercase;">Doanh Thu Thực Thu</div>
+                    <div style="font-size: 30px; font-weight: 850; color: var(--success); margin: 6px 0;" id="report-ship-revenue">0 đ</div>
+                    <div style="font-size: 11.5px; color: var(--slate-400); font-weight:600;" id="report-total-orders">Đã hoàn thành: 0 đơn</div>
                 </div>
-                <div class="card">
-                    <div class="flex-between" style="border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
-                        <span>Tổng số đơn hoàn thành:</span>
-                        <strong id="report-total-orders">0 đơn</strong>
-                    </div>
-                    <div class="flex-between" style="padding-top: 10px;">
-                        <span>Tổng COD đã thu:</span>
-                        <strong style="color: #0066b3;" id="report-cod-revenue">0 đ</strong>
+
+                <div class="card" style="margin-top: 0; padding: 14px 18px;">
+                    <div class="flex-between">
+                        <span class="input-label" style="color: var(--slate-600)">Tổng tiền COD đã thu hộ:</span>
+                        <strong style="color: var(--primary); font-size: 15px;" id="report-cod-revenue">0 đ</strong>
                     </div>
                 </div>
+
+                <div style="margin: 20px 5px 10px 5px;">
+                    <div class="card-title" style="margin-bottom: 10px;">
+                        <svg style="width:16px; height:16px; fill:var(--slate-800)" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 7 7 7.07 7.07 0 0 1-6-3H4.26a9 9 0 1 0 8.74-16zm-.75 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12.25z"/></svg>
+                        Lịch Sử Giao Dịch Đơn Hàng
+                    </div>
+                    <div id="history-list" class="list-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-pane">
+            <div class="card">
+                <div class="card-title" style="color: var(--primary);">
+                    <svg style="width:16px; height:16px; fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+                    Thiết Lập Cách Tính Phí Ship
+                </div>
+                
+                <div class="flex-between" style="margin-bottom: 16px;">
+                    <span class="input-label">Số km tối thiểu (Định mức đầu)</span>
+                    <div style="max-width: 120px;">
+                        <input type="number" id="cfg-base-km" class="input-box text-right" value="2" oninput="saveSettings()">
+                    </div>
+                </div>
+
+                <div class="flex-between" style="margin-bottom: 16px;">
+                    <span class="input-label">Số tiền đồng giá định mức (đ)</span>
+                    <div style="max-width: 140px;">
+                        <input type="text" id="cfg-base-price" class="input-box text-right" value="10.000" oninput="handleSettingMoney(this)">
+                    </div>
+                </div>
+
+                <div class="flex-between">
+                    <span class="input-label">Giá tiền mỗi km tiếp theo (đ)</span>
+                    <div style="max-width: 140px;">
+                        <input type="text" id="cfg-per-km" class="input-box text-right" value="5.000" oninput="handleSettingMoney(this)">
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 0 15px; font-size: 12px; color: var(--slate-400); font-weight: 500; text-align: center;">
+                * Hệ thống tự động lưu cấu hình khi thay đổi thông số.
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- Báo hiệu Code đã chạy ---
-    window.onload = function() {
-        showToast("Hệ thống đã tải xong! Các nút đã sẵn sàng.");
+    // --- KHỞI TẠO CƠ SỞ DỮ LIỆU ---
+    let orders = []; // Mảng chứa toàn bộ dữ liệu đơn hàng hệ thống
+
+    // Cấu hình tính tiền mặc định (Yêu cầu số 1)
+    let config = {
+        baseKm: 2,
+        basePrice: 10000,
+        perKm: 5000
     };
 
-    // --- Biến toàn cục ---
-    let currentPaymentMode = 'debt'; 
-    let totalShipDebt = 0, totalCodDebt = 0;
-    let statsShipRevenue = 0, statsCodCollected = 0, statsTotalOrders = 0;
+    window.onload = function() {
+        showToast("Hệ thống UNIFAST Pro đã sẵn sàng!");
+    };
 
-    // --- Chuyển Tab (Top Nav) ---
-    function switchTab(tabId, element, title) {
+    // --- ĐIỀU HƯỚNG TABS BIỂU TƯỢNG ---
+    function switchTab(tabId, title) {
         document.getElementById('header-title').innerText = title;
         document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        
         document.getElementById(tabId).classList.add('active');
-        element.classList.add('active');
+        
+        let navMap = { 'tab-order': 'nav-order', 'tab-debt': 'nav-debt', 'tab-report': 'nav-report', 'tab-settings': 'nav-settings' };
+        document.getElementById(navMap[tabId]).classList.add('active');
+        
         document.getElementById('cod-suggestions').style.display = 'none';
+
+        // Tự động làm tươi danh sách khi vào tab
+        if(tabId === 'tab-debt') renderDebtTab();
+        if(tabId === 'tab-report') renderReportTab();
     }
 
+    let currentPaymentMode = 'debt';
     function setPaymentMode(mode) {
         currentPaymentMode = mode;
         document.getElementById('mode-debt').classList.remove('active');
@@ -213,60 +326,62 @@
     function formatMoney(num) {
         return new Intl.NumberFormat('vi-VN').format(num);
     }
+    function parseMoney(str) {
+        return parseInt(str.replace(/\D/g, '')) || 0;
+    }
 
-    // --- TÍNH NĂNG MỚI: LẤY VỊ TRÍ GPS HIỆN TẠI ---
+    // --- TAB CÀI ĐẶT (Yêu cầu số 1) ---
+    function handleSettingMoney(el) {
+        let val = el.value.replace(/\D/g, '');
+        el.value = val ? formatMoney(val) : '';
+        saveSettings();
+    }
+
+    function saveSettings() {
+        config.baseKm = parseFloat(document.getElementById('cfg-base-km').value) || 0;
+        config.basePrice = parseMoney(document.getElementById('cfg-base-price').value);
+        config.perKm = parseMoney(document.getElementById('cfg-per-km').value);
+        calculateShippingFee(); // Cập nhật lại giá tiền nếu đang nhập dở bên tab Tạo Đơn
+    }
+
+    // --- GPS LẤY VỊ TRÍ NƠI ĐANG ĐỨNG ---
     function getCurrentGPS() {
         const pickupInput = document.getElementById('pickup-address');
         const btnGPS = document.querySelector('.btn-gps');
 
         if (!navigator.geolocation) {
-            alert("Trình duyệt của bạn không hỗ trợ tính năng GPS.");
+            alert("Trình duyệt không hỗ trợ quét GPS.");
             return;
         }
 
-        btnGPS.innerText = "⏳";
-        pickupInput.value = "Đang quét vị trí...";
+        btnGPS.style.color = "var(--danger)";
+        pickupInput.value = "Đang kết nối vệ tinh GPS...";
 
         navigator.geolocation.getCurrentPosition(async (position) => {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            
             try {
-                // Dùng Nominatim API để dịch tọa độ thành địa chỉ
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                 const data = await res.json();
-                
-                if (data && data.display_name) {
-                    pickupInput.value = data.display_name;
-                    showToast("Đã cập nhật vị trí hiện tại!");
-                } else {
-                    pickupInput.value = `${lat}, ${lon}`;
-                    showToast("Lấy GPS thành công!");
-                }
-            } catch (error) {
+                pickupInput.value = data && data.display_name ? data.display_name : `${lat}, ${lon}`;
+                showToast("Định vị tọa độ thành công!");
+            } catch (e) {
                 pickupInput.value = `${lat}, ${lon}`;
-                showToast("Đã lấy GPS!");
-            } finally {
-                btnGPS.innerText = "📍";
             }
-        }, (error) => {
-            btnGPS.innerText = "📍";
-            pickupInput.value = "";
-            alert("Không thể lấy vị trí. Vui lòng cấp quyền truy cập vị trí (Location) cho trình duyệt.");
+        }, (err) => {
+            pickupInput.value = "29a Nguyễn Hữu Khiếu, Đông Hà, Quảng Trị";
+            alert("Không lấy được GPS. Vui lòng bật vị trí của thiết bị.");
         });
     }
 
-    // --- API TÌM QUÃNG ĐƯỜNG MIỄN PHÍ ---
+    // --- ĐO KHOẢNG CÁCH API OSRM ---
     async function getDistanceAPI() {
         const pickup = document.getElementById('pickup-address').value.trim();
         const dropoff = document.getElementById('dropoff-address').value.trim();
         const btn = document.querySelector('.btn-api');
         
-        if(!pickup) { alert("Vui lòng nhập hoặc lấy GPS điểm lấy hàng!"); return; }
-        if(!dropoff) { alert("Vui lòng nhập điểm đến!"); return; }
-
-        btn.innerText = "⏳ Đang tìm...";
-        btn.disabled = true;
+        if(!pickup || !dropoff) { alert("Vui lòng điền đủ điểm đi và điểm đến!"); return; }
+        btn.disabled = true; btn.innerText = "⏳...";
 
         try {
             const getCoords = async (addr) => {
@@ -277,219 +392,229 @@
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`);
                 const data = await res.json();
                 if(data && data.length > 0) return { lat: data[0].lat, lon: data[0].lon };
-                throw new Error(`Không định vị được: ${addr}`);
+                throw new Error("Không tìm thấy địa chỉ");
             };
 
-            const coords1 = await getCoords(pickup);
-            const coords2 = await getCoords(dropoff);
+            const c1 = await getCoords(pickup);
+            const c2 = await getCoords(dropoff);
+            const osrm = await fetch(`https://router.project-osrm.org/route/v1/driving/${c1.lon},${c1.lat};${c2.lon},${c2.lat}?overview=false`);
+            const rData = await osrm.json();
 
-            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords1.lon},${coords1.lat};${coords2.lon},${coords2.lat}?overview=false`;
-            const routeRes = await fetch(osrmUrl);
-            const routeData = await routeRes.json();
-
-            if(routeData && routeData.routes && routeData.routes.length > 0) {
-                const distanceMeters = routeData.routes[0].distance;
-                const distanceKm = (distanceMeters / 1000).toFixed(1); 
-                
-                document.getElementById('distance-input').value = distanceKm;
+            if(rData && rData.routes && rData.routes.length > 0) {
+                const km = (rData.routes[0].distance / 1000).toFixed(1);
+                document.getElementById('distance-input').value = km;
                 calculateShippingFee();
-                showToast(`Đã tìm thấy tuyến đường: ${distanceKm} km`);
-            } else {
-                throw new Error("Không thể tìm đường kết nối 2 điểm này.");
-            }
-
-        } catch (error) {
-            alert("Lỗi: " + error.message + "\n\nMẹo: Điểm đến cần ghi rõ địa chỉ (Thêm phường, thành phố/tỉnh).");
-        } finally {
-            btn.innerText = "📍 Tính km";
-            btn.disabled = false;
-        }
+                showToast(`Quãng đường thực tế: ${km} km`);
+            } else { throw new Error(); }
+        } catch (e) {
+            alert("Lỗi kết nối bản đồ. Hãy thử gõ thêm tên Tỉnh/Thành phố.");
+        } finally { btn.disabled = false; btn.innerText = "Tính km"; }
     }
 
-    // --- Tính Phí Ship Tự Động ---
+    // --- TÍNH TIỀN THEO CẤU HÌNH ĐỘNG ---
     function calculateShippingFee() {
-        let distRaw = parseFloat(document.getElementById('distance-input').value);
+        let raw = parseFloat(document.getElementById('distance-input').value);
         let shipInput = document.getElementById('ship-input');
         let hint = document.getElementById('distance-hint');
 
-        if (isNaN(distRaw) || distRaw <= 0) {
-            shipInput.value = '';
-            hint.innerText = "Hệ số x1.2 chưa áp dụng";
-            return;
-        }
+        if(isNaN(raw) || raw <= 0) { shipInput.value = ''; hint.innerText = "Hệ số x1.2 chưa tính"; return; }
 
-        let distActual = distRaw * 1.2;
-        let fee = 0;
+        let realKm = raw * 1.2;
+        let money = 0;
 
-        if (distActual <= 2) {
-            fee = 10000;
+        // Thuật toán tùy biến cấu hình theo Cài Đặt (Yêu cầu số 1)
+        if(realKm <= config.baseKm) {
+            money = config.basePrice;
         } else {
-            fee = 10000 + (distActual - 2) * 5000;
+            money = config.basePrice + (realKm - config.baseKm) * config.perKm;
         }
-        
-        fee = Math.round(fee); 
 
-        shipInput.value = formatMoney(fee);
-        hint.innerText = `Thực tính: ${distActual.toFixed(2)} km`;
+        shipInput.value = formatMoney(Math.round(money)) + " đ";
+        hint.innerText = `Thực tính hệ số: ${realKm.toFixed(2)} km`;
     }
 
-    // --- Gợi Ý Tiền Tự Động ---
-    function handleSmartInput(inputEl, suggestionBoxId) {
-        let rawValue = inputEl.value.replace(/\D/g, '');
-        if (rawValue !== '') { inputEl.value = formatMoney(rawValue); } 
-        else { inputEl.value = ''; }
-
-        let box = document.getElementById(suggestionBoxId);
+    // --- GỢI Ý TIỀN TỰ ĐỘNG ---
+    function handleSmartInput(inputEl, boxId) {
+        let raw = inputEl.value.replace(/\D/g, '');
+        inputEl.value = raw ? formatMoney(raw) : '';
+        let box = document.getElementById(boxId);
         box.innerHTML = '';
 
-        if (rawValue && parseInt(rawValue) > 0) {
-            let baseNum = parseInt(rawValue);
-            let suggestions = [baseNum * 1000, baseNum * 10000, baseNum * 100000];
-            
-            suggestions.forEach(val => {
-                let div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.innerText = formatMoney(val) + ' đ';
-                div.onclick = function() {
-                    inputEl.value = formatMoney(val);
-                    box.style.display = 'none';
-                };
-                box.appendChild(div);
+        if(raw && parseInt(raw) > 0) {
+            let num = parseInt(raw);
+            [num*1000, num*10000, num*100000].forEach(v => {
+                let d = document.createElement('div');
+                d.className = 'suggestion-item';
+                d.innerText = formatMoney(v) + ' đ';
+                d.onclick = function() { inputEl.value = formatMoney(v); box.style.display = 'none'; };
+                box.appendChild(d);
             });
             box.style.display = 'block';
-        } else {
-            box.style.display = 'none';
-        }
+        } else { box.style.display = 'none'; }
     }
 
-    document.addEventListener('click', function(e) {
-        if(!e.target.closest('.input-wrapper')) {
-            document.getElementById('cod-suggestions').style.display = 'none';
-        }
+    document.addEventListener('click', e => {
+        if(!e.target.closest('.input-wrapper')) document.getElementById('cod-suggestions').style.display = 'none';
     });
 
-    // --- Xử Lý Lưu Đơn ---
+    // --- LƯU ĐƠN HÀNG VÀO MẢNG DỮ LIỆU ---
     function saveOrder() {
         let name = document.getElementById('cus-name').value.trim() || 'Khách vãng lai';
-        let phone = document.getElementById('cus-phone').value.trim() || '---';
-        let codRaw = parseInt(document.getElementById('cod-input').value.replace(/\D/g, '')) || 0;
-        let shipRaw = parseInt(document.getElementById('ship-input').value.replace(/\D/g, '')) || 0;
+        let phone = document.getElementById('cus-phone').value.trim() || 'Không rõ';
+        let cod = parseMoney(document.getElementById('cod-input').value);
+        let ship = parseMoney(document.getElementById('ship-input').value);
+        let dropoff = document.getElementById('dropoff-address').value.trim() || 'Chưa cập nhật địa chỉ';
 
-        if (codRaw === 0 && shipRaw === 0) {
-            alert('Vui lòng nhập khoảng cách hoặc COD để tạo đơn!');
-            return;
-        }
+        if(cod === 0 && ship === 0) { alert("Vui lòng nhập quãng đường hoặc số tiền COD!"); return; }
 
-        if (currentPaymentMode === 'debt') {
-            let debtItem = document.createElement('div');
-            debtItem.className = 'debt-list-item';
-            debtItem.innerHTML = `
-                <div class="debt-info">
-                    <div>
-                        <div style="font-weight: 600; font-size: 15px;">${name}</div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 3px;">📞 ${phone}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="color: #ef4444; font-size: 14px; font-weight: 600; margin-bottom: 2px;">Ship: ${formatMoney(shipRaw)}đ</div>
-                        <div style="color: #0066b3; font-size: 14px; font-weight: 600;">COD: ${formatMoney(codRaw)}đ</div>
-                    </div>
-                </div>
-                <div class="debt-actions">
-                    <button class="action-btn btn-thu-ship" onclick="collectShip(this, ${shipRaw})" ${shipRaw === 0 ? 'disabled class="action-btn btn-done"' : ''}>
-                        ${shipRaw === 0 ? 'Xong Ship ✓' : 'Đã thu Ship'}
-                    </button>
-                    <button class="action-btn btn-tra-cod" onclick="payCod(this, ${codRaw})" ${codRaw === 0 ? 'disabled class="action-btn btn-done"' : ''}>
-                        ${codRaw === 0 ? 'Xong COD ✓' : 'Đã thanh toán COD'}
-                    </button>
-                </div>
-            `;
-            let list = document.getElementById('debt-list');
-            list.insertBefore(debtItem, list.firstChild);
+        // Đối tượng cấu trúc đơn hàng
+        let orderItem = {
+            id: Date.now(),
+            name: name,
+            phone: phone,
+            dropoff: dropoff,
+            cod: cod,
+            ship: ship,
+            mode: currentPaymentMode, // 'debt' hoặc 'paid'
+            shipPaid: currentPaymentMode === 'paid',
+            codPaid: currentPaymentMode === 'paid',
+            time: new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})
+        };
 
-            totalShipDebt += shipRaw;
-            totalCodDebt += codRaw;
-            updateDebtSummary();
-            showToast('Đã lưu vào sổ Ghi Nợ!');
+        orders.unshift(orderItem); // Chèn lên đầu danh sách
+        showToast("Đơn hàng đã được lưu!");
 
-        } else {
-            statsShipRevenue += shipRaw;
-            statsCodCollected += codRaw;
-            statsTotalOrders += 1;
-            updateReportSummary();
-            showToast('Đã cộng vào Báo Cáo Doanh Thu!');
-        }
-
-        // Reset form
+        // Xóa sạch form nhập
         document.getElementById('dropoff-address').value = '';
         document.getElementById('cus-name').value = '';
         document.getElementById('cus-phone').value = '';
         document.getElementById('distance-input').value = '';
         document.getElementById('ship-input').value = '';
-        document.getElementById('distance-hint').innerText = 'Hệ số x1.2 chưa áp dụng';
         document.getElementById('cod-input').value = '';
+        document.getElementById('distance-hint').innerText = "Hệ số x1.2 chưa tính";
     }
 
-    // --- Các nút thanh toán trong Sổ Nợ ---
-    function collectShip(btnEl, amount) {
-        if(confirm(`Xác nhận đã thu ${formatMoney(amount)}đ tiền Ship? Số tiền này sẽ được cộng vào Thống Kê doanh thu.`)) {
-            totalShipDebt -= amount;
-            statsShipRevenue += amount; 
-            updateDebtSummary();
-            updateReportSummary();
-            
-            btnEl.innerText = "Xong Ship ✓";
-            btnEl.className = "action-btn btn-done";
-            btnEl.onclick = null;
-            checkIfOrderCompleted(btnEl);
-        }
-    }
+    // --- QUẢN LÝ TAB GHI NỢ & TÌM KIẾM (Yêu cầu số 3) ---
+    function renderDebtTab() {
+        let listContainer = document.getElementById('debt-list');
+        let searchKey = document.getElementById('search-debt').value.toLowerCase().trim();
+        listContainer.innerHTML = '';
 
-    function payCod(btnEl, amount) {
-        if(confirm(`Xác nhận đã trả ${formatMoney(amount)}đ tiền COD cho khách?`)) {
-            totalCodDebt -= amount;
-            statsCodCollected += amount; 
-            updateDebtSummary();
-            updateReportSummary();
-            
-            btnEl.innerText = "Xong COD ✓";
-            btnEl.className = "action-btn btn-done";
-            btnEl.onclick = null;
-            checkIfOrderCompleted(btnEl);
-        }
-    }
-    
-    function checkIfOrderCompleted(btnEl) {
-        let parentActions = btnEl.parentElement;
-        let buttons = parentActions.querySelectorAll('button');
-        let isAllDone = true;
-        buttons.forEach(btn => {
-            if (!btn.classList.contains('btn-done')) isAllDone = false;
+        let shipDebtSum = 0;
+        let codDebtSum = 0;
+
+        // Lọc danh sách nợ (Chỉ lấy đơn có nợ ship hoặc nợ cod và khớp tên tìm kiếm)
+        let debtOrders = orders.filter(o => {
+            let isDebt = (!o.shipPaid && o.ship > 0) || (!o.codPaid && o.cod > 0);
+            let matchName = o.name.toLowerCase().includes(searchKey);
+            return isDebt && matchName;
         });
-        
-        if (isAllDone) {
-            statsTotalOrders += 1;
-            updateReportSummary();
-            parentActions.parentElement.style.opacity = '0.5'; 
+
+        // Tính tổng tiền nợ trên toàn bộ hệ thống đơn (không bị ảnh hưởng bởi ô tìm kiếm)
+        orders.forEach(o => {
+            if(!o.shipPaid) shipDebtSum += o.ship;
+            if(!o.codPaid) codDebtSum += o.cod;
+        });
+
+        document.getElementById('total-ship-debt').innerText = formatMoney(shipDebtSum) + ' đ';
+        document.getElementById('total-cod-debt').innerText = formatMoney(codDebtSum) + ' đ';
+
+        if(debtOrders.length === 0) {
+            listContainer.innerHTML = '<div class="no-data">Không có dữ liệu công nợ thỏa mãn.</div>';
+            return;
+        }
+
+        debtOrders.forEach(o => {
+            let div = document.createElement('div');
+            div.className = 'item-card debt-style';
+            div.innerHTML = `
+                <div class="item-info">
+                    <div>
+                        <div style="font-weight:700; font-size:14.5px; color:var(--slate-800)">${o.name}</div>
+                        <div style="font-size:11.5px; color:var(--slate-400); margin-top:2px;">📞 ${o.phone}</div>
+                        <div style="font-size:11.5px; color:var(--slate-600); margin-top:2px;">📍 ${o.dropoff}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color:var(--danger); font-size:13.5px; font-weight:700;">Ship: ${o.shipPaid ? '✓' : formatMoney(o.ship)+'đ'}</div>
+                        <div style="color:var(--primary); font-size:13.5px; font-weight:700; margin-top:2px;">COD: ${o.codPaid ? '✓' : formatMoney(o.cod)+'đ'}</div>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <button class="action-btn ${o.shipPaid ? 'btn-done' : 'btn-thu-ship'}" onclick="${o.shipPaid ? '' : `actionCollectShip(${o.id}, ${o.ship})`}">
+                        ${o.shipPaid ? 'Đã thu Ship ✓' : 'Thu Ship'}
+                    </button>
+                    <button class="action-btn ${o.codPaid ? 'btn-done' : 'btn-tra-cod'}" onclick="${o.codPaid ? '' : `actionPayCod(${o.id}, ${o.cod})`}">
+                        ${o.codPaid ? 'Đã trả COD ✓' : 'Trả COD'}
+                    </button>
+                </div>
+            `;
+            listContainer.appendChild(div);
+        });
+    }
+
+    function actionCollectShip(id, amount) {
+        if(confirm(`Thu ${formatMoney(amount)}đ tiền Ship của đơn hàng này?`)) {
+            let o = orders.find(x => x.id === id);
+            if(o) { o.shipPaid = true; renderDebtTab(); showToast("Đã thu tiền ship."); }
         }
     }
 
-    // --- Cập nhật giao diện số liệu ---
-    function updateDebtSummary() {
-        document.getElementById('total-ship-debt').innerText = formatMoney(totalShipDebt) + ' đ';
-        document.getElementById('total-cod-debt').innerText = formatMoney(totalCodDebt) + ' đ';
+    function actionPayCod(id, amount) {
+        if(confirm(`Xác nhận đã hoàn trả ${formatMoney(amount)}đ tiền COD cho khách?`)) {
+            let o = orders.find(x => x.id === id);
+            if(o) { o.codPaid = true; renderDebtTab(); showToast("Đã thanh toán tiền COD."); }
+        }
     }
 
-    function updateReportSummary() {
-        document.getElementById('report-ship-revenue').innerText = formatMoney(statsShipRevenue) + ' đ';
-        document.getElementById('report-cod-revenue').innerText = formatMoney(statsCodCollected) + ' đ';
-        document.getElementById('report-total-orders').innerText = statsTotalOrders + ' đơn';
-    }
+    // --- TAB THỐNG KÊ & LỊCH SỬ ĐƠN HÀNG (Yêu cầu số 2) ---
+    function renderReportTab() {
+        let historyContainer = document.getElementById('history-list');
+        historyContainer.innerHTML = '';
 
-    function showToast(msg) {
-        let toast = document.getElementById('toast-msg');
-        toast.innerText = msg;
-        toast.style.opacity = '1';
-        setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        let revenueShip = 0;
+        let revenueCod = 0;
+        let doneCount = 0;
+
+        orders.forEach(o => {
+            if(o.shipPaid) revenueShip += o.ship;
+            if(o.codPaid) revenueCod += o.cod;
+            if(o.shipPaid && o.codPaid) doneCount++;
+        });
+
+        document.getElementById('report-ship-revenue').innerText = formatMoney(revenueShip) + ' đ';
+        document.getElementById('report-cod-revenue').innerText = formatMoney(revenueCod) + ' đ';
+        document.getElementById('report-total-orders').innerText = `Tổng đơn hoàn thành: ${doneCount} / ${orders.length} đơn`;
+
+        if(orders.length === 0) {
+            historyContainer.innerHTML = '<div class="no-data">Chưa có đơn hàng nào trong lịch sử hôm nay.</div>';
+            return;
+        }
+
+        // Tạo danh sách lịch sử trực quan
+        orders.forEach(o => {
+            let isAllDone = o.shipPaid && o.codPaid;
+            let statusBadge = isAllDone ? 
+                `<span class="badge success">Hoàn Thành</span>` : 
+                `<span class="badge warning">Còn Nợ</span>`;
+
+            let card = document.createElement('div');
+            card.className = `item-card ${isAllDone ? 'completed-style' : ''}`;
+            card.innerHTML = `
+                <div class="item-info" style="margin-bottom:0">
+                    <div>
+                        <div style="font-weight:700; color:var(--slate-800); font-size:13.5px;">
+                            <span style="color:var(--slate-400); font-size:11px; font-weight:500;">[${o.time}]</span> ${o.name}
+                        </div>
+                        <div style="font-size:11.5px; color:var(--slate-600); margin-top:2px;">Khách nhận: ${o.dropoff}</div>
+                        <div style="font-size:11px; color:var(--slate-400); margin-top:4px;">Phí: Ship (${formatMoney(o.ship)}đ) | COD (${formatMoney(o.cod)}đ)</div>
+                    </div>
+                    <div style="text-align:right; display:flex; flex-direction:column; justify-content:center; align-items:flex-end;">
+                        ${statusBadge}
+                    </div>
+                </div>
+            `;
+            historyContainer.appendChild(card);
+        });
     }
 </script>
 

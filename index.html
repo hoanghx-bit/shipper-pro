@@ -2,340 +2,348 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHIPPER PRO V24</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Giao Hàng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #00AA55; --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --red: #ff4757; --orange: #ffa502; --blue: #4285F4; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
-        
-        header { padding: 10px 20px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .logo-box { display: flex; align-items: center; gap: 10px; }
-        .logo-svg { width: 35px; height: 35px; }
-        .logo-text { font-weight: 900; color: var(--primary); font-size: 1.2rem; }
-
-        .container { max-width: 500px; margin: auto; padding: 15px; }
-        #map { height: 250px; width: 100%; border-radius: 24px; margin-bottom: -40px; border: 4px solid white; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 1; }
-
-        .main-card { background: var(--card); border-radius: 30px; padding: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); position: relative; z-index: 10; border: 1px solid rgba(0,0,0,0.03); }
-        
-        .input-group { background: #f8f9fa; padding: 15px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #eee; }
-        input { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
-        
-        .btn { border: none; padding: 15px; border-radius: 18px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; text-transform: uppercase; font-size: 13px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-blue { background: var(--blue); color: white; }
-        .btn-orange { background: var(--orange); color: white; }
-        .btn-ghost { background: #f1f3f5; color: #747d8c; }
-        
-        .report-box { background: white; border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #eee; margin-top: 10px; }
-        .report-val { font-size: 32px; font-weight: 900; color: var(--primary); margin: 10px 0; }
-        .filter-btns { display: flex; gap: 5px; margin-bottom: 15px; }
-        .filter-btns button { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #eee; background: white; font-weight: 700; font-size: 12px; }
-        .filter-btns button.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .list-item { background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-        
-        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 5px 25px; border-top: 1px solid #f1f3f5; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; color: #b2bec3; font-size: 10px; font-weight: 700; display: flex; flex-direction: column; gap: 5px; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.3rem; }
-
-        .order-block { border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .hidden { display: none; }
-        .note-text { font-size: 11px; color: #747d8c; font-style: italic; background: #f1f3f5; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
-        
-        .total-debt-banner { background: var(--orange); color: white; padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        /* Ẩn thanh cuộn cho mượt */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 flex justify-center font-sans text-gray-800">
 
-    <header>
-        <div class="logo-box">
-            <svg class="logo-svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#00AA55"/><path d="M20 70 L40 70 L45 75 L55 75 L60 70 L80 70 M30 70 Q30 50 50 50 L70 50 L70 60" stroke="white" stroke-width="5" fill="none"/><circle cx="35" cy="75" r="7" fill="white"/><circle cx="65" cy="75" r="7" fill="white"/><path d="M50 30 L75 30 L65 50 L40 50 Z" fill="#C0C0C0"/></svg>
-            <div class="logo-text">SHIPPER PRO</div>
+    <div class="w-full max-w-md bg-white shadow-xl h-screen flex flex-col relative overflow-hidden">
+        
+        <div class="bg-blue-600 p-3 pb-4 rounded-b-xl shadow-md z-10 flex justify-around">
+            <button onclick="switchTab('len-don')" id="tab-btn-len-don" class="flex flex-col items-center px-4 py-2 rounded-xl transition-all bg-white text-blue-600 shadow">
+                <i class="fa-solid fa-file-invoice text-xl"></i>
+                <span class="text-xs mt-1 font-bold">Lên đơn</span>
+            </button>
+            <button onclick="switchTab('so-no')" id="tab-btn-so-no" class="flex flex-col items-center px-4 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500">
+                <i class="fa-solid fa-book text-xl"></i>
+                <span class="text-xs mt-1 font-bold">Sổ nợ</span>
+            </button>
+            <button onclick="switchTab('bao-cao')" id="tab-btn-bao-cao" class="flex flex-col items-center px-4 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500">
+                <i class="fa-solid fa-chart-column text-xl"></i>
+                <span class="text-xs mt-1 font-bold">Báo cáo</span>
+            </button>
         </div>
-        <div id="header-today" style="font-weight: 800; color: var(--primary);">0đ</div>
-    </header>
 
-    <div class="container">
-        <div id="tab-order" class="tab-content">
-            <div id="map"></div>
-            <div class="main-card">
-                <div id="idle-view">
-                    <div id="customer-inputs">
-                        <div class="input-group">
-                            <b>Khách hàng 1</b>
-                            <input type="text" class="c-name" placeholder="Tên khách...">
-                            <input type="text" class="c-note" placeholder="Ghi chú...">
-                            <input type="number" class="c-goods" placeholder="Tiền hàng (Bạn nợ khách)...">
+        <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
+            
+            <div id="success-msg" class="hidden bg-green-100 text-green-700 p-3 rounded-lg items-center mb-4 text-sm font-bold">
+                <i class="fa-solid fa-circle-check mr-2"></i> Tạo đơn hàng thành công!
+            </div>
+
+            <div id="len-don" class="tab-content active space-y-4">
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center mb-3">
+                        <i class="fa-solid fa-location-dot text-blue-500 mr-3 text-lg"></i>
+                        <div class="text-sm text-gray-600">
+                            <p class="font-semibold text-gray-800">Điểm lấy hàng mặc định</p>
+                            <p>Đông Hà, Quảng Trị</p>
                         </div>
                     </div>
-                    <button class="btn btn-ghost" onclick="addCustomerInput()"><i class="fa-solid fa-plus"></i> THÊM KHÁCH</button>
-                    <button class="btn btn-primary" onclick="startOrders()"><i class="fa-solid fa-motorcycle"></i> BẮT ĐẦU GIAO</button>
+                    <div class="border-t border-gray-100 my-3"></div>
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-map-location-dot text-red-500 mr-3 text-lg"></i>
+                        <input type="text" id="diem-giao" placeholder="Địa chỉ giao..." class="w-full bg-transparent outline-none text-sm font-semibold">
+                    </div>
+                    <div class="mt-4 flex items-center gap-2 bg-gray-50 p-2 rounded-lg border focus-within:border-blue-300">
+                        <span class="text-sm font-semibold whitespace-nowrap text-gray-600">Khoảng cách:</span>
+                        <input type="number" id="khoang-cach" placeholder="Số km (VD: 3.5)" oninput="calculateTotal()" class="w-full bg-transparent outline-none text-sm font-bold text-blue-600">
+                    </div>
                 </div>
-                <div id="running-view" class="hidden">
-                    <div id="active-orders-list"></div>
-                    <button class="btn btn-ghost" onclick="location.reload()" style="color:var(--red)">HỦY HẾT ĐƠN</button>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <div class="flex space-x-2">
+                        <div class="flex-1 bg-gray-50 p-2 rounded-lg border focus-within:border-blue-400 flex items-center">
+                            <i class="fa-solid fa-user text-gray-400 mr-2"></i>
+                            <input type="text" id="ten-khach" placeholder="Tên khách" class="w-full bg-transparent outline-none text-sm font-semibold">
+                        </div>
+                        <div class="flex-1 bg-gray-50 p-2 rounded-lg border focus-within:border-blue-400 flex items-center">
+                            <i class="fa-solid fa-phone text-gray-400 mr-2"></i>
+                            <input type="tel" id="sdt-khach" placeholder="Số điện thoại" class="w-full bg-transparent outline-none text-sm font-semibold">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                        <span class="font-semibold text-sm text-blue-800">Tiền thu hộ (COD)</span>
+                        <input type="number" id="tien-cod" placeholder="0" class="text-right text-blue-700 font-bold outline-none bg-transparent w-1/2 text-lg">
+                    </div>
+
+                    <div class="flex justify-between items-center px-1">
+                        <span class="font-semibold text-sm text-gray-700">Trạng thái</span>
+                        <div class="flex bg-gray-100 rounded-lg p-1">
+                            <button id="btn-tien-mat" onclick="setDebt(false)" class="px-3 py-1 text-xs font-bold rounded-md bg-white text-green-600 shadow-sm transition-all">Tiền mặt</button>
+                            <button id="btn-ghi-no" onclick="setDebt(true)" class="px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all">Ghi nợ</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <div id="tab-history" class="tab-content hidden">
-            <h3 style="margin-left:10px">Lịch sử đơn</h3>
-            <input type="text" id="filter-history" placeholder="Tìm tên khách hàng..." oninput="renderHistoryList()" style="margin-bottom:15px">
-            <div id="history-list"></div>
-        </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-2 text-sm">
+                    <div class="flex justify-between text-gray-500">
+                        <span>Phí vận chuyển</span>
+                        <span id="phi-ship">0 đ</span>
+                    </div>
+                    <div class="flex justify-between text-gray-500">
+                        <span>Phí dịch vụ</span>
+                        <span>5.000 đ</span>
+                    </div>
+                    <div class="border-t border-dashed my-2"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-800 text-base">Tổng cộng</span>
+                        <span id="tong-tien" class="font-bold text-blue-600 text-xl">5.000 đ</span>
+                    </div>
+                </div>
 
-        <div id="tab-report" class="tab-content hidden">
-            <h3 style="margin-left:10px">Báo cáo thu nhập</h3>
-            <div class="filter-btns">
-                <button id="btn-day" class="active" onclick="setReportPeriod('day')">NGÀY</button>
-                <button id="btn-week" onclick="setReportPeriod('week')">TUẦN</button>
-                <button id="btn-month" onclick="setReportPeriod('month')">THÁNG</button>
+                <button onclick="submitOrder()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-colors text-lg">
+                    Xác nhận tạo đơn
+                </button>
             </div>
-            <div class="report-box">
-                <div id="report-label" style="font-weight: 700; color: #95a5a6;">THU NHẬP SHIP</div>
-                <div id="report-val" class="report-val">0đ</div>
-                <div id="report-count" style="font-size: 14px; color: #666;">Số lượng: 0 đơn</div>
-            </div>
-        </div>
 
-        <div id="tab-debt" class="tab-content hidden">
-            <h3 style="margin-left:10px">Nợ khách (Tiền hàng)</h3>
-            <div class="total-debt-banner">
-                <div id="debt-label-dynamic" style="font-size: 11px; font-weight: 700; opacity: 0.9; text-transform: uppercase;">TỔNG NỢ KHÁCH HÀNG</div>
-                <div id="sum-debt-val" style="font-size: 24px; font-weight: 900;">0đ</div>
+            <div id="so-no" class="tab-content">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 px-1">Danh sách cần thu nợ</h2>
+                <div id="danh-sach-no">
+                    </div>
             </div>
-            <input type="text" id="filter-debt" placeholder="Nhập tên khách để đối soát..." oninput="renderDebts()" style="margin-bottom:15px">
-            <div id="debt-list"></div>
-        </div>
 
-        <div id="tab-settings" class="tab-content hidden">
-            <div class="main-card">
-                <h3>Cấu hình giá theo KM</h3>
-                <div id="pricing-list"></div>
-                <button class="btn btn-ghost" onclick="addPriceStep()">+ THÊM MỐC MỚI</button>
-                <button class="btn btn-primary" onclick="savePricing()">LƯU CÀI ĐẶT</button>
+            <div id="bao-cao" class="tab-content space-y-4">
+                <h2 class="text-lg font-bold text-gray-800 mb-2 px-1">Tổng quan doanh thu</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-xs text-blue-600 font-semibold mb-1">Tổng số đơn</p>
+                        <p id="bc-tong-don" class="text-2xl font-bold text-blue-800">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                        <p class="text-xs text-green-600 font-semibold mb-1">Doanh thu cước</p>
+                        <p id="bc-doanh-thu" class="text-xl font-bold text-green-800">0 đ</p>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 col-span-2">
+                        <p class="text-xs text-orange-600 font-semibold mb-1">Tổng tiền COD đang giữ</p>
+                        <p id="bc-tong-cod" class="text-2xl font-bold text-orange-800">0 đ</p>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-gray-800 mt-6 mb-3 px-1">Lịch sử đơn hàng</h3>
+                <div id="lich-su-don" class="space-y-2">
+                    </div>
             </div>
+
         </div>
     </div>
 
-    <nav>
-        <div class="nav-item active" onclick="showTab('order', this)"><i class="fa-solid fa-route"></i>Đơn</div>
-        <div class="nav-item" onclick="showTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
-        <div class="nav-item" onclick="showTab('report', this)"><i class="fa-solid fa-chart-line"></i>Báo cáo</div>
-        <div class="nav-item" onclick="showTab('debt', this)"><i class="fa-solid fa-wallet"></i>Nợ khách</div>
-        <div class="nav-item" onclick="showTab('settings', this)"><i class="fa-solid fa-gear"></i>Giá</div>
-    </nav>
-
     <script>
-        let history = JSON.parse(localStorage.getItem('shipper_hist_v21') || '[]');
-        let debts = JSON.parse(localStorage.getItem('shipper_debts_v21') || '[]');
-        let pricing = JSON.parse(localStorage.getItem('shipper_price') || '[{"from":0, "to":2,"price":15000},{"from":2, "to":5,"price":30000},{"from":5, "to":100,"price":50000}]');
-        let activeOrders = [];
-        let pickupPos = null;
-        let map, userMarker, currentPeriod = 'day';
+        // Khởi tạo dữ liệu từ LocalStorage hoặc dùng dữ liệu mẫu
+        let orders = JSON.parse(localStorage.getItem('giao_hang_db')) || [];
+        if(orders.length === 0) {
+            // Dữ liệu mẫu ban đầu
+            orders = [
+                { id: 1, date: new Date().toLocaleDateString('vi-VN'), name: 'Chị Nậm', phone: '0987654321', distance: 3.5, cod: 150000, fee: 20500, total: 25500, isDebt: true }
+            ];
+            saveData();
+        }
 
-        window.onload = () => { initMap(); updateHeader(); renderPricing(); };
+        let isDebtCurrent = false;
 
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([10.7626, 106.6601], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // 1. CHUYỂN TAB
+        function switchTab(tabId) {
+            // Ẩn tất cả tab
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
 
-            // Tự động lấy vị trí khi mở app
-            map.locate({setView: true, maxZoom: 16, watch: true});
-
-            map.on('locationfound', e => {
-                const radius = e.accuracy / 2;
-                if (!userMarker) {
-                    userMarker = L.circleMarker(e.latlng, {color: '#4285F4', radius: 8, fillOpacity: 0.8}).addTo(map);
+            // Đổi màu nút
+            const btns = ['len-don', 'so-no', 'bao-cao'];
+            btns.forEach(btn => {
+                const el = document.getElementById('tab-btn-' + btn);
+                if(btn === tabId) {
+                    el.className = "flex flex-col items-center px-4 py-2 rounded-xl transition-all bg-white text-blue-600 shadow";
                 } else {
-                    userMarker.setLatLng(e.latlng);
+                    el.className = "flex flex-col items-center px-4 py-2 rounded-xl transition-all text-blue-100 hover:bg-blue-500";
                 }
-                // Luôn cập nhật tâm bản đồ theo vị trí hiện tại
-                map.panTo(e.latlng);
             });
 
-            map.on('locationerror', e => {
-                console.log("Không thể truy cập GPS.");
-            });
+            // Nếu qua tab khác thì render lại dữ liệu
+            if(tabId === 'so-no') renderDebtList();
+            if(tabId === 'bao-cao') renderReports();
         }
 
-        function addCustomerInput() {
-            const count = document.querySelectorAll('.input-group').length;
-            if(count >= 5) return;
-            const div = document.createElement('div');
-            div.className = 'input-group';
-            div.innerHTML = `<b>Khách hàng ${count+1}</b><input type="text" class="c-name" placeholder="Tên khách..."><input type="text" class="c-note" placeholder="Ghi chú..."><input type="number" class="c-goods" placeholder="Tiền hàng...">`;
-            document.getElementById('customer-inputs').appendChild(div);
-        }
-
-        function startOrders() {
-            navigator.geolocation.getCurrentPosition(p => {
-                pickupPos = [p.coords.latitude, p.coords.longitude];
-                const names = document.querySelectorAll('.c-name');
-                const notes = document.querySelectorAll('.c-note');
-                const goods = document.querySelectorAll('.c-goods');
-                activeOrders = [];
-                names.forEach((n, i) => {
-                    if(n.value.trim() !== "") {
-                        activeOrders.push({ id: i, name: n.value, note: notes[i].value, goods: Number(goods[i].value) || 0, fee: 0, dist: 0, status: 'delivering' });
-                    }
-                });
-                if(activeOrders.length === 0) return alert("Vui lòng nhập tên khách!");
-                document.getElementById('idle-view').classList.add('hidden');
-                document.getElementById('running-view').classList.remove('hidden');
-                renderActiveOrders();
-                L.circleMarker(pickupPos, {color: '#00AA55', radius: 8, fillOpacity: 0.5}).addTo(map);
-            });
-        }
-
-        function renderActiveOrders() {
-            const container = document.getElementById('active-orders-list');
-            container.innerHTML = activeOrders.map(o => `
-                <div class="order-block" id="block-${o.id}" style="opacity: ${o.status==='completed' ? '0.5' : '1'}">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${o.name}</b> 
-                        <span style="font-size:10px;">${o.note ? '['+o.note+']' : ''}</span>
-                    </div>
-                    <div style="font-size:12px; color:#666; margin-bottom:5px;">Tiền hàng: ${o.goods.toLocaleString()}đ</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:11px; font-weight:700;">SHIP:</span>
-                        <input type="number" id="fee-input-${o.id}" value="${o.fee}" oninput="updateManualFee(${o.id}, this.value)" style="width:100px; margin:0; padding:5px; border:none; border-bottom:2px solid var(--primary);">
-                        <b style="color:var(--red); flex:1; text-align:right;">Thu: ${(o.goods + o.fee).toLocaleString()}đ</b>
-                    </div>
-                    ${o.status === 'delivering' ? `<button class="btn btn-blue" onclick="arriveOrder(${o.id})">ĐẾN NƠI (GPS)</button>` : 
-                    (o.status === 'arrived' ? `<div style="display:flex; gap:5px;"><button class="btn btn-primary" onclick="finishOrder(${o.id}, 'cash')">XONG</button><button class="btn btn-orange" onclick="finishOrder(${o.id}, 'debt')">NỢ TIỀN HÀNG</button></div>` : `<b>ĐÃ XONG ✓</b>`)}
-                </div>
-            `).join('');
-        }
-
-        function updateManualFee(id, val) {
-            const order = activeOrders.find(o => o.id === id);
-            order.fee = Number(val) || 0;
-            const block = document.getElementById(`block-${id}`);
-            const thuText = block.querySelector('b[style*="text-align:right"]');
-            thuText.innerText = 'Thu: ' + (order.goods + order.fee).toLocaleString() + 'đ';
-        }
-
-        function arriveOrder(id) {
-            navigator.geolocation.getCurrentPosition(async p => {
-                const order = activeOrders.find(o => o.id === id);
-                const url = `https://router.project-osrm.org/route/v1/driving/${pickupPos[1]},${pickupPos[0]};${p.coords.longitude},${p.coords.latitude}?overview=full`;
-                const res = await fetch(url); const data = await res.json();
-                order.dist = (data.routes[0].distance / 1000).toFixed(1);
-                order.fee = calculateFee(order.dist);
-                order.status = 'arrived';
-                renderActiveOrders();
-            });
-        }
-
-        function finishOrder(id, type) {
-            const order = activeOrders.find(o => o.id === id);
-            const record = { ...order, date: new Date().toLocaleDateString('vi-VN'), ts: Date.now() };
-            history.unshift(record);
-            localStorage.setItem('shipper_hist_v21', JSON.stringify(history));
-            if(type === 'debt' && order.goods > 0) {
-                debts.unshift({ ...record, debtAmount: order.goods });
-                localStorage.setItem('shipper_debts_v21', JSON.stringify(debts));
-            }
-            order.status = 'completed';
-            renderActiveOrders(); updateHeader();
-            if(activeOrders.every(o => o.status === 'completed')) {
-                setTimeout(() => { alert("Xong tất cả đơn!"); location.reload(); }, 600);
+        // 2. CHỌN TRẠNG THÁI NỢ
+        function setDebt(status) {
+            isDebtCurrent = status;
+            const btnTienMat = document.getElementById('btn-tien-mat');
+            const btnGhiNo = document.getElementById('btn-ghi-no');
+            
+            if(status) { // Nếu chọn Ghi nợ
+                btnGhiNo.className = "px-3 py-1 text-xs font-bold rounded-md bg-red-500 text-white shadow-sm transition-all";
+                btnTienMat.className = "px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all";
+            } else { // Tiền mặt
+                btnTienMat.className = "px-3 py-1 text-xs font-bold rounded-md bg-white text-green-600 shadow-sm transition-all";
+                btnGhiNo.className = "px-3 py-1 text-xs font-bold rounded-md text-gray-500 transition-all";
             }
         }
 
-        function calculateFee(d) {
-            for(let p of pricing) { if(d >= p.from && d <= p.to) return p.price; }
-            return pricing[pricing.length-1].price;
+        // 3. TÍNH TOÁN TIỀN SHIP TỰ ĐỘNG
+        function calculateTotal() {
+            const distance = parseFloat(document.getElementById('khoang-cach').value) || 0;
+            let fee = 0;
+            
+            // Công thức: 2km đầu 13k, các km sau 5k/km
+            if (distance > 0) {
+                if (distance <= 2) fee = 13000;
+                else fee = 13000 + Math.ceil(distance - 2) * 5000;
+            }
+
+            const total = fee + 5000; // 5000đ phí dịch vụ mặc định
+
+            document.getElementById('phi-ship').innerText = fee.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('tong-tien').innerText = total.toLocaleString('vi-VN') + ' đ';
+            return { fee, total };
         }
 
-        function renderHistoryList() {
-            const filter = document.getElementById('filter-history').value.toLowerCase();
-            const filtered = history.filter(h => h.name.toLowerCase().includes(filter));
-            document.getElementById('history-list').innerHTML = filtered.map((h, i) => `
-                <div class="list-item">
-                    <div><b>${h.name}</b> ${h.note ? `<span class="note-text">${h.note}</span>` : ''}<br><small>${h.date} - ${h.dist}km</small></div>
-                    <div style="text-align:right"><b style="color:var(--primary)">${h.fee.toLocaleString()}đ</b><br><i class="fa-solid fa-trash" style="color:var(--red); font-size:12px;" onclick="deleteHistory(${i})"></i></div>
-                </div>
-            `).join('');
+        // 4. TẠO ĐƠN HÀNG MỚI
+        function submitOrder() {
+            const distance = parseFloat(document.getElementById('khoang-cach').value) || 0;
+            const name = document.getElementById('ten-khach').value.trim();
+            const phone = document.getElementById('sdt-khach').value.trim();
+            const cod = parseFloat(document.getElementById('tien-cod').value) || 0;
+
+            if(!name || !phone || distance <= 0) {
+                alert("Vui lòng nhập Tên khách, Số điện thoại và Khoảng cách km!");
+                return;
+            }
+
+            const calc = calculateTotal();
+
+            const newOrder = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString('vi-VN'),
+                name: name,
+                phone: phone,
+                distance: distance,
+                cod: cod,
+                fee: calc.fee,
+                total: calc.total,
+                isDebt: isDebtCurrent
+            };
+
+            orders.unshift(newOrder); // Thêm lên đầu danh sách
+            saveData();
+
+            // Reset form
+            document.getElementById('khoang-cach').value = '';
+            document.getElementById('diem-giao').value = '';
+            document.getElementById('ten-khach').value = '';
+            document.getElementById('sdt-khach').value = '';
+            document.getElementById('tien-cod').value = '';
+            setDebt(false);
+            calculateTotal();
+
+            // Hiện thông báo
+            const msg = document.getElementById('success-msg');
+            msg.classList.remove('hidden');
+            msg.classList.add('flex');
+            setTimeout(() => { msg.classList.add('hidden'); msg.classList.remove('flex'); }, 3000);
         }
 
-        function deleteHistory(i) { if(confirm("Xóa?")) { history.splice(i,1); localStorage.setItem('shipper_hist_v21', JSON.stringify(history)); renderHistoryList(); updateHeader(); } }
+        // 5. RENDER SỔ NỢ GỘP THEO KHÁCH HÀNG
+        function renderDebtList() {
+            const listDiv = document.getElementById('danh-sach-no');
+            listDiv.innerHTML = '';
 
-        function renderDebts() {
-            const filterInput = document.getElementById('filter-debt').value.trim();
-            const filterLower = filterInput.toLowerCase();
-            const filtered = debts.filter(d => d.name.toLowerCase().includes(filterLower));
-            const labelEl = document.getElementById('debt-label-dynamic');
-            labelEl.innerText = (filterInput === "") ? "TỔNG NỢ KHÁCH HÀNG" : `NỢ CỦA: ${filterInput}`;
-            const sumDebt = filtered.reduce((a, b) => a + b.debtAmount, 0);
-            document.getElementById('sum-debt-val').innerText = sumDebt.toLocaleString() + 'đ';
-            document.getElementById('debt-list').innerHTML = filtered.length ? filtered.map((d) => `
-                <div class="list-item" onclick="collectDebt('${d.ts}')">
-                    <div><b>${d.name}</b><br><small>${d.date}</small></div>
-                    <div style="text-align:right"><b style="color:var(--orange)">${d.debtAmount.toLocaleString()}đ</b><br><small>Trả khách</small></div>
-                </div>
-            `).join('') : '<p style="text-align:center;">Trống</p>';
-        }
+            // Lọc ra các đơn đang nợ và gộp theo Số điện thoại
+            const debts = {};
+            orders.forEach(o => {
+                if(o.isDebt) {
+                    if(!debts[o.phone]) debts[o.phone] = { name: o.name, total: 0, count: 0 };
+                    debts[o.phone].total += o.total;
+                    debts[o.phone].count += 1;
+                }
+            });
 
-        function collectDebt(timestamp) {
-            if(confirm("Đã trả nợ cho khách?")) {
-                const idx = debts.findIndex(d => d.ts == timestamp);
-                debts.splice(idx, 1);
-                localStorage.setItem('shipper_debts_v21', JSON.stringify(debts));
-                renderDebts();
+            if(Object.keys(debts).length === 0) {
+                listDiv.innerHTML = '<div class="text-center text-gray-400 py-10">Không có khách hàng nào đang nợ.</div>';
+                return;
+            }
+
+            for (const phone in debts) {
+                const khach = debts[phone];
+                listDiv.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm mb-3 border border-red-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-gray-800"><i class="fa-solid fa-user text-gray-500 mr-1"></i> ${khach.name}</h3>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-phone mr-1"></i> ${phone}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-red-600 font-bold text-lg">${khach.total.toLocaleString('vi-VN')} đ</div>
+                                <div class="text-xs text-gray-400">${khach.count} đơn nợ</div>
+                            </div>
+                        </div>
+                        <button onclick="payDebt('${phone}')" class="w-full py-2 bg-green-50 text-green-700 font-bold text-sm rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                            Xác nhận đã thu tiền
+                        </button>
+                    </div>
+                `;
             }
         }
 
-        function renderReport() {
-            const now = new Date();
-            let filtered = [];
-            if(currentPeriod === 'day') filtered = history.filter(h => h.date === now.toLocaleDateString('vi-VN'));
-            else if(currentPeriod === 'week') filtered = history.filter(h => h.ts > (Date.now() - 7*86400000));
-            else filtered = history.filter(h => new Date(h.ts).getMonth() === now.getMonth());
-            const total = filtered.reduce((a, b) => a + b.fee, 0);
-            document.getElementById('report-val').innerText = total.toLocaleString() + 'đ';
-            document.getElementById('report-count').innerText = `Số lượng: ${filtered.length} đơn`;
+        // 6. TRẢ NỢ (Chuyển trạng thái từ Ghi nợ -> Tiền mặt)
+        function payDebt(phone) {
+            if(confirm("Bạn xác nhận đã thu đủ tiền nợ của khách hàng này?")) {
+                orders = orders.map(o => o.phone === phone ? { ...o, isDebt: false } : o);
+                saveData();
+                renderDebtList(); // Render lại danh sách
+            }
         }
 
-        function setReportPeriod(p) { currentPeriod = p; document.querySelectorAll('.filter-btns button').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+p).classList.add('active'); renderReport(); }
+        // 7. RENDER BÁO CÁO VÀ LỊCH SỬ
+        function renderReports() {
+            let sumFee = 0;
+            let sumCod = 0;
 
-        function showTab(tab, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-            if(tab === 'history') renderHistoryList();
-            if(tab === 'report') renderReport();
-            if(tab === 'debt') renderDebts();
-            if(tab === 'order') setTimeout(() => map.invalidateSize(), 200);
-        }
+            orders.forEach(o => {
+                sumFee += o.fee;
+                sumCod += o.cod;
+            });
 
-        function renderPricing() {
-            document.getElementById('pricing-list').innerHTML = pricing.map((p, i) => `
-                <div style="background:#f8f9fa; padding:10px; border-radius:15px; margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
-                        Từ <input type="number" style="width:60px; padding:5px; margin:0;" value="${p.from}" onchange="pricing[${i}].from=Number(this.value)"> 
-                        đến <input type="number" style="width:60px; padding:5px; margin:0;" value="${p.to}" onchange="pricing[${i}].to=Number(this.value)"> km
+            document.getElementById('bc-tong-don').innerText = orders.length;
+            document.getElementById('bc-doanh-thu').innerText = sumFee.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('bc-tong-cod').innerText = sumCod.toLocaleString('vi-VN') + ' đ';
+
+            const historyDiv = document.getElementById('lich-su-don');
+            historyDiv.innerHTML = '';
+            
+            // Hiển thị 10 đơn gần nhất
+            orders.slice(0, 10).forEach(o => {
+                const statusBadge = o.isDebt 
+                    ? '<span class="text-[10px] px-2 py-1 rounded-md font-bold bg-red-100 text-red-600">Ghi nợ</span>'
+                    : '<span class="text-[10px] px-2 py-1 rounded-md font-bold bg-green-100 text-green-600">Đã thu</span>';
+                
+                historyDiv.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-sm text-gray-800">${o.name}</p>
+                            <p class="text-xs text-gray-500">${o.date} - ${o.distance}km</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-1">
+                            <p class="font-bold text-blue-600 text-sm">${o.total.toLocaleString('vi-VN')} đ</p>
+                            ${statusBadge}
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        Giá: <input type="number" style="flex:1; padding:5px; margin:0;" value="${p.price}" onchange="pricing[${i}].price=Number(this.value)"> đ
-                        <i class="fa-solid fa-trash" style="color:var(--red)" onclick="pricing.splice(${i},1); renderPricing()"></i>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            });
         }
-        function addPriceStep() { pricing.push({from: 0, to: 0, price: 0}); renderPricing(); }
-        function savePricing() { localStorage.setItem('shipper_price', JSON.stringify(pricing)); alert("Đã lưu!"); }
-        function updateHeader() { const today = new Date().toLocaleDateString('vi-VN'); const total = history.filter(h => h.date === today).reduce((a,b) => a + b.fee, 0); document.getElementById('header-today').innerText = total.toLocaleString() + 'đ'; }
+
+        // LƯU DỮ LIỆU
+        function saveData() {
+            localStorage.setItem('giao_hang_db', JSON.stringify(orders));
+        }
     </script>
 </body>
 </html>

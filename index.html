@@ -183,6 +183,11 @@
 </div>
 
 <script>
+    // --- Báo hiệu Code đã chạy ---
+    window.onload = function() {
+        showToast("Hệ thống đã tải xong! Các nút đã sẵn sàng.");
+    };
+
     // --- Biến toàn cục ---
     let currentPaymentMode = 'debt'; 
     let totalShipDebt = 0, totalCodDebt = 0;
@@ -264,9 +269,7 @@
         btn.disabled = true;
 
         try {
-            // Lấy tọa độ (Kinh độ/Vĩ độ)
             const getCoords = async (addr) => {
-                // Kiểm tra xem người dùng có truyền trực tiếp tọa độ (dạng: lat, lon) không
                 if (/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(addr)) {
                     let parts = addr.split(',');
                     return { lat: parts[0].trim(), lon: parts[1].trim() };
@@ -280,7 +283,6 @@
             const coords1 = await getCoords(pickup);
             const coords2 = await getCoords(dropoff);
 
-            // API OSRM: Đo khoảng cách đường đi
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords1.lon},${coords1.lat};${coords2.lon},${coords2.lat}?overview=false`;
             const routeRes = await fetch(osrmUrl);
             const routeData = await routeRes.json();
@@ -478,4 +480,18 @@
     }
 
     function updateReportSummary() {
-        document.getElementById('report-ship-revenue').innerText
+        document.getElementById('report-ship-revenue').innerText = formatMoney(statsShipRevenue) + ' đ';
+        document.getElementById('report-cod-revenue').innerText = formatMoney(statsCodCollected) + ' đ';
+        document.getElementById('report-total-orders').innerText = statsTotalOrders + ' đơn';
+    }
+
+    function showToast(msg) {
+        let toast = document.getElementById('toast-msg');
+        toast.innerText = msg;
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+    }
+</script>
+
+</body>
+</html>

@@ -26,7 +26,7 @@
 
         /* --- Cards & Inputs --- */
         .card { background: #fff; margin: 15px; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .flex-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; position: relative;}
+        .flex-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; position: relative;}
         .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .input-box { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; width: 100%; background: #fdfdfd; transition: 0.2s; }
         .input-box:focus { border-color: #0066b3; }
@@ -34,10 +34,13 @@
         .text-right { text-align: right; font-weight: bold; color: #0066b3; }
         .readonly { background-color: #f1f5f9; color: #334155; cursor: not-allowed; }
 
-        /* --- Nút API tính km --- */
+        /* --- Các nút đặc biệt --- */
         .btn-api { position: absolute; right: 0; padding: 8px 12px; background: #e0f2fe; color: #0066b3; border: 1px solid #bae6fd; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;}
         .btn-api:active { background: #bae6fd; }
         .btn-api:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: wait; }
+        
+        .btn-gps { background: transparent; border: none; font-size: 20px; cursor: pointer; transition: 0.2s; padding-right: 5px; }
+        .btn-gps:active { transform: scale(0.9); }
 
         /* --- Gợi ý giá tiền động --- */
         .input-wrapper { position: relative; max-width: 180px; flex: 1;}
@@ -99,11 +102,11 @@
 
             <div class="card" style="margin-top: 0; padding-bottom: 10px;">
                 <div class="flex-row" style="border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
-                    <span style="color: #0066b3;">🔵</span>
-                    <input type="text" id="pickup-address" class="input-box" style="border:none; padding:0; background:transparent;" value="29a Nguyễn Hữu Khiếu, Đông Hà, Quảng Trị">
+                    <button class="btn-gps" onclick="getCurrentGPS()" title="Bấm để lấy vị trí hiện tại">📍</button>
+                    <input type="text" id="pickup-address" class="input-box" style="border:none; padding:0; background:transparent;" placeholder="Nhập địa chỉ lấy hàng hoặc bấm 📍..." value="29a Nguyễn Hữu Khiếu, Đông Hà, Quảng Trị">
                 </div>
                 <div class="flex-row" style="padding-top: 10px;">
-                    <span style="color: #ef4444;">🔴</span>
+                    <span style="color: #ef4444; font-size: 20px;">🎯</span>
                     <input type="text" id="dropoff-address" class="input-box" style="border:none; padding:0; background:transparent; padding-right: 70px;" placeholder="Nhập điểm đến (+ Tỉnh/Thành)...">
                     <button class="btn-api" onclick="getDistanceAPI()">📍 Tính km</button>
                 </div>
@@ -206,23 +209,68 @@
         return new Intl.NumberFormat('vi-VN').format(num);
     }
 
-    // --- TÍNH NĂNG MỚI: API TÌM QUÃNG ĐƯỜNG MIỄN PHÍ ---
+    // --- TÍNH NĂNG MỚI: LẤY VỊ TRÍ GPS HIỆN TẠI ---
+    function getCurrentGPS() {
+        const pickupInput = document.getElementById('pickup-address');
+        const btnGPS = document.querySelector('.btn-gps');
+
+        if (!navigator.geolocation) {
+            alert("Trình duyệt của bạn không hỗ trợ tính năng GPS.");
+            return;
+        }
+
+        btnGPS.innerText = "⏳";
+        pickupInput.value = "Đang quét vị trí...";
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            try {
+                // Dùng Nominatim API để dịch tọa độ thành địa chỉ
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await res.json();
+                
+                if (data && data.display_name) {
+                    pickupInput.value = data.display_name;
+                    showToast("Đã cập nhật vị trí hiện tại!");
+                } else {
+                    pickupInput.value = `${lat}, ${lon}`;
+                    showToast("Lấy GPS thành công!");
+                }
+            } catch (error) {
+                pickupInput.value = `${lat}, ${lon}`;
+                showToast("Đã lấy GPS!");
+            } finally {
+                btnGPS.innerText = "📍";
+            }
+        }, (error) => {
+            btnGPS.innerText = "📍";
+            pickupInput.value = "";
+            alert("Không thể lấy vị trí. Vui lòng cấp quyền truy cập vị trí (Location) cho trình duyệt.");
+        });
+    }
+
+    // --- API TÌM QUÃNG ĐƯỜNG MIỄN PHÍ ---
     async function getDistanceAPI() {
         const pickup = document.getElementById('pickup-address').value.trim();
         const dropoff = document.getElementById('dropoff-address').value.trim();
         const btn = document.querySelector('.btn-api');
         
-        if(!dropoff) {
-            alert("Vui lòng nhập điểm đến!");
-            return;
-        }
+        if(!pickup) { alert("Vui lòng nhập hoặc lấy GPS điểm lấy hàng!"); return; }
+        if(!dropoff) { alert("Vui lòng nhập điểm đến!"); return; }
 
         btn.innerText = "⏳ Đang tìm...";
         btn.disabled = true;
 
         try {
-            // 1. API Nominatim: Lấy tọa độ (Kinh độ/Vĩ độ) từ địa chỉ text
+            // Lấy tọa độ (Kinh độ/Vĩ độ)
             const getCoords = async (addr) => {
+                // Kiểm tra xem người dùng có truyền trực tiếp tọa độ (dạng: lat, lon) không
+                if (/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(addr)) {
+                    let parts = addr.split(',');
+                    return { lat: parts[0].trim(), lon: parts[1].trim() };
+                }
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`);
                 const data = await res.json();
                 if(data && data.length > 0) return { lat: data[0].lat, lon: data[0].lon };
@@ -232,16 +280,15 @@
             const coords1 = await getCoords(pickup);
             const coords2 = await getCoords(dropoff);
 
-            // 2. API OSRM: Đo khoảng cách đường đi thực tế giữa 2 tọa độ
+            // API OSRM: Đo khoảng cách đường đi
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords1.lon},${coords1.lat};${coords2.lon},${coords2.lat}?overview=false`;
             const routeRes = await fetch(osrmUrl);
             const routeData = await routeRes.json();
 
             if(routeData && routeData.routes && routeData.routes.length > 0) {
                 const distanceMeters = routeData.routes[0].distance;
-                const distanceKm = (distanceMeters / 1000).toFixed(1); // Đổi ra km, lấy 1 số thập phân
+                const distanceKm = (distanceMeters / 1000).toFixed(1); 
                 
-                // Điền vào ô và kích hoạt tính tiền
                 document.getElementById('distance-input').value = distanceKm;
                 calculateShippingFee();
                 showToast(`Đã tìm thấy tuyến đường: ${distanceKm} km`);
@@ -250,7 +297,7 @@
             }
 
         } catch (error) {
-            alert("Lỗi: " + error.message + "\n\nMẹo: API miễn phí cần ghi rõ địa chỉ (Thêm tên phường, tên tỉnh). VD: Lê Lợi, Đông Hà, Quảng Trị.");
+            alert("Lỗi: " + error.message + "\n\nMẹo: Điểm đến cần ghi rõ địa chỉ (Thêm phường, thành phố/tỉnh).");
         } finally {
             btn.innerText = "📍 Tính km";
             btn.disabled = false;
@@ -269,18 +316,16 @@
             return;
         }
 
-        // Áp dụng hệ số đường cong
         let distActual = distRaw * 1.2;
         let fee = 0;
 
-        // Thuật toán tính tiền (10k cho 2km đầu, +5k mỗi km tiếp theo)
         if (distActual <= 2) {
             fee = 10000;
         } else {
             fee = 10000 + (distActual - 2) * 5000;
         }
         
-        fee = Math.round(fee); // Làm tròn số tiền
+        fee = Math.round(fee); 
 
         shipInput.value = formatMoney(fee);
         hint.innerText = `Thực tính: ${distActual.toFixed(2)} km`;
@@ -433,18 +478,4 @@
     }
 
     function updateReportSummary() {
-        document.getElementById('report-ship-revenue').innerText = formatMoney(statsShipRevenue) + ' đ';
-        document.getElementById('report-cod-revenue').innerText = formatMoney(statsCodCollected) + ' đ';
-        document.getElementById('report-total-orders').innerText = statsTotalOrders + ' đơn';
-    }
-
-    function showToast(msg) {
-        let toast = document.getElementById('toast-msg');
-        toast.innerText = msg;
-        toast.style.opacity = '1';
-        setTimeout(() => { toast.style.opacity = '0'; }, 3000);
-    }
-</script>
-
-</body>
-</html>
+        document.getElementById('report-ship-revenue').innerText

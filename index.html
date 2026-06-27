@@ -8,6 +8,7 @@
         :root {
             --primary: #3b82f6;
             --accent: #10b981;
+            --accent-speed: #ef4444;
             --bg: #0f172a; 
             --card: #1e293b;
             --text: #f8fafc;
@@ -61,7 +62,7 @@
         .tab-content { display: none; padding: 16px; flex: 1; overflow-y: auto; }
         .tab-content.active { display: block; }
 
-        /* UI ĐỒNG HỒ & GIAO DIỆN TÍNH TIỀN MỚI */
+        /* UI ĐỒNG HỒ SONG SONG */
         #tab-journey {
             background-color: var(--bg);
             color: var(--text);
@@ -70,23 +71,37 @@
             align-items: center;
         }
         
+        .meters-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            margin: 15px 0 25px 0;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
         .meter-container {
             position: relative;
-            width: 220px;
-            height: 220px;
+            flex: 1;
+            max-width: 170px;
+            aspect-ratio: 1 / 1;
             border-radius: 50%;
             background: conic-gradient(var(--accent) 0%, var(--card) 0%);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 20px 0 25px 0;
             box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.5);
             transition: background 0.3s ease;
         }
         
+        #speedRing {
+            background: conic-gradient(var(--accent-speed) 0%, var(--card) 0%);
+        }
+
         .meter-inner {
-            width: 190px;
-            height: 190px;
+            width: 85%;
+            height: 85%;
             border-radius: 50%;
             background-color: var(--bg);
             display: flex;
@@ -97,17 +112,17 @@
         }
 
         .km-value {
-            font-size: 2.8rem;
+            font-size: 2.2rem;
             font-weight: 800;
             color: var(--text);
             line-height: 1;
             text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
         .km-label {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             margin-top: 5px;
         }
 
@@ -192,10 +207,19 @@
     </div>
 
     <div id="tab-journey" class="tab-content active">
-        <div class="meter-container" id="meterRing">
-            <div class="meter-inner">
-                <div class="km-value" id="totalDistance">0.00</div>
-                <div class="km-label">Kilometer</div>
+        
+        <div class="meters-wrapper">
+            <div class="meter-container" id="meterRing">
+                <div class="meter-inner">
+                    <div class="km-value" id="totalDistance">0.00</div>
+                    <div class="km-label">Kilometer</div>
+                </div>
+            </div>
+            <div class="meter-container" id="speedRing">
+                <div class="meter-inner">
+                    <div class="km-value" id="currentSpeed">0</div>
+                    <div class="km-label">Km/h</div>
+                </div>
             </div>
         </div>
 
@@ -259,7 +283,7 @@
 <script>
     let currentFareNum = 0; 
     let totalRevenue = 0;   
-    let isCurrentFareAdded = false; // Biến kiểm soát việc cộng tiền, tránh cộng đúp
+    let isCurrentFareAdded = false; 
 
     window.onload = function() {
         loadSettings();
@@ -324,12 +348,15 @@
     let watchId = null;
     let totalDistanceKm = 0;
     let lastPosition = null;
+    let lastTime = null; // Dùng để tính tốc độ
     let dropOffCount = 0;
     let isTracking = false;
 
     const domDistance = document.getElementById('totalDistance');
     const domFare = document.getElementById('totalFare');
+    const domSpeed = document.getElementById('currentSpeed');
     const meterRing = document.getElementById('meterRing');
+    const speedRing = document.getElementById('speedRing');
     const logArea = document.getElementById('logArea');
 
     function logMessage(msg) {
@@ -385,22 +412,47 @@
 
     function updatePosition(position) {
         const currentPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+        const currentTime = position.timestamp || Date.now();
+
+        // 1. TÍNH TỐC ĐỘ (km/h)
+        let speedKmH = 0;
+        if (position.coords.speed !== null && position.coords.speed >= 0) {
+            // Lấy trực tiếp từ GPS (m/s -> km/h)
+            speedKmH = position.coords.speed * 3.6;
+        } else if (lastPosition && lastTime) {
+            // Tự tính bằng Công thức: Quãng đường / Thời gian
+            const timeDiffHours = (currentTime - lastTime) / 1000 / 3600;
+            const dist = calculateDistance(lastPosition.lat, lastPosition.lng, currentPos.lat, currentPos.lng);
+            if (timeDiffHours > 0) {
+                speedKmH = dist / timeDiffHours;
+            }
+        }
+        
+        // Lọc nhiễu tốc độ thấp (nếu dưới 1km/h thì coi như đứng yên)
+        if (speedKmH < 1) speedKmH = 0;
+        
+        domSpeed.innerText = Math.round(speedKmH);
+        
+        // Cập nhật vòng viền tốc độ (Giả sử 100km/h là đầy vòng)
+        let speedPercentage = Math.min((speedKmH / 100) * 100, 100);
+        speedRing.style.background = `conic-gradient(var(--accent-speed) ${speedPercentage}%, var(--card) ${speedPercentage}%)`;
+
+
+        // 2. TÍNH QUÃNG ĐƯỜNG & TIỀN
         if (lastPosition) {
             const dist = calculateDistance(lastPosition.lat, lastPosition.lng, currentPos.lat, currentPos.lng);
-            if (dist > 0.005) { 
+            if (dist > 0.005) { // Lọc nhiễu tọa độ 5 mét
                 totalDistanceKm += dist;
                 domDistance.innerText = totalDistanceKm < 10 ? "0" + totalDistanceKm.toFixed(2) : totalDistanceKm.toFixed(2);
                 
                 calculateFare();
                 updateMeterVisual();
-                lastPosition = currentPos;
-                
-                // Xe đã di chuyển thêm 1 khoảng -> Cước đã thay đổi -> Hủy cờ đã thu tiền
                 isCurrentFareAdded = false; 
             }
-        } else {
-            lastPosition = currentPos; 
         }
+        
+        lastPosition = currentPos; 
+        lastTime = currentTime;
     }
 
     function startTracking() {
@@ -410,10 +462,14 @@
         totalDistanceKm = 0;
         currentFareNum = 0;
         lastPosition = null;
+        lastTime = null;
         dropOffCount = 0;
-        isCurrentFareAdded = false; // Bắt đầu cuốc mới, chưa thu tiền
+        isCurrentFareAdded = false; 
+        
         domDistance.innerText = "00.00";
+        domSpeed.innerText = "0";
         meterRing.style.background = `conic-gradient(var(--accent) 0%, var(--card) 0%)`;
+        speedRing.style.background = `conic-gradient(var(--accent-speed) 0%, var(--card) 0%)`;
 
         calculateFare();
 
@@ -451,12 +507,10 @@
             const lng = lastPosition.lng;
             const fareAtDropOff = domFare.innerText;
 
-            // ---- KHẮC PHỤC LỖI Ở ĐÂY ----
-            // Cộng tiền của đơn hàng này thẳng vào Tổng Doanh Thu ngay lập tức
             totalRevenue += currentFareNum;
             localStorage.setItem('shipper_totalRevenue', totalRevenue);
             document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString('vi-VN');
-            isCurrentFareAdded = true; // Đánh dấu là số tiền hiển thị trên màn hình hiện tại đã được tính vào tổng
+            isCurrentFareAdded = true; 
 
             logMessage(`🔄 Đang định vị Điểm đến ${dropOffCount}...`);
             const address = await getAddressFromCoords(lat, lng);
@@ -484,6 +538,8 @@
             watchId = null;
         }
         isTracking = false;
+        domSpeed.innerText = "0"; // Trả tốc độ về 0 khi kết thúc
+        speedRing.style.background = `conic-gradient(var(--accent-speed) 0%, var(--card) 0%)`;
         
         document.getElementById('btnStart').style.display = 'block';
         document.getElementById('btnDrop').style.display = 'none';
@@ -500,7 +556,6 @@
             }
         }
 
-        // Kiểm tra xem tiền cước hiện tại đã được cộng vào Tổng lúc bấm nút "Đã Trả Hàng" hay chưa
         let collectedInfo = "";
         if (!isCurrentFareAdded) {
             totalRevenue += currentFareNum;
@@ -508,11 +563,9 @@
             document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString('vi-VN');
             collectedInfo = `💰 Cước thu điểm cuối: <strong style="color:var(--primary); font-size:1.1rem;">${domFare.innerText} VNĐ</strong>`;
         } else {
-            // Nếu vừa bấm "Đã Trả Hàng" xong liền bấm "Kết Thúc", ta không cộng tiền lần 2
             collectedInfo = `💰 <em>(Cước điểm này đã tính ở phần Trả Hàng)</em>`;
         }
 
-        // Ghi log kết thúc chuyến
         logMessage(`🏁 <strong style="color:#ef4444;">KẾT THÚC LỘ TRÌNH</strong><br>
                     📍 Địa chỉ dừng: ${finalAddress}<br>
                     🛣️ Tổng quãng đường: ${totalDistanceKm.toFixed(2)} km<br>

@@ -215,9 +215,17 @@
     </div>
 
     <div id="tab-history" class="tab-content">
+        <div class="fare-display" style="margin-bottom: 20px;">
+            <div class="fare-label">Tổng Tiền Đã Thu</div>
+            <div class="fare-value">
+                <span id="totalRevenueDisplay">0</span> 
+                <span class="fare-currency">VNĐ</span>
+            </div>
+        </div>
+
         <div class="header-history">
             <h3 style="margin: 0; font-size: 1rem; color: #374151;">Hoạt động gần đây</h3>
-            <button class="btn-clear" onclick="clearHistory()">Xóa lịch sử</button>
+            <button class="btn-clear" onclick="clearHistory()">Xóa & Reset</button>
         </div>
         <div class="card" style="padding: 0;">
             <div id="logArea">
@@ -249,9 +257,13 @@
     </div>
 
 <script>
+    let currentFareNum = 0; // Biến lưu cước phí chuyến hiện tại (kiểu số nguyên)
+    let totalRevenue = 0;   // Biến lưu tổng doanh thu
+
     window.onload = function() {
         loadSettings();
         loadHistory();
+        loadRevenue();
     };
 
     function saveSettings() {
@@ -269,6 +281,16 @@
         if (localStorage.getItem('shipper_extraPrice')) document.getElementById('extraPrice').value = localStorage.getItem('shipper_extraPrice');
     }
 
+    function loadRevenue() {
+        const savedRev = localStorage.getItem('shipper_totalRevenue');
+        if (savedRev) {
+            totalRevenue = parseInt(savedRev, 10);
+        } else {
+            totalRevenue = 0;
+        }
+        document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString('vi-VN');
+    }
+
     function saveHistory() {
         localStorage.setItem('shipper_history', document.getElementById('logArea').innerHTML);
     }
@@ -281,9 +303,15 @@
     }
 
     function clearHistory() {
-        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử chuyến đi?")) {
+        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử và RESET TỔNG TIỀN ĐÃ THU về 0?")) {
+            // Xóa lịch sử
             localStorage.removeItem('shipper_history');
             document.getElementById('logArea').innerHTML = '<div id="emptyLogMsg" style="text-align: center; color: #9ca3af; padding: 30px;">Danh sách trống...</div>';
+            
+            // Reset tổng tiền
+            localStorage.removeItem('shipper_totalRevenue');
+            totalRevenue = 0;
+            document.getElementById('totalRevenueDisplay').innerText = "0";
         }
     }
 
@@ -346,7 +374,9 @@
             const stepCount = Math.ceil(extraDist / stepKm);
             fare = basePrice + (stepCount * extraPrice);
         }
-        domFare.innerText = Math.round(fare).toLocaleString('vi-VN');
+        
+        currentFareNum = Math.round(fare); // Lưu giá trị thô để cộng dồn
+        domFare.innerText = currentFareNum.toLocaleString('vi-VN');
     }
 
     function updateMeterVisual() {
@@ -376,6 +406,7 @@
         
         isTracking = true;
         totalDistanceKm = 0;
+        currentFareNum = 0;
         lastPosition = null;
         dropOffCount = 0;
         domDistance.innerText = "00.00";
@@ -415,7 +446,7 @@
             const currentKm = totalDistanceKm.toFixed(2);
             const lat = lastPosition.lat;
             const lng = lastPosition.lng;
-            const currentFare = domFare.innerText;
+            const fareAtDropOff = domFare.innerText;
 
             logMessage(`🔄 Đang định vị Điểm đến ${dropOffCount}...`);
             const address = await getAddressFromCoords(lat, lng);
@@ -428,7 +459,7 @@
             logMessage(`✅ <strong style="color:var(--primary)">Hoàn tất điểm ${dropOffCount}</strong><br>
                         📍 ${address}<br>
                         🛣️ Quãng đường: ${currentKm} km<br>
-                        💰 Cước tạm tính: ${currentFare} VNĐ`);
+                        💰 Cước tạm tính: ${fareAtDropOff} VNĐ`);
 
             if (dropOffCount === 5) {
                 document.getElementById('btnDrop').style.display = 'none';
@@ -437,7 +468,6 @@
         }
     }
 
-    // TÍCH HỢP TÌM ĐỊA CHỈ CHO NÚT KẾT THÚC
     async function stopTracking() {
         if (watchId !== null) {
             navigator.geolocation.clearWatch(watchId);
@@ -449,22 +479,28 @@
         document.getElementById('btnDrop').style.display = 'none';
         document.getElementById('btnStop').style.display = 'none';
         
+        // 1. Cộng dồn doanh thu của chuyến này vào Tổng Tiền
+        totalRevenue += currentFareNum;
+        localStorage.setItem('shipper_totalRevenue', totalRevenue);
+        document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString('vi-VN');
+
+        // 2. Xử lý lấy địa chỉ kết thúc
         let finalAddress = "Không xác định được vị trí";
         if (lastPosition) {
             logMessage(`🔄 Đang lấy địa chỉ điểm kết thúc...`);
             finalAddress = await getAddressFromCoords(lastPosition.lat, lastPosition.lng);
-
-            // Xóa thông báo "đang lấy địa chỉ" để chèn thông báo kết quả cuối cùng
+            
             const logContent = document.getElementById('logArea');
             if(logContent.innerHTML.includes(`Đang lấy địa chỉ điểm kết thúc`)) {
                  logContent.firstElementChild.remove();
             }
         }
 
+        // 3. Ghi log kết thúc chuyến
         logMessage(`🏁 <strong style="color:#ef4444;">KẾT THÚC LỘ TRÌNH</strong><br>
                     📍 Địa chỉ dừng: ${finalAddress}<br>
                     🛣️ Tổng quãng đường: ${totalDistanceKm.toFixed(2)} km<br>
-                    💰 Tổng cước: <strong style="color:var(--primary); font-size:1.1rem;">${domFare.innerText} VNĐ</strong>`);
+                    💰 Cước thu chuyến này: <strong style="color:var(--primary); font-size:1.1rem;">${domFare.innerText} VNĐ</strong>`);
     }
 </script>
 </body>

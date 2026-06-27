@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đồng Hồ Shipper Pro - Lưu Trữ</title>
+    <title>Đồng Hồ Shipper Pro</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -61,7 +61,7 @@
         .tab-content { display: none; padding: 16px; flex: 1; overflow-y: auto; }
         .tab-content.active { display: block; }
 
-        /* UI ĐỒNG HỒ */
+        /* UI ĐỒNG HỒ & GIAO DIỆN TÍNH TIỀN MỚI */
         #tab-journey {
             background-color: var(--bg);
             color: var(--text);
@@ -72,21 +72,21 @@
         
         .meter-container {
             position: relative;
-            width: 240px;
-            height: 240px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
             background: conic-gradient(var(--accent) 0%, var(--card) 0%);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 20px 0 30px 0;
+            margin: 20px 0 25px 0;
             box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.5);
             transition: background 0.3s ease;
         }
         
         .meter-inner {
-            width: 210px;
-            height: 210px;
+            width: 190px;
+            height: 190px;
             border-radius: 50%;
             background-color: var(--bg);
             display: flex;
@@ -97,39 +97,68 @@
         }
 
         .km-value {
-            font-size: 3rem;
+            font-size: 2.8rem;
             font-weight: 800;
             color: var(--text);
             line-height: 1;
             text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
         .km-label {
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-top: 5px;
         }
 
+        /* KHU VỰC HIỂN THỊ TIỀN ĐƯỢC LÀM ĐẸP */
         .fare-display {
-            background: var(--card);
-            padding: 15px 30px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            padding: 20px 15px;
+            border-radius: 16px;
+            border: 1px solid #334155;
             text-align: center;
             width: 100%;
             box-sizing: border-box;
             margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .fare-display::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60%; height: 3px;
+            background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+            border-radius: 50%;
+            box-shadow: 0 2px 10px #fbbf24;
+        }
+        .fare-label { 
+            font-size: 0.85rem; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            font-weight: 600; 
         }
         .fare-value {
-            font-size: 2.5rem;
-            font-weight: bold;
+            font-size: 3.2rem;
+            font-weight: 900;
             color: #fbbf24;
-            font-family: 'Courier New', Courier, monospace;
-            text-shadow: 0 0 5px rgba(251, 191, 36, 0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            margin: 10px 0;
+            line-height: 1;
+            letter-spacing: 1px;
         }
-        .fare-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .fare-currency {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            font-weight: 600;
+            text-shadow: none;
+            letter-spacing: 0;
+        }
 
         /* Elements General */
         .card { background: var(--light-card); padding: 16px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 16px; }
@@ -171,8 +200,11 @@
         </div>
 
         <div class="fare-display">
-            <div class="fare-label">Tổng Cước Phí</div>
-            <div class="fare-value"><span id="totalFare">0</span> <span style="font-size: 1.2rem;">VNĐ</span></div>
+            <div class="fare-label">Cước Phí Hiện Tại</div>
+            <div class="fare-value">
+                <span id="totalFare">0</span> 
+                <span class="fare-currency">VNĐ</span>
+            </div>
         </div>
         
         <div style="width: 100%;">
@@ -217,7 +249,6 @@
     </div>
 
 <script>
-    // --- KHỞI TẠO LƯU TRỮ TRÊN TRÌNH DUYỆT (LOCALSTORAGE) ---
     window.onload = function() {
         loadSettings();
         loadHistory();
@@ -228,8 +259,6 @@
         localStorage.setItem('shipper_basePrice', document.getElementById('basePrice').value);
         localStorage.setItem('shipper_stepKm', document.getElementById('stepKm').value);
         localStorage.setItem('shipper_extraPrice', document.getElementById('extraPrice').value);
-        
-        // Nếu đang trong chuyến đi mà đổi giá, tính lại tiền ngay lập tức
         if (isTracking) calculateFare(); 
     }
 
@@ -258,7 +287,6 @@
         }
     }
 
-    // --- UI Tabs ---
     function openTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -266,7 +294,6 @@
         btnElement.classList.add('active');
     }
 
-    // --- Logic Variables ---
     let watchId = null;
     let totalDistanceKm = 0;
     let lastPosition = null;
@@ -281,7 +308,7 @@
     function logMessage(msg) {
         const time = new Date().toLocaleTimeString('vi-VN');
         const emptyMsg = document.getElementById('emptyLogMsg');
-        if(emptyMsg) emptyMsg.remove(); // Xóa dòng "Danh sách trống" nếu có
+        if(emptyMsg) emptyMsg.remove(); 
 
         const logHtml = `
             <div class="log-item">
@@ -290,7 +317,7 @@
             </div>`;
         
         logArea.innerHTML = logHtml + logArea.innerHTML;
-        saveHistory(); // Ghi dữ liệu vào LocalStorage ngay khi có log mới
+        saveHistory(); 
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -391,10 +418,8 @@
             const currentFare = domFare.innerText;
 
             logMessage(`🔄 Đang định vị Điểm đến ${dropOffCount}...`);
-
             const address = await getAddressFromCoords(lat, lng);
             
-            // Tìm và xóa dòng "Đang định vị..." để log sạch đẹp hơn
             const logContent = document.getElementById('logArea');
             if(logContent.innerHTML.includes(`Đang định vị Điểm đến ${dropOffCount}`)) {
                  logContent.firstElementChild.remove();
@@ -412,7 +437,8 @@
         }
     }
 
-    function stopTracking() {
+    // TÍCH HỢP TÌM ĐỊA CHỈ CHO NÚT KẾT THÚC
+    async function stopTracking() {
         if (watchId !== null) {
             navigator.geolocation.clearWatch(watchId);
             watchId = null;
@@ -423,7 +449,22 @@
         document.getElementById('btnDrop').style.display = 'none';
         document.getElementById('btnStop').style.display = 'none';
         
-        logMessage(`🏁 <strong>KẾT THÚC. Tổng quãng đường: ${totalDistanceKm.toFixed(2)} km - Cước: ${domFare.innerText} VNĐ.</strong>`);
+        let finalAddress = "Không xác định được vị trí";
+        if (lastPosition) {
+            logMessage(`🔄 Đang lấy địa chỉ điểm kết thúc...`);
+            finalAddress = await getAddressFromCoords(lastPosition.lat, lastPosition.lng);
+
+            // Xóa thông báo "đang lấy địa chỉ" để chèn thông báo kết quả cuối cùng
+            const logContent = document.getElementById('logArea');
+            if(logContent.innerHTML.includes(`Đang lấy địa chỉ điểm kết thúc`)) {
+                 logContent.firstElementChild.remove();
+            }
+        }
+
+        logMessage(`🏁 <strong style="color:#ef4444;">KẾT THÚC LỘ TRÌNH</strong><br>
+                    📍 Địa chỉ dừng: ${finalAddress}<br>
+                    🛣️ Tổng quãng đường: ${totalDistanceKm.toFixed(2)} km<br>
+                    💰 Tổng cước: <strong style="color:var(--primary); font-size:1.1rem;">${domFare.innerText} VNĐ</strong>`);
     }
 </script>
 </body>

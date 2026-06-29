@@ -3,21 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đồng Hồ Shipper Pro - Full Version</title>
+    <title>Đồng Hồ Shipper Pro</title>
     <style>
         :root {
             --primary: #3b82f6; --accent: #10b981; --accent-speed: #ef4444;
             --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --text-muted: #94a3b8;
             --light-bg: #f3f4f6; --light-card: #ffffff; --light-text: #1f2937;
         }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--light-bg); color: var(--light-text); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-        .tab-nav { display: flex; background: var(--light-card); padding: 10px 10px 0 10px; border-bottom: 2px solid #e5e7eb; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-weight: 600; font-size: 0.9rem; color: #6b7280; background: #f9fafb; border: 1px solid #e5e7eb; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; }
-        .tab-btn.active { color: var(--primary); background: var(--light-card); border-bottom: 2px solid var(--light-card); margin-bottom: -2px; }
-        .tab-content { display: none; padding: 16px; flex: 1; overflow-y: auto; }
-        .tab-content.active { display: block; }
-        #tab-journey { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background-color: var(--light-bg); 
+            color: var(--light-text); 
+            margin: 0; padding: 0; 
+            display: flex; flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; /* Chống cuộn toàn trang */
+        }
         
+        /* Tab Navigation */
+        .tab-nav { 
+            display: flex; background: var(--light-card); 
+            padding: 10px 10px 0 10px; border-bottom: 2px solid #e5e7eb; gap: 5px; 
+            flex-shrink: 0;
+        }
+        .tab-btn { 
+            flex: 1; padding: 12px 0; text-align: center; font-weight: 600; 
+            font-size: 0.9rem; color: #6b7280; background: #f9fafb; 
+            border: 1px solid #e5e7eb; border-bottom: none; border-radius: 8px 8px 0 0; 
+            cursor: pointer; 
+        }
+        .tab-btn.active { color: var(--primary); background: var(--light-card); border-bottom: 2px solid var(--light-card); margin-bottom: -2px; }
+        
+        /* Hiển thị Full Trang cho từng Tab */
+        .tab-content { 
+            display: none; padding: 16px; 
+            flex: 1; overflow-y: auto; /* Chỉ cuộn nội dung bên trong tab */
+            background-color: var(--light-bg);
+        }
+        .tab-content.active { display: block; }
+        
+        #tab-journey { background-color: var(--bg); color: var(--text); }
+
+        /* Giao diện Hành trình */
         .meters-wrapper { display: flex; justify-content: center; gap: 15px; width: 100%; margin: 15px 0 25px 0; padding: 0 10px; box-sizing: border-box; }
         .meter-container { position: relative; flex: 1; max-width: 170px; aspect-ratio: 1 / 1; border-radius: 50%; background: conic-gradient(var(--accent) 0%, var(--card) 0%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.5); }
         #speedRing { background: conic-gradient(var(--accent-speed) 0%, var(--card) 0%); }
@@ -25,17 +52,30 @@
         .km-value { font-size: 2rem; font-weight: 800; color: var(--text); }
         .km-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; }
 
-        .fare-display { background: linear-gradient(145deg, #1e293b, #0f172a); padding: 20px; border-radius: 16px; text-align: center; width: 100%; margin-bottom: 20px; color: #fbbf24; }
+        .fare-display { background: linear-gradient(145deg, #1e293b, #0f172a); padding: 20px; border-radius: 16px; text-align: center; width: 100%; margin-bottom: 20px; color: #fbbf24; border: 1px solid #334155; box-sizing: border-box;}
+        .fare-label { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 10px;}
         .fare-value { font-size: 2.5rem; font-weight: 900; }
-        
+        .fare-currency { font-size: 1rem; color: #cbd5e1;}
+
+        /* Lịch sử & Cấu hình */
         .card { background: var(--light-card); padding: 16px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 16px; }
         .form-group { margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 12px; text-transform: uppercase; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; color: #374151;}
+        input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-size: 1rem;}
+        
+        button { width: 100%; padding: 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 12px; text-transform: uppercase; font-size: 1.05rem;}
         .btn-start { background-color: var(--primary); }
         .btn-stop { background-color: #ef4444; }
         .btn-drop { background-color: #f59e0b; color: #000; }
-        .log-item { padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.85rem; }
+        .btn-clear { background-color: #ef4444; padding: 10px; font-size: 0.9rem;}
+
+        /* Lịch sử Item */
+        .log-item { background: var(--light-card); padding: 15px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;}
+        .log-time { color: var(--primary); font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+        .log-address { font-size: 0.95rem; margin-bottom: 8px; line-height: 1.4; color: #374151;}
+        .log-details { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #d1d5db; padding-top: 8px;}
+        .log-km { font-weight: 600; color: #4b5563; }
+        .edit-fare-input { width: 120px; padding: 6px; border: 1px solid var(--primary); border-radius: 6px; font-weight: bold; color: #000; text-align: right; background: #eff6ff;}
     </style>
 </head>
 <body>
@@ -48,52 +88,56 @@
 
     <div id="tab-journey" class="tab-content active">
         <div class="meters-wrapper">
-            <div class="meter-container" id="meterRing"><div class="meter-inner"><div class="km-value" id="totalDistance">0.00</div><div class="km-label">Km</div></div></div>
-            <div class="meter-container" id="speedRing"><div class="meter-inner"><div class="km-value" id="currentSpeed">0</div><div class="km-label">Km/h</div></div></div>
+            <div class="meter-container" id="meterRing">
+                <div class="meter-inner">
+                    <div class="km-value" id="totalDistance">0.00</div><div class="km-label">Km</div>
+                </div>
+            </div>
+            <div class="meter-container" id="speedRing">
+                <div class="meter-inner">
+                    <div class="km-value" id="currentSpeed">0</div><div class="km-label">Km/h</div>
+                </div>
+            </div>
         </div>
         <div class="fare-display">
             <div class="fare-label">Cước Phí Hiện Tại</div>
-            <div class="fare-value"><span id="totalFare">0</span> <span style="font-size: 1rem;">VNĐ</span></div>
+            <div class="fare-value"><span id="totalFare">0</span> <span class="fare-currency">VNĐ</span></div>
         </div>
         <button id="btnStart" class="btn-start" onclick="startTracking()">Nhận Hàng Mới</button>
         <button id="btnDrop" class="btn-drop" onclick="markDropOff()" style="display: none;">Đã Trả Hàng</button>
-        <button id="btnStop" class="btn-stop" onclick="stopTracking()" style="display: none;">Kết Thúc</button>
+        <button id="btnStop" class="btn-stop" onclick="stopTracking()" style="display: none;">Kết Thúc Chuyến</button>
     </div>
 
     <div id="tab-history" class="tab-content">
-        <div class="fare-display">
-            <div class="fare-label">Tổng Tiền Đã Thu</div>
-            <div class="fare-value"><span id="totalRevenueDisplay">0</span></div>
+        <div class="fare-display" style="background: linear-gradient(145deg, #10b981, #047857); margin-bottom: 15px;">
+            <div class="fare-label" style="color: #d1fae5;">Tổng Doanh Thu</div>
+            <div class="fare-value" style="color: #fff;"><span id="totalRevenueDisplay">0</span> <span class="fare-currency">VNĐ</span></div>
         </div>
-        <div id="logArea"></div>
+        <button class="btn-clear" onclick="clearHistory()">Xóa Toàn Bộ Lịch Sử</button>
+        
+        <div id="historyList">
+            </div>
     </div>
 
     <div id="tab-settings" class="tab-content">
         <div class="card">
-            <div class="form-group"><label>Hệ số GPS (0.9 - 1.1):</label><input type="number" id="gpsFactor" value="1.0" step="0.01" oninput="saveSettings()"></div>
-            <div class="form-group"><label>Mốc km đầu:</label><input type="number" id="baseKm" value="2" oninput="saveSettings()"></div>
-            <div class="form-group"><label>Giá mốc đầu:</label><input type="number" id="basePrice" value="15000" oninput="saveSettings()"></div>
-            <div class="form-group"><label>Giá mỗi km tiếp:</label><input type="number" id="extraPrice" value="5000" oninput="saveSettings()"></div>
+            <div class="form-group"><label>Hệ số sai số GPS (0.9 - 1.1):</label><input type="number" id="gpsFactor" value="1.0" step="0.01" oninput="saveSettings()"></div>
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+            <div class="form-group"><label>Mốc km đầu tiên (km):</label><input type="number" id="baseKm" value="2" step="0.1" oninput="saveSettings()"></div>
+            <div class="form-group"><label>Giá mốc km đầu (VNĐ):</label><input type="number" id="basePrice" value="15000" step="1000" oninput="saveSettings()"></div>
+            <div class="form-group"><label>Bước nhảy tiếp theo (km):</label><input type="number" id="stepKm" value="1" step="0.1" oninput="saveSettings()"></div>
+            <div class="form-group"><label>Giá mỗi bước nhảy (VNĐ):</label><input type="number" id="extraPrice" value="5000" step="1000" oninput="saveSettings()"></div>
         </div>
     </div>
 
 <script>
-    let totalDistanceKm = 0, totalRevenue = 0, isTracking = false, lastPosition = null, watchId = null, dropOffCount = 0;
+    let totalDistanceKm = 0;
+    let isTracking = false;
+    let lastPosition = null;
+    let watchId = null;
+    let tripLogs = []; 
 
-    function saveSettings() {
-        localStorage.setItem('shipper_gpsFactor', document.getElementById('gpsFactor').value);
-        localStorage.setItem('shipper_baseKm', document.getElementById('baseKm').value);
-        localStorage.setItem('shipper_basePrice', document.getElementById('basePrice').value);
-        localStorage.setItem('shipper_extraPrice', document.getElementById('extraPrice').value);
-    }
-
-    function loadSettings() {
-        document.getElementById('gpsFactor').value = localStorage.getItem('shipper_gpsFactor') || 1.0;
-        document.getElementById('baseKm').value = localStorage.getItem('shipper_baseKm') || 2;
-        document.getElementById('basePrice').value = localStorage.getItem('shipper_basePrice') || 15000;
-        document.getElementById('extraPrice').value = localStorage.getItem('shipper_extraPrice') || 5000;
-    }
-
+    // QUẢN LÝ TABS
     function openTab(tabId, btn) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -101,6 +145,74 @@
         btn.classList.add('active');
     }
 
+    // LƯU & TẢI CẤU HÌNH
+    function saveSettings() {
+        localStorage.setItem('shipper_gpsFactor', document.getElementById('gpsFactor').value);
+        localStorage.setItem('shipper_baseKm', document.getElementById('baseKm').value);
+        localStorage.setItem('shipper_basePrice', document.getElementById('basePrice').value);
+        localStorage.setItem('shipper_stepKm', document.getElementById('stepKm').value);
+        localStorage.setItem('shipper_extraPrice', document.getElementById('extraPrice').value);
+        if (isTracking) calculateFare();
+    }
+
+    function loadSettings() {
+        document.getElementById('gpsFactor').value = localStorage.getItem('shipper_gpsFactor') || 1.0;
+        document.getElementById('baseKm').value = localStorage.getItem('shipper_baseKm') || 2;
+        document.getElementById('basePrice').value = localStorage.getItem('shipper_basePrice') || 15000;
+        document.getElementById('stepKm').value = localStorage.getItem('shipper_stepKm') || 1;
+        document.getElementById('extraPrice').value = localStorage.getItem('shipper_extraPrice') || 5000;
+    }
+
+    // XỬ LÝ LỊCH SỬ & DOANH THU
+    function renderHistory() {
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '';
+        let totalRevenue = 0;
+
+        if (tripLogs.length === 0) {
+            historyList.innerHTML = '<div style="text-align:center; padding:20px; color:#9ca3af;">Chưa có chuyến đi nào...</div>';
+        } else {
+            // Render từ mới nhất đến cũ nhất
+            [...tripLogs].reverse().forEach((log, reversedIndex) => {
+                const originalIndex = tripLogs.length - 1 - reversedIndex;
+                totalRevenue += log.fare;
+                historyList.innerHTML += `
+                    <div class="log-item">
+                        <div class="log-time">${log.time}</div>
+                        <div class="log-address">📍 ${log.address}</div>
+                        <div class="log-details">
+                            <span class="log-km">${log.distance.toFixed(2)} km</span>
+                            <span>
+                                <input type="number" class="edit-fare-input" value="${log.fare}" 
+                                onchange="editFare(${originalIndex}, this.value)"> VNĐ
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString('vi-VN');
+    }
+
+    function editFare(index, newValue) {
+        let parsedValue = parseInt(newValue.replace(/,/g, ''));
+        if (isNaN(parsedValue)) parsedValue = 0;
+        
+        tripLogs[index].fare = parsedValue;
+        localStorage.setItem('shipper_tripLogs', JSON.stringify(tripLogs));
+        renderHistory(); // Render lại để tính tổng tiền mới
+    }
+
+    function clearHistory() {
+        if(confirm("Xóa toàn bộ lịch sử và đưa doanh thu về 0?")) {
+            tripLogs = [];
+            localStorage.setItem('shipper_tripLogs', JSON.stringify(tripLogs));
+            renderHistory();
+        }
+    }
+
+    // TÍNH TOÁN QUÃNG ĐƯỜNG & TIỀN
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = (lat2-lat1) * Math.PI/180;
@@ -109,55 +221,155 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
+    function calculateFare() {
+        const baseKm = parseFloat(document.getElementById('baseKm').value);
+        const basePrice = parseFloat(document.getElementById('basePrice').value);
+        const stepKm = parseFloat(document.getElementById('stepKm').value) || 1;
+        const extraPrice = parseFloat(document.getElementById('extraPrice').value);
+
+        let fare = 0;
+        if (totalDistanceKm <= baseKm) fare = basePrice;
+        else {
+            const stepCount = Math.ceil((totalDistanceKm - baseKm) / stepKm);
+            fare = basePrice + (stepCount * extraPrice);
+        }
+        document.getElementById('totalFare').innerText = Math.round(fare).toLocaleString('vi-VN');
+        return Math.round(fare);
+    }
+
     function updatePosition(position) {
         const gpsFactor = parseFloat(document.getElementById('gpsFactor').value) || 1.0;
         const currentPos = { lat: position.coords.latitude, lng: position.coords.longitude };
         
         // Cập nhật tốc độ
-        document.getElementById('currentSpeed').innerText = Math.round((position.coords.speed || 0) * 3.6);
-        
+        let speed = Math.round((position.coords.speed || 0) * 3.6);
+        document.getElementById('currentSpeed').innerText = speed;
+        document.getElementById('speedRing').style.background = `conic-gradient(var(--accent-speed) ${Math.min(speed, 100)}%, var(--card) 0%)`;
+
+        // Cộng dồn quãng đường
         if (lastPosition) {
-            const dist = calculateDistance(lastPosition.lat, lastPosition.lng, currentPos.lat, currentPos.lng);
-            if (dist > 0.005) {
-                totalDistanceKm += (dist * gpsFactor);
+            const rawDist = calculateDistance(lastPosition.lat, lastPosition.lng, currentPos.lat, currentPos.lng);
+            if (rawDist > 0.005) { 
+                totalDistanceKm += (rawDist * gpsFactor);
                 document.getElementById('totalDistance').innerText = totalDistanceKm.toFixed(2);
+                document.getElementById('meterRing').style.background = `conic-gradient(var(--accent) ${(totalDistanceKm%1)*100}%, var(--card) 0%)`;
                 
-                // Tính cước
-                const baseKm = parseFloat(document.getElementById('baseKm').value);
-                const basePrice = parseFloat(document.getElementById('basePrice').value);
-                const extraPrice = parseFloat(document.getElementById('extraPrice').value);
-                let fare = totalDistanceKm <= baseKm ? basePrice : (basePrice + (totalDistanceKm - baseKm) * extraPrice);
-                document.getElementById('totalFare').innerText = Math.round(fare).toLocaleString();
+                calculateFare();
+                
+                // AUTO-SAVE Đề phòng f5 mất dữ liệu
+                localStorage.setItem('shipper_activeDist', totalDistanceKm.toString());
             }
         }
         lastPosition = currentPos;
     }
 
+    // ĐIỀU KHIỂN CHUYẾN ĐI
     function startTracking() {
-        totalDistanceKm = 0;
+        if (!navigator.geolocation) { alert("Thiết bị không hỗ trợ GPS"); return; }
+        
         isTracking = true;
+        totalDistanceKm = 0;
+        lastPosition = null;
+        
+        localStorage.setItem('shipper_isTracking', 'true');
+        localStorage.setItem('shipper_activeDist', '0');
+
         document.getElementById('btnStart').style.display = 'none';
         document.getElementById('btnDrop').style.display = 'block';
         document.getElementById('btnStop').style.display = 'block';
-        watchId = navigator.geolocation.watchPosition(updatePosition, null, {enableHighAccuracy: true});
+        
+        document.getElementById('totalDistance').innerText = "0.00";
+        calculateFare();
+
+        watchId = navigator.geolocation.watchPosition(updatePosition, 
+            (err) => console.log(err), 
+            {enableHighAccuracy: true, timeout: 5000}
+        );
     }
 
-    function markDropOff() {
-        totalRevenue += parseInt(document.getElementById('totalFare').innerText.replace(/,/g, ''));
-        localStorage.setItem('shipper_totalRevenue', totalRevenue);
-        document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString();
-        alert("Đã cộng tiền đơn hàng vào doanh thu!");
+    async function getAddressFromAPI(lat, lng) {
+        try {
+            document.getElementById('btnDrop').innerText = "Đang lấy địa chỉ...";
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const data = await res.json();
+            document.getElementById('btnDrop').innerText = "Đã Trả Hàng";
+            return data.display_name || "Vị trí không xác định";
+        } catch {
+            document.getElementById('btnDrop').innerText = "Đã Trả Hàng";
+            return `Tọa độ: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+    }
+
+    async function markDropOff() {
+        if (!lastPosition) return;
+        
+        const currentFare = calculateFare();
+        const currentDist = totalDistanceKm;
+        const timeStr = new Date().toLocaleTimeString('vi-VN');
+        const lat = lastPosition.lat;
+        const lng = lastPosition.lng;
+
+        const address = await getAddressFromAPI(lat, lng);
+
+        // Lưu vào mảng Lịch sử
+        tripLogs.push({
+            time: timeStr,
+            address: address,
+            distance: currentDist,
+            fare: currentFare
+        });
+        
+        localStorage.setItem('shipper_tripLogs', JSON.stringify(tripLogs));
+        renderHistory();
+
+        // Reset để tính lại từ đầu cho đơn tiếp theo
+        totalDistanceKm = 0;
+        lastPosition = null;
+        document.getElementById('totalDistance').innerText = "0.00";
+        calculateFare();
+        localStorage.setItem('shipper_activeDist', '0');
+        
+        alert("Đã lưu điểm trả hàng vào lịch sử!");
     }
 
     function stopTracking() {
-        navigator.geolocation.clearWatch(watchId);
+        if(watchId) navigator.geolocation.clearWatch(watchId);
+        isTracking = false;
+        
+        localStorage.setItem('shipper_isTracking', 'false');
+        localStorage.setItem('shipper_activeDist', '0');
+
         document.getElementById('btnStart').style.display = 'block';
         document.getElementById('btnDrop').style.display = 'none';
         document.getElementById('btnStop').style.display = 'none';
-        alert("Chuyến đi kết thúc!");
+        document.getElementById('currentSpeed').innerText = "0";
     }
 
-    window.onload = () => { loadSettings(); totalRevenue = parseInt(localStorage.getItem('shipper_totalRevenue') || 0); document.getElementById('totalRevenueDisplay').innerText = totalRevenue.toLocaleString(); };
+    // KHỞI ĐỘNG (Phục hồi dữ liệu nếu F5)
+    window.onload = function() {
+        loadSettings();
+        
+        // Tải lịch sử
+        const savedLogs = localStorage.getItem('shipper_tripLogs');
+        if (savedLogs) tripLogs = JSON.parse(savedLogs);
+        renderHistory();
+
+        // Khôi phục chuyến đi đang dở (nếu thoát web rồi vào lại)
+        const savedIsTracking = localStorage.getItem('shipper_isTracking');
+        if (savedIsTracking === 'true') {
+            isTracking = true;
+            totalDistanceKm = parseFloat(localStorage.getItem('shipper_activeDist')) || 0;
+            
+            document.getElementById('totalDistance').innerText = totalDistanceKm.toFixed(2);
+            calculateFare();
+
+            document.getElementById('btnStart').style.display = 'none';
+            document.getElementById('btnDrop').style.display = 'block';
+            document.getElementById('btnStop').style.display = 'block';
+
+            watchId = navigator.geolocation.watchPosition(updatePosition, null, {enableHighAccuracy: true});
+        }
+    };
 </script>
 </body>
 </html>

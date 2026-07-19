@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý Bán Hàng Chuyên Nghiệp</title>
+    
+    <!-- CẤU HÌNH WEB APP & LOGO -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PRO CRM">
+    
+    <!-- Favicon (Biểu tượng hiển thị trên tab trình duyệt) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <!-- Apple Touch Icon (Biểu tượng khi ghim ra màn hình chính iOS/Android) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%234f46e5%22 rx=%2220%22/><text y=%2270%22 x=%2215%22 font-size=%2265%22>📦</text></svg>">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* TÙY CHỈNH FONT VÀ MÀU SẮC */
@@ -113,14 +126,14 @@
 
         /* BẢNG LỊCH SỬ ĐƠN HÀNG ĐẶC BIỆT */
         .history-table { border-collapse: collapse; table-layout: auto; width: 100%; }
-        .history-table tbody { border: 2px solid var(--primary); margin-bottom: 10px; }
+        .history-table tbody { border: 2px solid var(--primary); }
+        .history-table .spacer-row { height: 10px; border: none !important; background: transparent !important; }
         .history-table .customer-row { background: #eef2ff; }
         .history-table .customer-row td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         .history-table .total-row td { background: #f8fafc; font-weight: bold; border-top: 1px dashed var(--border); font-size: 14px; }
         
         /* Cố định để nội dung bảng không bị xuống hàng */
         .history-table td, .history-table th { white-space: nowrap; }
-        /* Cho phép tên SP và KM dài được phép tự động xuống hàng nếu quá dài */
         .history-table .wrap-text { white-space: normal; min-width: 150px; }
 
         /* BIỂU ĐỒ & THỐNG KÊ */
@@ -134,24 +147,24 @@
 
         /* CSS ĐẶC BIỆT DÀNH CHO KHI XUẤT PDF / IN ẤN */
         @media print {
-            body * { visibility: hidden; } /* Ẩn toàn bộ trang */
-            #page-lichsu, #page-lichsu * { visibility: visible; } /* Chỉ hiện phần lịch sử */
+            body * { visibility: hidden; }
+            #page-lichsu, #page-lichsu * { visibility: visible; }
             #page-lichsu { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0;}
             
-            .no-print { display: none !important; } /* Ẩn các nút không cần thiết */
+            .no-print { display: none !important; }
             
-            /* Tinh chỉnh màu sắc bảng khi in */
             .history-table tbody { border: 2px solid #000 !important; }
             .history-table th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
             .history-table .customer-row td { background-color: #eef2ff !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
             .history-table td { border-bottom: 1px solid #ccc !important; }
+            .history-table .spacer-row { height: 15px; border: none !important; }
         }
     </style>
 </head>
 <body>
 
     <header class="no-print">
-        <div class="header-brand" id="smallBrand">PRO CRM</div>
+        <div class="header-brand" id="smallBrand">📦 PRO CRM</div>
         <div style="flex-grow: 1;"></div>
         <button class="btn btn-outline hidden" id="btnBackHome" onclick="goHome()">🏠 Quay lại Dashboard</button>
     </header>
@@ -331,12 +344,12 @@
         <div id="page-lichsu" class="page">
             <div class="page-header">
                 <h2 class="page-title">Lịch Sử Đơn Hàng</h2>
-                <!-- Nút Xuất PDF / In được gán class no-print để không in chính nó -->
                 <button class="btn btn-primary no-print" onclick="window.print()">🖨️ Xuất PDF / In</button>
             </div>
             
             <div class="table-responsive" style="border: none; background: transparent; overflow-x: visible;">
-                <table class="history-table">
+                <!-- Đã cấu trúc lại thẻ Table nguyên khối ở đây để sửa lỗi vỡ bảng -->
+                <table class="history-table" id="historyTable">
                     <thead>
                         <tr>
                             <th class="wrap-text">Sản Phẩm</th>
@@ -347,7 +360,7 @@
                             <th class="text-right">Thành Tiền</th>
                         </tr>
                     </thead>
-                    <tbody id="historyTableContainer"></tbody>
+                    <!-- Các đơn hàng sẽ được JavaScript tự động điền trực tiếp vào đây -->
                 </table>
             </div>
         </div>
@@ -660,24 +673,32 @@
             openPage('page-lichsu');
         }
 
-        // --- LỊCH SỬ ĐƠN HÀNG (CẬP NHẬT CĂN CHỈNH) ---
+        // --- LỊCH SỬ ĐƠN HÀNG (SỬA LỖI VỠ BẢNG HTML) ---
         function renderHistory() {
-            const container = document.getElementById('historyTableContainer');
-            container.innerHTML = '';
+            const table = document.getElementById('historyTable');
+            
+            // Xóa toàn bộ dữ liệu cũ (chỉ giữ lại thead - tiêu đề bảng)
+            const existingTbodies = table.querySelectorAll('tbody');
+            existingTbodies.forEach(tb => tb.remove());
             
             if(orders.length === 0) {
-                container.innerHTML = `<tbody><tr><td colspan="6" class="text-center">Chưa có đơn hàng nào</td></tr></tbody>`;
+                let emptyTbody = document.createElement('tbody');
+                emptyTbody.innerHTML = `<tr><td colspan="6" class="text-center">Chưa có đơn hàng nào</td></tr>`;
+                table.appendChild(emptyTbody);
                 return;
             }
 
-            orders.forEach(o => {
+            // Gắn từng đơn hàng vào bảng chính xác
+            orders.forEach((o, index) => {
                 let noteText = o.note ? ` - <span style="color:var(--text-muted); font-weight:normal;">Ghi chú: ${o.note}</span>` : '';
                 
                 let tbody = document.createElement('tbody');
                 
-                // Dòng 1: Thông tin khách hàng & Nút Xóa được gom gọn trong colspan=6
-                // Nút xóa được đẩy sang phải bằng flexbox và thêm class no-print
+                // Khoảng trắng giữa các đơn hàng
+                let spacer = index > 0 ? `<tr class="spacer-row"><td colspan="6"></td></tr>` : '';
+
                 let trCustomer = `
+                    ${spacer}
                     <tr class="customer-row">
                         <td colspan="6">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -692,7 +713,6 @@
                 `;
                 
                 let itemsHtml = '';
-                // Các dòng tiếp theo: Chi tiết từng sản phẩm đảm bảo thẳng 6 cột
                 o.items.forEach(i => {
                     itemsHtml += `
                         <tr>
@@ -706,7 +726,6 @@
                     `;
                 });
 
-                // Dòng cuối: Tổng tiền của đơn (colspan=5 và 1 cột cuối)
                 let trTotal = `
                     <tr class="total-row">
                         <td colspan="5" class="text-right" style="color:var(--text-muted); text-transform:uppercase;">Tổng thanh toán:</td>
@@ -715,7 +734,7 @@
                 `;
 
                 tbody.innerHTML = trCustomer + itemsHtml + trTotal;
-                container.appendChild(tbody);
+                table.appendChild(tbody);
             });
         }
 

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5,65 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý Bán Hàng Chuyên Nghiệp</title>
     
-    <!-- CẤU HÌNH WEB APP & LOGO -->
+    <!-- CẤU HÌNH WEB APP & LOGO MỚI (Biểu tượng Sổ & Bút) -->
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PRO CRM">
     
-    <!-- Favicon (Biểu tượng hiển thị trên tab trình duyệt) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
-    <!-- Apple Touch Icon (Biểu tượng khi ghim ra màn hình chính iOS/Android) -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%234f46e5%22 rx=%2220%22/><text y=%2270%22 x=%2215%22 font-size=%2265%22>📦</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%234f46e5%22 rx=%2220%22/><text y=%2270%22 x=%2215%22 font-size=%2265%22>📝</text></svg>">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* TÙY CHỈNH FONT VÀ MÀU SẮC */
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --secondary: #f8fafc;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #cbd5e1;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --radius: 8px;
+            --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #f8fafc;
+            --text-main: #1e293b; --text-muted: #64748b; --border: #cbd5e1;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05); --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1); --radius: 8px;
         }
 
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-            background-color: #f1f5f9;
-            color: var(--text-main);
-            margin: 0;
-            font-size: 13px;
-        }
+        body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; color: var(--text-main); margin: 0; font-size: 13px; }
 
-        /* HEADER DÀNH CHO CÁC TRANG CON */
-        header {
-            background: #ffffff;
-            padding: 12px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
+        header { background: #ffffff; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; }
         .header-brand { font-size: 18px; font-weight: 700; color: var(--primary); display: none; }
 
-        .btn {
-            cursor: pointer; border: none; border-radius: var(--radius);
-            padding: 8px 14px; font-weight: 600; font-size: 13px;
-            transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center;
-        }
+        .btn { cursor: pointer; border: none; border-radius: var(--radius); padding: 8px 14px; font-weight: 600; font-size: 13px; transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .btn-outline:hover { background: var(--secondary); }
         .btn-primary { background: var(--primary); color: white; }
@@ -71,48 +39,35 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
 
-        /* DASHBOARD HERO SECTION */
         .hero-section { text-align: center; padding: 40px 20px 30px; }
         .hero-title { font-size: 32px; font-weight: 800; color: var(--primary); margin: 0; text-transform: uppercase; letter-spacing: 1px; }
         .hero-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
 
         .wrapper { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
-        
-        /* DASHBOARD GRID */
         .dash-grid { display: grid; gap: 20px; margin-bottom: 20px; }
         .grid-3 { grid-template-columns: repeat(3, 1fr); }
         .grid-2 { grid-template-columns: repeat(2, 1fr); max-width: 800px; margin: 0 auto; }
 
-        .card {
-            background: #ffffff; border-radius: var(--radius); padding: 20px;
-            box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: all 0.3s ease;
-        }
-        
+        .card { background: #ffffff; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: all 0.3s ease; }
         .dash-card { text-align: center; cursor: pointer; }
         .dash-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: #c7d2fe; }
         .dash-icon { font-size: 36px; margin-bottom: 12px; display: block; }
         .dash-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
 
-        /* NỘI DUNG TRANG CON */
         .page { display: none; animation: fadeIn 0.3s ease-in-out; margin-top: 20px; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
         .page-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--primary); }
 
-        /* FORM */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; align-items: end; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-        input, select {
-            width: 100%; padding: 8px 12px; border: 1px solid var(--border); 
-            border-radius: var(--radius); font-size: 13px; background: #fff; box-sizing: border-box;
-        }
+        input, select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; background: #fff; box-sizing: border-box; }
         input:focus, select:focus { border-color: var(--primary); outline: none; }
         .section-title { font-size: 14px; font-weight: 700; color: var(--text-main); margin: 20px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px;}
 
-        /* BẢNG DỮ LIỆU CHUNG */
         .table-responsive { overflow-x: auto; background: #fff; border-radius: var(--radius); border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background: #f8fafc; padding: 10px 12px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); text-transform: uppercase; white-space: nowrap; }
@@ -124,19 +79,15 @@
         .nowrap { white-space: nowrap; }
         .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #e0e7ff; color: var(--primary); display: inline-block;}
 
-        /* BẢNG LỊCH SỬ ĐƠN HÀNG ĐẶC BIỆT */
         .history-table { border-collapse: collapse; table-layout: auto; width: 100%; }
-        .history-table tbody { border: 2px solid var(--primary); }
-        .history-table .spacer-row { height: 10px; border: none !important; background: transparent !important; }
+        /* Giảm độ dày viền bao quanh bảng thành 1px để ghép nối liền mạch hơn */
+        .history-table tbody { border: 1px solid var(--primary); }
         .history-table .customer-row { background: #eef2ff; }
         .history-table .customer-row td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         .history-table .total-row td { background: #f8fafc; font-weight: bold; border-top: 1px dashed var(--border); font-size: 14px; }
-        
-        /* Cố định để nội dung bảng không bị xuống hàng */
         .history-table td, .history-table th { white-space: nowrap; }
         .history-table .wrap-text { white-space: normal; min-width: 150px; }
 
-        /* BIỂU ĐỒ & THỐNG KÊ */
         .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .stat-card { background: #fff; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); border-left: 4px solid var(--primary); }
         .stat-label { color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
@@ -145,28 +96,24 @@
 
         .hidden { display: none !important; }
 
-        /* CSS ĐẶC BIỆT DÀNH CHO KHI XUẤT PDF / IN ẤN */
         @media print {
             body * { visibility: hidden; }
             #page-lichsu, #page-lichsu * { visibility: visible; }
             #page-lichsu { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0;}
-            
             .no-print { display: none !important; }
-            
-            .history-table tbody { border: 2px solid #000 !important; }
+            .history-table tbody { border: 1px solid #000 !important; }
             .history-table th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
             .history-table .customer-row td { background-color: #eef2ff !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
             .history-table td { border-bottom: 1px solid #ccc !important; }
-            .history-table .spacer-row { height: 15px; border: none !important; }
         }
     </style>
 </head>
 <body>
 
     <header class="no-print">
-        <div class="header-brand" id="smallBrand">📦 PRO CRM</div>
+        <div class="header-brand" id="smallBrand">📝 PRO CRM</div>
         <div style="flex-grow: 1;"></div>
-        <button class="btn btn-outline hidden" id="btnBackHome" onclick="goHome()">🏠 Quay lại Dashboard</button>
+        <button class="btn btn-outline hidden" id="btnBackHome" onclick="goHome()" style="font-size: 16px; padding: 6px 12px;" title="Về màn hình chính">🏠</button>
     </header>
 
     <div class="wrapper">
@@ -174,7 +121,7 @@
         <div id="home-screen" class="page active" style="margin-top: 0;">
             <div class="hero-section">
                 <h1 class="hero-title">Hệ Thống Quản Lý Bán Hàng</h1>
-                <p class="hero-subtitle">Giải pháp toàn diện tối ưu hóa doanh số và kho hàng của bạn</p>
+                <p class="hero-subtitle">Giải pháp toàn diện tối ưu hóa doanh số đi thị trường</p>
             </div>
             
             <div class="dash-grid grid-3">
@@ -185,7 +132,7 @@
                     <span class="dash-icon">🛒</span><span class="dash-title">Tạo Đơn Hàng</span>
                 </div>
                 <div class="card dash-card" onclick="openPage('page-lichsu')">
-                    <span class="dash-icon">📋</span><span class="dash-title">Lịch Sử Đơn</span>
+                    <span class="dash-icon">📝</span><span class="dash-title">Lịch Sử Đơn</span>
                 </div>
             </div>
             <div class="dash-grid grid-2">
@@ -201,6 +148,7 @@
         <!-- 1. KHO HÀNG -->
         <div id="page-kho" class="page">
             <h2 class="page-title" style="margin-bottom: 20px;">Kho Sản Phẩm</h2>
+            
             <div class="card">
                 <div class="form-grid">
                     <input type="hidden" id="prodId">
@@ -255,7 +203,12 @@
                 </div>
             </div>
 
-            <div class="table-responsive" style="margin-top: 20px;">
+            <!-- THANH TÌM KIẾM SẢN PHẨM -->
+            <div style="margin-top: 20px;">
+                <input type="text" id="searchProdInput" oninput="renderInventory()" placeholder="🔍 Tìm kiếm tên sản phẩm hoặc phân loại..." style="max-width: 400px; padding: 10px;">
+            </div>
+
+            <div class="table-responsive" style="margin-top: 15px;">
                 <table>
                     <thead>
                         <tr>
@@ -343,12 +296,13 @@
         <!-- 3. LỊCH SỬ ĐƠN HÀNG -->
         <div id="page-lichsu" class="page">
             <div class="page-header">
-                <h2 class="page-title">Lịch Sử Đơn Hàng</h2>
+                <h2 class="page-title" id="historyTitle">Đơn hàng ngày...</h2>
+                <!-- THANH TÌM KIẾM ĐƠN HÀNG -->
+                <input type="text" id="searchOrderInput" class="no-print" oninput="renderHistory()" placeholder="🔍 Tìm tên khách hàng..." style="max-width: 300px; padding: 8px;">
                 <button class="btn btn-primary no-print" onclick="window.print()">🖨️ Xuất PDF / In</button>
             </div>
             
             <div class="table-responsive" style="border: none; background: transparent; overflow-x: visible;">
-                <!-- Đã cấu trúc lại thẻ Table nguyên khối ở đây để sửa lỗi vỡ bảng -->
                 <table class="history-table" id="historyTable">
                     <thead>
                         <tr>
@@ -360,7 +314,7 @@
                             <th class="text-right">Thành Tiền</th>
                         </tr>
                     </thead>
-                    <!-- Các đơn hàng sẽ được JavaScript tự động điền trực tiếp vào đây -->
+                    <!-- Dữ liệu sẽ đổ vào đây -->
                 </table>
             </div>
         </div>
@@ -413,6 +367,12 @@
     </div>
 
     <script>
+        // --- KHỞI TẠO & LƯU TRẠNG THÁI TRANG ---
+        window.onload = function() {
+            const savedPage = localStorage.getItem('pro_active_page') || 'home-screen';
+            if (savedPage === 'home-screen') { goHome(); } else { openPage(savedPage); }
+        };
+
         // --- DỮ LIỆU ---
         let products = JSON.parse(localStorage.getItem('pro_products')) || [];
         let categories = JSON.parse(localStorage.getItem('pro_categories')) || ['Hàng thường', 'Hàng Tết', 'Bánh mì'];
@@ -429,6 +389,7 @@
             document.getElementById('home-screen').classList.add('active');
             document.getElementById('btnBackHome').classList.add('hidden');
             document.getElementById('smallBrand').style.display = 'none';
+            localStorage.setItem('pro_active_page', 'home-screen');
         }
 
         function openPage(id) {
@@ -437,9 +398,16 @@
             document.getElementById('btnBackHome').classList.remove('hidden');
             document.getElementById('smallBrand').style.display = 'block';
             
+            localStorage.setItem('pro_active_page', id);
+            
             if(id === 'page-kho') { loadCategories(); renderInventory(); }
             if(id === 'page-lendon') { loadProductDropdown(); }
-            if(id === 'page-lichsu') { renderHistory(); }
+            if(id === 'page-lichsu') { 
+                let tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById('historyTitle').innerText = 'Đơn hàng ngày ' + tomorrow.toLocaleDateString('vi-VN');
+                renderHistory(); 
+            }
             if(id === 'page-tk-ngay') { document.getElementById('inputTargetSales').value = targetSales; renderStats('day'); }
             if(id === 'page-tk-thang') { document.getElementById('inputTargetSales').value = targetSales; renderStats('month'); }
         }
@@ -460,16 +428,10 @@
             const cat = document.getElementById('prodCat').value.trim();
             
             if(!name || !cat) return alert("Vui lòng nhập tên và phân loại sản phẩm!");
-            if(!categories.includes(cat)) {
-                categories.push(cat);
-                localStorage.setItem('pro_categories', JSON.stringify(categories));
-                loadCategories();
-            }
+            if(!categories.includes(cat)) { categories.push(cat); localStorage.setItem('pro_categories', JSON.stringify(categories)); loadCategories(); }
 
             const p = {
-                id: id || Date.now().toString(),
-                name,
-                cat,
+                id: id || Date.now().toString(), name, cat,
                 quyCach: Number(document.getElementById('prodQuyCach').value) || 1,
                 priceUnit: Number(document.getElementById('prodPriceUnit').value),
                 priceCarton: Number(document.getElementById('prodPriceCarton').value),
@@ -479,20 +441,29 @@
                 promoTarget: document.getElementById('promoTarget').value.trim()
             };
 
-            if(id) {
-                const idx = products.findIndex(x => x.id == id);
-                products[idx] = p;
-            } else products.push(p);
+            if(id) { const idx = products.findIndex(x => x.id == id); products[idx] = p; } 
+            else products.push(p);
 
             localStorage.setItem('pro_products', JSON.stringify(products));
-            clearProductForm();
-            renderInventory();
+            clearProductForm(); renderInventory();
         }
 
         function renderInventory() {
-            const tb = document.getElementById('inventoryTable');
-            tb.innerHTML = '';
-            products.forEach(p => {
+            const tb = document.getElementById('inventoryTable'); tb.innerHTML = '';
+            const keyword = document.getElementById('searchProdInput').value.toLowerCase().trim();
+            
+            // Lọc sản phẩm theo tên hoặc danh mục
+            const filteredProducts = products.filter(p => 
+                p.name.toLowerCase().includes(keyword) || 
+                p.cat.toLowerCase().includes(keyword)
+            );
+
+            if (filteredProducts.length === 0) {
+                tb.innerHTML = `<tr><td colspan="6" class="text-center">Không tìm thấy sản phẩm nào!</td></tr>`;
+                return;
+            }
+
+            filteredProducts.forEach(p => {
                 let quyCachVal = p.quyCach || 1;
                 let promoArr = [];
                 if(p.disc > 0) promoArr.push(`CK ${p.disc}%`);
@@ -521,45 +492,31 @@
         function editProduct(id) {
             const p = products.find(x => x.id == id);
             document.getElementById('prodId').value = p.id;
-            document.getElementById('prodName').value = p.name;
-            document.getElementById('prodCat').value = p.cat;
+            document.getElementById('prodName').value = p.name; document.getElementById('prodCat').value = p.cat;
             document.getElementById('prodQuyCach').value = p.quyCach || 1;
-            document.getElementById('prodPriceUnit').value = p.priceUnit;
-            document.getElementById('prodPriceCarton').value = p.priceCarton;
+            document.getElementById('prodPriceUnit').value = p.priceUnit; document.getElementById('prodPriceCarton').value = p.priceCarton;
             document.getElementById('prodDisc').value = p.disc;
-            document.getElementById('promoBuy').value = p.promoBuy;
-            document.getElementById('promoGift').value = p.promoGift;
+            document.getElementById('promoBuy').value = p.promoBuy; document.getElementById('promoGift').value = p.promoGift;
             document.getElementById('promoTarget').value = p.promoTarget;
         }
 
         function delProduct(id) {
             if(confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
-                products = products.filter(x => x.id != id);
-                localStorage.setItem('pro_products', JSON.stringify(products));
-                renderInventory();
+                products = products.filter(x => x.id != id); localStorage.setItem('pro_products', JSON.stringify(products)); renderInventory();
             }
         }
 
         function clearProductForm() {
-            document.getElementById('prodId').value = '';
-            document.getElementById('prodName').value = '';
-            document.getElementById('prodCat').value = '';
-            document.getElementById('prodQuyCach').value = 1;
-            document.getElementById('prodPriceUnit').value = 0;
-            document.getElementById('prodPriceCarton').value = 0;
-            document.getElementById('prodDisc').value = 0;
-            document.getElementById('promoBuy').value = 0;
-            document.getElementById('promoGift').value = 0;
-            document.getElementById('promoTarget').value = '';
+            document.getElementById('prodId').value = ''; document.getElementById('prodName').value = ''; document.getElementById('prodCat').value = '';
+            document.getElementById('prodQuyCach').value = 1; document.getElementById('prodPriceUnit').value = 0; document.getElementById('prodPriceCarton').value = 0;
+            document.getElementById('prodDisc').value = 0; document.getElementById('promoBuy').value = 0; document.getElementById('promoGift').value = 0; document.getElementById('promoTarget').value = '';
         }
 
         // --- LÊN ĐƠN ---
         function loadProductDropdown() {
             const sel = document.getElementById('selectProduct');
             sel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
-            products.forEach(p => {
-                sel.innerHTML += `<option value="${p.id}">${p.name} (${p.cat})</option>`;
-            });
+            products.forEach(p => { sel.innerHTML += `<option value="${p.id}">${p.name} (${p.cat})</option>`; });
         }
 
         function calculateLine() {
@@ -569,18 +526,14 @@
             
             if(!id) return;
             const p = products.find(x => x.id == id);
-            
             let basePrice = type === 'unit' ? p.priceUnit : p.priceCarton;
             let total = basePrice * qty;
             
             let quyCachVal = p.quyCach || 1;
             let totalBaseQty = type === 'carton' ? (qty * quyCachVal) : qty;
-
             let promoArr = [];
-            if(p.disc > 0) {
-                total = total * (1 - p.disc / 100);
-                promoArr.push(`Giảm ${p.disc}%`);
-            }
+
+            if(p.disc > 0) { total = total * (1 - p.disc / 100); promoArr.push(`Giảm ${p.disc}%`); }
             if(p.promoBuy > 0 && totalBaseQty >= p.promoBuy) {
                 let multiplier = Math.floor(totalBaseQty / p.promoBuy);
                 let totalGift = multiplier * p.promoGift;
@@ -593,10 +546,7 @@
             document.getElementById('orderPromoNote').innerText = promoArr.length > 0 ? "KM: " + promoArr.join(' | ') : '';
         }
 
-        function onSelectProduct() {
-            document.getElementById('orderQty').value = 1;
-            calculateLine();
-        }
+        function onSelectProduct() { document.getElementById('orderQty').value = 1; calculateLine(); }
 
         function addToCart() {
             const id = document.getElementById('selectProduct').value;
@@ -610,21 +560,12 @@
             const total = Number(document.getElementById('lineTotal').getAttribute('data-raw'));
             const promoText = document.getElementById('orderPromoNote').innerText;
 
-            cart.push({
-                prodId: p.id,
-                name: p.name,
-                unitLabel: unitLabel,
-                qty: qty,
-                price: price,
-                total: total,
-                promoText: promoText
-            });
+            cart.push({ prodId: p.id, name: p.name, unitLabel: unitLabel, qty: qty, price: price, total: total, promoText: promoText });
             renderCart();
         }
 
         function renderCart() {
-            const tb = document.getElementById('cartTable');
-            tb.innerHTML = '';
+            const tb = document.getElementById('cartTable'); tb.innerHTML = '';
             let sum = 0;
             cart.forEach((c, index) => {
                 sum += c.total;
@@ -651,7 +592,6 @@
             if(cart.length === 0) return alert("Giỏ hàng đang trống!");
 
             const orderTotal = cart.reduce((sum, item) => sum + item.total, 0);
-            
             const newOrder = {
                 id: Date.now().toString(),
                 date: new Date().toLocaleDateString('vi-VN'),
@@ -662,49 +602,45 @@
                 total: orderTotal
             };
 
-            orders.unshift(newOrder);
+            // Đổi từ unshift thành push để khách hàng lên đơn trước nằm trên cùng
+            orders.push(newOrder); 
             localStorage.setItem('pro_orders', JSON.stringify(orders));
             
-            cart = [];
-            document.getElementById('orderCustomer').value = '';
-            document.getElementById('orderNote').value = '';
-            renderCart();
-            alert("Đã lưu đơn hàng!");
-            openPage('page-lichsu');
+            cart = []; document.getElementById('orderCustomer').value = ''; document.getElementById('orderNote').value = '';
+            renderCart(); alert("Đã lưu đơn hàng!"); openPage('page-lichsu');
         }
 
-        // --- LỊCH SỬ ĐƠN HÀNG (SỬA LỖI VỠ BẢNG HTML) ---
+        // --- LỊCH SỬ ĐƠN HÀNG ---
         function renderHistory() {
             const table = document.getElementById('historyTable');
-            
-            // Xóa toàn bộ dữ liệu cũ (chỉ giữ lại thead - tiêu đề bảng)
             const existingTbodies = table.querySelectorAll('tbody');
             existingTbodies.forEach(tb => tb.remove());
             
-            if(orders.length === 0) {
+            const keyword = document.getElementById('searchOrderInput').value.toLowerCase().trim();
+            
+            // Lọc đơn hàng theo tên khách hàng
+            const filteredOrders = orders.filter(o => o.customer.toLowerCase().includes(keyword));
+
+            if(filteredOrders.length === 0) {
                 let emptyTbody = document.createElement('tbody');
-                emptyTbody.innerHTML = `<tr><td colspan="6" class="text-center">Chưa có đơn hàng nào</td></tr>`;
+                emptyTbody.innerHTML = `<tr><td colspan="6" class="text-center">Không tìm thấy đơn hàng nào!</td></tr>`;
                 table.appendChild(emptyTbody);
                 return;
             }
 
-            // Gắn từng đơn hàng vào bảng chính xác
-            orders.forEach((o, index) => {
+            filteredOrders.forEach((o, index) => {
                 let noteText = o.note ? ` - <span style="color:var(--text-muted); font-weight:normal;">Ghi chú: ${o.note}</span>` : '';
-                
                 let tbody = document.createElement('tbody');
                 
-                // Khoảng trắng giữa các đơn hàng
-                let spacer = index > 0 ? `<tr class="spacer-row"><td colspan="6"></td></tr>` : '';
+                // Bỏ khoảng trống để tiết kiệm giấy in
 
                 let trCustomer = `
-                    ${spacer}
                     <tr class="customer-row">
                         <td colspan="6">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span>
                                     <strong>👤 Khách hàng:</strong> <span style="color:var(--primary); font-weight:bold;">${o.customer}</span> 
-                                    (Ngày: ${o.date}) ${noteText}
+                                    ${noteText}
                                 </span>
                                 <button class="btn btn-danger no-print" style="padding: 4px 10px; font-size:11px;" onclick="delOrder('${o.id}')">Xóa Đơn</button>
                             </div>
@@ -740,9 +676,7 @@
 
         function delOrder(id) {
             if(confirm("Xóa toàn bộ đơn hàng này khỏi lịch sử?")) {
-                orders = orders.filter(o => o.id !== id);
-                localStorage.setItem('pro_orders', JSON.stringify(orders));
-                renderHistory();
+                orders = orders.filter(o => o.id !== id); localStorage.setItem('pro_orders', JSON.stringify(orders)); renderHistory();
             }
         }
 
@@ -794,10 +728,7 @@
 
             const newChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labelsArr,
-                    datasets: [{ label: label, data: dataArr, backgroundColor: colorsArr, borderRadius: 6, barThickness: 60 }]
-                },
+                data: { labels: labelsArr, datasets: [{ label: label, data: dataArr, backgroundColor: colorsArr, borderRadius: 6, barThickness: 60 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return value.toLocaleString() + 'đ'; } } } },

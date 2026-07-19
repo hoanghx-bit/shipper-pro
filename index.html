@@ -1,450 +1,749 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Bán Hàng Toàn Diện v5.0</title>
+    <title>Hệ Thống Quản Lý Bán Hàng Chuyên Nghiệp</title>
+    <!-- Tích hợp Chart.js cho biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* CSS CHUYÊN NGHIỆP HIỆN ĐẠI */
         :root {
-            --primary: #0d6efd;
-            --primary-dark: #0a58ca;
-            --bg: #f8f9fa;
-            --white: #ffffff;
-            --text: #333;
-            --border: #dee2e6;
-            --success: #198754;
-            --danger: #dc3545;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 8px;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-main);
             margin: 0;
             font-size: 14px;
         }
 
-        /* HEADER */
         header {
-            background: var(--primary);
-            color: white;
-            padding: 12px 25px;
+            background: #ffffff;
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .btn-home {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid white;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: none;
+        .brand { font-size: 20px; font-weight: 700; color: var(--primary); }
+
+        .btn {
+            cursor: pointer; border: none; border-radius: var(--radius);
+            padding: 8px 16px; font-weight: 600; font-size: 13px;
+            transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
         }
-
-        /* DASHBOARD GRID (3 TRÊN - 2 DƯỚI) */
-        #home-screen {
-            max-width: 900px;
-            margin: 50px auto;
-            padding: 20px;
-        }
-
-        .dash-row { display: grid; gap: 20px; margin-bottom: 20px; }
-        .row-3 { grid-template-columns: repeat(3, 1fr); }
-        .row-2 { grid-template-columns: repeat(2, 1fr); max-width: 600px; margin: 0 auto; }
-
-        .dash-card {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            transition: 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .dash-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 8px 15px rgba(13,110,253,0.1);
-        }
-
-        .dash-icon { font-size: 32px; display: block; margin-bottom: 10px; }
-        .dash-title { font-weight: bold; color: var(--primary); }
-
-        /* NỘI DUNG TRANG CON */
-        .page-container {
-            display: none;
-            max-width: 1100px;
-            margin: 20px auto;
-            padding: 20px;
-            background: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .page-container.active { display: block; }
-
-        /* FORM & TABLE */
-        .control-panel { background: #f1f4f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #d1d9e6; }
-        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; align-items: flex-end; }
-        
-        label { font-size: 12px; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
-        thead { background: var(--primary); color: white; }
-        .text-left { text-align: left; }
-        .hidden { display: none !important; }
-        
-        button { cursor: pointer; border: none; border-radius: 4px; padding: 8px 12px; font-weight: bold; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--secondary); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-pri { background: var(--primary); color: white; }
+
+        /* DASHBOARD GRID */
+        .wrapper { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        .dash-grid { display: grid; gap: 20px; margin-bottom: 20px; }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); max-width: 800px; margin: 0 auto; }
+
+        .card {
+            background: #ffffff;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .dash-card { text-align: center; cursor: pointer; }
+        .dash-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: #c7d2fe;
+        }
+        .dash-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+        .dash-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+
+        /* NỘI DUNG TRANG */
+        .page { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 22px; font-weight: 700; margin: 0; }
+
+        /* FORM */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-items: end; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid var(--border); border-radius: var(--radius);
+            font-size: 14px; background: #fff; outline: none; box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        .section-title { font-size: 14px; font-weight: 700; color: var(--primary); margin: 20px 0 10px 0; border-bottom: 2px solid var(--border); padding-bottom: 5px;}
+
+        /* BẢNG */
+        .table-responsive { overflow-x: auto; margin-top: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: #fff; text-align: left; }
+        th { background: #f8fafc; padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); text-transform: uppercase;}
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #f8fafc; }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #e0e7ff; color: var(--primary); }
+        
+        /* BIỂU ĐỒ & THỐNG KÊ */
+        .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); border-left: 4px solid var(--primary); }
+        .stat-label { color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--text-main); margin-top: 5px; }
+        .chart-container { background: #fff; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 20px; height: 350px;}
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="font-weight: bold;">HỆ THỐNG QUẢN LÝ BÁN HÀNG v5.0</div>
-        <button class="btn-home" id="btnBackHome" onclick="goHome()">🏠 Trang Chủ</button>
+        <div class="brand">PRO CRM</div>
+        <button class="btn btn-outline hidden" id="btnBackHome" onclick="goHome()">Quay lại Dashboard</button>
     </header>
 
-    <div id="home-screen">
-        <div class="dash-row row-3">
-            <div class="dash-card" onclick="openPage('page-kho')">
-                <span class="dash-icon">📦</span><span class="dash-title">KHO HÀNG</span>
-            </div>
-            <div class="dash-card" onclick="openPage('page-lendon')">
-                <span class="dash-icon">📝</span><span class="dash-title">LÊN ĐƠN</span>
-            </div>
-            <div class="dash-card" onclick="openPage('page-lichsu')">
-                <span class="dash-icon">🗄️</span><span class="dash-title">LỊCH SỬ ĐƠN</span>
-            </div>
-        </div>
-        <div class="dash-row row-2">
-            <div class="dash-card" onclick="openPage('page-tk-ngay')">
-                <span class="dash-icon">📅</span><span class="dash-title">TK NGÀY</span>
-            </div>
-            <div class="dash-card" onclick="openPage('page-tk-thang')">
-                <span class="dash-icon">📊</span><span class="dash-title">TK THÁNG</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="page-kho" class="page-container">
-        <h3>Quản Lý Kho Hàng</h3>
-        <div class="control-panel">
-            <div class="grid-form">
-                <input type="hidden" id="prodId">
-                <div style="grid-column: span 2;"><label>Tên sản phẩm</label><input type="text" id="prodName"></div>
-                <div>
-                    <label>Phân loại</label>
-                    <select id="prodCat" onchange="handleCatChange()">
-                        <option value="Hàng thường">Hàng thường</option>
-                        <option value="Hàng Tết">Hàng Tết</option>
-                        <option value="Bánh mì">Bánh mì</option>
-                    </select>
+    <div class="wrapper">
+        <!-- TRANG CHỦ DASHBOARD -->
+        <div id="home-screen" class="page active">
+            <div class="dash-grid grid-3">
+                <div class="card dash-card" onclick="openPage('page-kho')">
+                    <span class="dash-icon">📦</span><span class="dash-title">Quản Lý Sản Phẩm</span>
                 </div>
-                <div><label>Đơn vị</label><input type="text" id="prodUnit" readonly></div>
-                <div><label>Giá Gói/Hộp</label><input type="number" id="prodPrice" value="0"></div>
-                <div id="box-tet-ck" class="hidden"><label>Chiết khấu (%)</label><input type="number" id="prodDisc" value="0"></div>
-                <div><button class="btn-success" onclick="saveProduct()">Lưu</button></div>
+                <div class="card dash-card" onclick="openPage('page-lendon')">
+                    <span class="dash-icon">🛒</span><span class="dash-title">Tạo Đơn Hàng</span>
+                </div>
+                <div class="card dash-card" onclick="openPage('page-lichsu')">
+                    <span class="dash-icon">📋</span><span class="dash-title">Lịch Sử Đơn</span>
+                </div>
             </div>
-            <div id="box-promo" class="hidden" style="margin-top:15px; background:white; padding:15px; border-left:4px solid var(--success)">
-                <label style="color:var(--success)">CẤU HÌNH MUA X TẶNG Y</label>
-                <div class="grid-form">
-                    <div><label>Mua SL (X)</label><input type="number" id="promoBuy" value="0"></div>
-                    <div><label>Tặng SL (Y)</label><input type="number" id="promoGift" value="0"></div>
-                    <div><label>Tặng là</label><select id="promoType"><option value="Chính nó">Chính nó</option><option value="SP Khác">SP Khác</option></select></div>
+            <div class="dash-grid grid-2">
+                <div class="card dash-card" onclick="openPage('page-tk-ngay')">
+                    <span class="dash-icon">📈</span><span class="dash-title">Báo Cáo Ngày</span>
+                </div>
+                <div class="card dash-card" onclick="openPage('page-tk-thang')">
+                    <span class="dash-icon">📊</span><span class="dash-title">Báo Cáo Tháng</span>
                 </div>
             </div>
         </div>
-        <table>
-            <thead><tr><th class="text-left">Sản Phẩm</th><th>Loại</th><th>ĐVT</th><th>Giá</th><th>KM/CK</th><th>Hành động</th></tr></thead>
-            <tbody id="inventoryTable"></tbody>
-        </table>
-    </div>
 
-    <div id="page-lendon" class="page-container">
-        <h3>Tạo Đơn Hàng Mới</h3>
-        <div class="control-panel">
-            <div class="grid-form" style="margin-bottom:15px">
-                <div style="grid-column: span 2;"><label>Tên Khách Hàng</label><input type="text" id="orderCustomer" placeholder="Nhập tên khách..."></div>
+        <!-- 1. KHO HÀNG -->
+        <div id="page-kho" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Kho Sản Phẩm</h2>
             </div>
-            <div class="grid-form">
-                <div style="grid-column: span 2;"><label>Sản phẩm</label><select id="selectProduct" onchange="onSelectProduct()"></select></div>
-                <div><label>Số lượng</label><input type="number" id="orderQty" value="1" oninput="calculateLine()"></div>
-                <div><label>Đơn giá</label><input type="number" id="orderPrice" oninput="calculateLine()"></div>
-                <div><label>Thành tiền</label><input type="number" id="lineTotal" readonly style="background:#eee"></div>
-                <div><button class="btn-pri" onclick="addToCart()">Thêm vào đơn</button></div>
+            <div class="card">
+                <div class="form-grid">
+                    <input type="hidden" id="prodId">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tên sản phẩm</label>
+                        <input type="text" id="prodName" placeholder="VD: Bánh quy bơ...">
+                    </div>
+                    <div class="form-group">
+                        <label>Phân loại (Chọn hoặc nhập mới)</label>
+                        <input list="catList" id="prodCat" placeholder="Nhập/chọn phân loại...">
+                        <datalist id="catList"></datalist>
+                    </div>
+                </div>
+
+                <div class="section-title">Cấu hình Giá (VNĐ)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Giá Lẻ (Gói/Hộp/Xách)</label>
+                        <input type="number" id="prodPriceUnit" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Giá Sỉ (1 Thùng)</label>
+                        <input type="number" id="prodPriceCarton" value="0">
+                    </div>
+                </div>
+
+                <div class="section-title">Cấu hình Khuyến mãi & Chiết khấu</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chiết khấu (%)</label>
+                        <input type="number" id="prodDisc" value="0" placeholder="0 - 100">
+                    </div>
+                    <div class="form-group">
+                        <label>Mua SL (X)</label>
+                        <input type="number" id="promoBuy" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Tặng SL (Y)</label>
+                        <input type="number" id="promoGift" value="0">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tên SP Tặng (Để trống nếu tặng chính nó)</label>
+                        <input type="text" id="promoTarget" placeholder="Tự động lấy tên SP nếu để trống">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" style="height: 40px; margin-top: 18px;" onclick="saveProduct()">Lưu Sản Phẩm</button>
+                    </div>
+                </div>
             </div>
-            <div id="orderPromoNote" style="margin-top:10px; color:var(--success); font-weight:bold;"></div>
-        </div>
-        <table>
-            <thead><tr><th class="text-left">Sản phẩm</th><th>SL</th><th>Giá</th><th>Thành tiền</th><th>Khuyến mãi</th><th>Xóa</th></tr></thead>
-            <tbody id="cartTable"></tbody>
-        </table>
-        <div style="text-align:right; margin-top:20px">
-            <h3>Tổng cộng: <span id="cartTotal" style="color:var(--danger)">0</span> VNĐ</h3>
-            <button class="btn-success" style="padding:10px 40px" onclick="checkout()">LƯU ĐƠN HÀNG</button>
-        </div>
-    </div>
 
-    <div id="page-lichsu" class="page-container">
-        <h3>Lịch Sử Đơn Hàng</h3>
-        <table>
-            <thead><tr><th>STT</th><th>Khách Hàng</th><th>Sản Phẩm/SL</th><th>Tổng Tiền</th><th>Ngày</th><th>Xóa</th></tr></thead>
-            <tbody id="historyTable"></tbody>
-        </table>
-    </div>
-
-    <div id="page-tk-ngay" class="page-container">
-        <h3>Thống Kê Doanh Thu Ngày <span id="curDay"></span></h3>
-        <div style="background:var(--primary); color:white; padding:20px; border-radius:8px; text-align:center">
-            <div style="font-size:24px" id="dayRev">0 VNĐ</div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Phân loại</th>
+                            <th class="text-right">Giá Lẻ</th>
+                            <th class="text-right">Giá Thùng</th>
+                            <th>Chính sách KM</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTable"></tbody>
+                </table>
+            </div>
         </div>
-        <table style="margin-top:20px">
-            <thead><tr><th>Sản Phẩm</th><th>Tổng SL Bán</th><th>Doanh Thu</th></tr></thead>
-            <tbody id="dayStatTable"></tbody>
-        </table>
-    </div>
 
-    <div id="page-tk-thang" class="page-container">
-        <h3>Thống Kê Doanh Thu Tháng <span id="curMonth"></span></h3>
-        <div style="background:var(--success); color:white; padding:20px; border-radius:8px; text-align:center">
-            <div style="font-size:24px" id="monthRev">0 VNĐ</div>
+        <!-- 2. LÊN ĐƠN -->
+        <div id="page-lendon" class="page">
+            <h2 class="page-title" style="margin-bottom: 20px;">Tạo Đơn Hàng Mới</h2>
+            
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tên Khách Hàng</label>
+                        <input type="text" id="orderCustomer" placeholder="Nhập tên khách hàng...">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Ghi chú đơn hàng</label>
+                        <input type="text" id="orderNote" placeholder="Ghi chú thêm về vận chuyển, thanh toán...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title" style="margin-top:0;">Thêm sản phẩm vào đơn</div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Chọn sản phẩm</label>
+                        <select id="selectProduct" onchange="onSelectProduct()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Đơn vị bán</label>
+                        <select id="orderSellType" onchange="calculateLine()">
+                            <option value="unit">Bán Lẻ (Gói/Hộp/Xách)</option>
+                            <option value="carton">Bán Sỉ (Thùng)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Số lượng</label>
+                        <input type="number" id="orderQty" value="1" min="1" oninput="calculateLine()">
+                    </div>
+                    <div class="form-group">
+                        <label>Thành tiền (Dự kiến)</label>
+                        <input type="text" id="lineTotal" readonly style="background: var(--secondary); font-weight: bold; color: var(--primary);">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-success" style="height: 40px; margin-top: 18px;" onclick="addToCart()">Thêm vào giỏ</button>
+                    </div>
+                </div>
+                <div id="orderPromoNote" style="margin-top:10px; color:var(--success); font-weight:600; font-size: 13px;"></div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-center">Đơn vị</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-right">Đơn giá</th>
+                            <th class="text-right">Thành tiền</th>
+                            <th>Khuyến mãi Áp dụng</th>
+                            <th class="text-center">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartTable"></tbody>
+                </table>
+            </div>
+
+            <div style="text-align:right; margin-top:20px; background: #fff; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border);">
+                <h3 style="margin: 0 0 15px 0;">Tổng thanh toán: <span id="cartTotal" style="color:var(--danger); font-size: 24px;">0</span> VNĐ</h3>
+                <button class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;" onclick="checkout()">LƯU ĐƠN HÀNG</button>
+            </div>
         </div>
-        <table style="margin-top:20px">
-            <thead><tr><th>Sản Phẩm</th><th>Tổng SL Bán</th><th>Doanh Thu</th></tr></thead>
-            <tbody id="monthStatTable"></tbody>
-        </table>
+
+        <!-- 3. LỊCH SỬ -->
+        <div id="page-lichsu" class="page">
+            <h2 class="page-title" style="margin-bottom: 20px;">Lịch Sử Đơn Hàng</h2>
+            <div class="card table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn / Ngày</th>
+                            <th>Khách Hàng / Ghi chú</th>
+                            <th>Chi tiết Sản phẩm</th>
+                            <th>Khuyến mãi</th>
+                            <th class="text-right">Tổng Tiền</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. THỐNG KÊ NGÀY -->
+        <div id="page-tk-ngay" class="page">
+            <h2 class="page-title" style="margin-bottom: 20px;">Báo Cáo Ngày <span id="curDayText" style="color:var(--primary)"></span></h2>
+            
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-label">Doanh thu ngày hôm nay</div>
+                    <div class="stat-value" id="dayRev">0đ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Chỉ tiêu ngày cần đạt</div>
+                    <div class="stat-value" id="dayTargetStat">0đ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tiến độ hoàn thành</div>
+                    <div class="stat-value" id="dayPercentStat" style="color: var(--primary);">0%</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="dayChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 5. THỐNG KÊ THÁNG -->
+        <div id="page-tk-thang" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Báo Cáo Tháng <span id="curMonthText" style="color:var(--primary)"></span></h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="margin:0">Doanh số khoán tháng:</label>
+                    <input type="number" id="inputTargetSales" placeholder="Nhập số tiền..." style="width: 200px;" onchange="saveTarget()">
+                </div>
+            </div>
+
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-label">Tổng doanh thu tháng</div>
+                    <div class="stat-value" id="monthRev">0đ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Doanh số Khoán</div>
+                    <div class="stat-value" id="monthTargetStat">0đ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tiến độ hoàn thành</div>
+                    <div class="stat-value" id="monthPercentStat" style="color: var(--success);">0%</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="monthChart"></canvas>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        let products = JSON.parse(localStorage.getItem('app_prods')) || [];
-        let orders = JSON.parse(localStorage.getItem('app_orders')) || [];
+        // --- DỮ LIỆU ---
+        let products = JSON.parse(localStorage.getItem('pro_products')) || [];
+        let categories = JSON.parse(localStorage.getItem('pro_categories')) || ['Hàng thường', 'Hàng Tết', 'Bánh mì'];
+        let orders = JSON.parse(localStorage.getItem('pro_orders')) || [];
+        let targetSales = Number(localStorage.getItem('pro_target')) || 0;
         let cart = [];
+        
+        let chartDayInstance = null;
+        let chartMonthInstance = null;
 
+        // --- ĐIỀU HƯỚNG ---
         function goHome() {
-            document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
-            document.getElementById('home-screen').style.display = 'block';
-            document.getElementById('btnBackHome').style.display = 'none';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('home-screen').classList.add('active');
+            document.getElementById('btnBackHome').classList.add('hidden');
         }
 
         function openPage(id) {
-            document.getElementById('home-screen').style.display = 'none';
-            document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            document.getElementById('btnBackHome').style.display = 'block';
-            if(id === 'page-kho') { handleCatChange(); renderInventory(); }
-            if(id === 'page-lendon') { loadProductList(); }
+            document.getElementById('btnBackHome').classList.remove('hidden');
+            
+            if(id === 'page-kho') { loadCategories(); renderInventory(); }
+            if(id === 'page-lendon') { loadProductDropdown(); }
             if(id === 'page-lichsu') { renderHistory(); }
-            if(id === 'page-tk-ngay') { renderStats('day'); }
-            if(id === 'page-tk-thang') { renderStats('month'); }
+            if(id === 'page-tk-ngay') { document.getElementById('inputTargetSales').value = targetSales; renderStats('day'); }
+            if(id === 'page-tk-thang') { document.getElementById('inputTargetSales').value = targetSales; renderStats('month'); }
         }
 
-        // KHO HÀNG
-        function handleCatChange() {
-            const cat = document.getElementById('prodCat').value;
-            const unit = document.getElementById('prodUnit');
-            if(cat === 'Bánh mì') {
-                unit.value = 'Xách';
-                document.getElementById('box-promo').classList.add('hidden');
-                document.getElementById('box-tet-ck').classList.add('hidden');
-            } else if(cat === 'Hàng Tết') {
-                unit.value = 'Gói/Hộp';
-                document.getElementById('box-promo').classList.add('hidden');
-                document.getElementById('box-tet-ck').classList.remove('hidden');
-            } else {
-                unit.value = 'Gói/Hộp';
-                document.getElementById('box-promo').classList.remove('hidden');
-                document.getElementById('box-tet-ck').classList.add('hidden');
-            }
+        // --- TIỆN ÍCH ---
+        function formatMoney(num) { return Number(num).toLocaleString('vi-VN') + 'đ'; }
+
+        // --- KHO HÀNG ---
+        function loadCategories() {
+            const dt = document.getElementById('catList');
+            dt.innerHTML = '';
+            categories.forEach(c => dt.innerHTML += `<option value="${c}">`);
         }
 
         function saveProduct() {
             const id = document.getElementById('prodId').value;
-            const name = document.getElementById('prodName').value;
-            if(!name) return alert("Nhập tên sản phẩm!");
+            const name = document.getElementById('prodName').value.trim();
+            const cat = document.getElementById('prodCat').value.trim();
             
+            if(!name || !cat) return alert("Vui lòng nhập tên và phân loại sản phẩm!");
+
+            // Cập nhật mảng danh mục nếu có phân loại mới
+            if(!categories.includes(cat)) {
+                categories.push(cat);
+                localStorage.setItem('pro_categories', JSON.stringify(categories));
+                loadCategories();
+            }
+
             const p = {
-                id: id || Date.now(),
+                id: id || Date.now().toString(),
                 name,
-                cat: document.getElementById('prodCat').value,
-                unit: document.getElementById('prodUnit').value,
-                price: Number(document.getElementById('prodPrice').value),
+                cat,
+                priceUnit: Number(document.getElementById('prodPriceUnit').value),
+                priceCarton: Number(document.getElementById('prodPriceCarton').value),
                 disc: Number(document.getElementById('prodDisc').value),
                 promoBuy: Number(document.getElementById('promoBuy').value),
                 promoGift: Number(document.getElementById('promoGift').value),
-                promoType: document.getElementById('promoType').value
+                promoTarget: document.getElementById('promoTarget').value.trim()
             };
-            
+
             if(id) {
                 const idx = products.findIndex(x => x.id == id);
                 products[idx] = p;
             } else products.push(p);
-            
-            localStorage.setItem('app_prods', JSON.stringify(products));
-            alert("Đã lưu!");
-            clearKho(); renderInventory();
+
+            localStorage.setItem('pro_products', JSON.stringify(products));
+            clearProductForm();
+            renderInventory();
         }
 
         function renderInventory() {
-            const tb = document.getElementById('inventoryTable'); tb.innerHTML = '';
+            const tb = document.getElementById('inventoryTable');
+            tb.innerHTML = '';
             products.forEach(p => {
-                let km = '-';
-                if(p.cat === 'Hàng Tết') km = `CK ${p.disc}%`;
-                if(p.cat === 'Hàng thường' && p.promoBuy > 0) km = `Mua ${p.promoBuy} tặng ${p.promoGift}`;
-                tb.innerHTML += `<tr><td class="text-left"><b>${p.name}</b></td><td>${p.cat}</td><td>${p.unit}</td><td>${p.price.toLocaleString()}</td><td>${km}</td>
-                <td><button onclick="editP(${p.id})">Sửa</button> <button class="btn-danger" onclick="delP(${p.id})">Xóa</button></td></tr>`;
+                let promoArr = [];
+                if(p.disc > 0) promoArr.push(`CK ${p.disc}%`);
+                if(p.promoBuy > 0) {
+                    let giftName = p.promoTarget ? p.promoTarget : p.name;
+                    promoArr.push(`Mua ${p.promoBuy} tặng ${p.promoGift} (${giftName})`);
+                }
+                let promoText = promoArr.length > 0 ? promoArr.join(' | ') : '-';
+
+                tb.innerHTML += `
+                    <tr>
+                        <td><strong>${p.name}</strong></td>
+                        <td><span class="badge">${p.cat}</span></td>
+                        <td class="text-right">${formatMoney(p.priceUnit)}</td>
+                        <td class="text-right">${formatMoney(p.priceCarton)}</td>
+                        <td style="color: var(--success); font-size: 12px; font-weight: 600;">${promoText}</td>
+                        <td class="text-center">
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;" onclick="editProduct('${p.id}')">Sửa</button>
+                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="delProduct('${p.id}')">Xóa</button>
+                        </td>
+                    </tr>
+                `;
             });
         }
-        
-        function editP(id) {
+
+        function editProduct(id) {
             const p = products.find(x => x.id == id);
             document.getElementById('prodId').value = p.id;
             document.getElementById('prodName').value = p.name;
             document.getElementById('prodCat').value = p.cat;
-            handleCatChange();
-            document.getElementById('prodPrice').value = p.price;
+            document.getElementById('prodPriceUnit').value = p.priceUnit;
+            document.getElementById('prodPriceCarton').value = p.priceCarton;
             document.getElementById('prodDisc').value = p.disc;
             document.getElementById('promoBuy').value = p.promoBuy;
             document.getElementById('promoGift').value = p.promoGift;
+            document.getElementById('promoTarget').value = p.promoTarget;
         }
 
-        function delP(id) { if(confirm("Xóa SP này?")) { products = products.filter(x => x.id != id); localStorage.setItem('app_prods', JSON.stringify(products)); renderInventory(); } }
-        function clearKho() { document.getElementById('prodId').value=''; document.getElementById('prodName').value=''; document.getElementById('prodPrice').value=0; }
+        function delProduct(id) {
+            if(confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+                products = products.filter(x => x.id != id);
+                localStorage.setItem('pro_products', JSON.stringify(products));
+                renderInventory();
+            }
+        }
 
-        // LÊN ĐƠN
-        function loadProductList() {
+        function clearProductForm() {
+            document.getElementById('prodId').value = '';
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodCat').value = '';
+            document.getElementById('prodPriceUnit').value = 0;
+            document.getElementById('prodPriceCarton').value = 0;
+            document.getElementById('prodDisc').value = 0;
+            document.getElementById('promoBuy').value = 0;
+            document.getElementById('promoGift').value = 0;
+            document.getElementById('promoTarget').value = '';
+        }
+
+        // --- LÊN ĐƠN ---
+        function loadProductDropdown() {
             const sel = document.getElementById('selectProduct');
             sel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
-            products.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-        }
-
-        function onSelectProduct() {
-            const id = document.getElementById('selectProduct').value;
-            if(!id) return;
-            const p = products.find(x => x.id == id);
-            document.getElementById('orderPrice').value = p.price;
-            calculateLine();
+            products.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}">${p.name} (${p.cat})</option>`;
+            });
         }
 
         function calculateLine() {
             const id = document.getElementById('selectProduct').value;
-            const qty = Number(document.getElementById('orderQty').value);
-            const price = Number(document.getElementById('orderPrice').value);
+            const type = document.getElementById('orderSellType').value;
+            const qty = Number(document.getElementById('orderQty').value) || 0;
+            
             if(!id) return;
             const p = products.find(x => x.id == id);
             
-            let total = qty * price;
-            if(p.cat === 'Hàng Tết') total -= (total * p.disc / 100);
+            let basePrice = type === 'unit' ? p.priceUnit : p.priceCarton;
+            let total = basePrice * qty;
             
-            let kmText = "";
-            if(p.cat === 'Hàng thường' && p.promoBuy > 0 && qty >= p.promoBuy) {
-                const gifts = Math.floor(qty / p.promoBuy) * p.promoGift;
-                kmText = `Tặng ${gifts} (${p.promoType === 'Chính nó' ? 'cùng loại' : 'SP khác'})`;
+            // Xử lý thông báo khuyến mãi
+            let promoArr = [];
+            if(p.disc > 0) {
+                total = total * (1 - p.disc / 100);
+                promoArr.push(`Giảm ${p.disc}%`);
             }
-            document.getElementById('lineTotal').value = total;
-            document.getElementById('orderPromoNote').innerText = kmText;
+            if(p.promoBuy > 0 && qty >= p.promoBuy) {
+                let multiplier = Math.floor(qty / p.promoBuy);
+                let totalGift = multiplier * p.promoGift;
+                let giftName = p.promoTarget ? p.promoTarget : p.name;
+                promoArr.push(`Tặng ${totalGift} ${giftName}`);
+            }
+
+            document.getElementById('lineTotal').value = formatMoney(total);
+            document.getElementById('lineTotal').setAttribute('data-raw', total);
+            document.getElementById('orderPromoNote').innerText = promoArr.length > 0 ? "KM: " + promoArr.join(' | ') : '';
+        }
+
+        function onSelectProduct() {
+            document.getElementById('orderQty').value = 1;
+            calculateLine();
         }
 
         function addToCart() {
             const id = document.getElementById('selectProduct').value;
             const qty = Number(document.getElementById('orderQty').value);
-            if(!id) return;
-            const p = products.find(x => x.id == id);
+            if(!id || qty <= 0) return;
             
+            const p = products.find(x => x.id == id);
+            const type = document.getElementById('orderSellType').value;
+            const unitLabel = type === 'unit' ? 'Lẻ' : 'Thùng';
+            const price = type === 'unit' ? p.priceUnit : p.priceCarton;
+            const total = Number(document.getElementById('lineTotal').getAttribute('data-raw'));
+            const promoText = document.getElementById('orderPromoNote').innerText;
+
             cart.push({
+                prodId: p.id,
                 name: p.name,
+                unitLabel: unitLabel,
                 qty: qty,
-                price: Number(document.getElementById('orderPrice').value),
-                total: Number(document.getElementById('lineTotal').value),
-                km: document.getElementById('orderPromoNote').innerText
+                price: price,
+                total: total,
+                promoText: promoText
             });
             renderCart();
         }
 
         function renderCart() {
-            const tb = document.getElementById('cartTable'); tb.innerHTML = '';
-            let total = 0;
-            cart.forEach((i, idx) => {
-                total += i.total;
-                tb.innerHTML += `<tr><td class="text-left">${i.name}</td><td>${i.qty}</td><td>${i.price.toLocaleString()}</td><td>${i.total.toLocaleString()}</td><td>${i.km}</td><td><button class="btn-danger" onclick="cart.splice(${idx},1);renderCart()">X</button></td></tr>`;
+            const tb = document.getElementById('cartTable');
+            tb.innerHTML = '';
+            let sum = 0;
+            cart.forEach((c, index) => {
+                sum += c.total;
+                tb.innerHTML += `
+                    <tr>
+                        <td><strong>${c.name}</strong></td>
+                        <td class="text-center"><span class="badge">${c.unitLabel}</span></td>
+                        <td class="text-center">${c.qty}</td>
+                        <td class="text-right">${formatMoney(c.price)}</td>
+                        <td class="text-right font-weight-bold">${formatMoney(c.total)}</td>
+                        <td style="color:var(--success); font-size:12px;">${c.promoText}</td>
+                        <td class="text-center"><button class="btn btn-danger" style="padding: 2px 8px;" onclick="removeFromCart(${index})">X</button></td>
+                    </tr>
+                `;
             });
-            document.getElementById('cartTotal').innerText = total.toLocaleString();
+            document.getElementById('cartTotal').innerText = formatMoney(sum).replace('đ','');
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
         }
 
         function checkout() {
-            const cust = document.getElementById('orderCustomer').value;
-            if(!cust || cart.length === 0) return alert("Kiểm tra lại thông tin!");
-            const order = {
-                id: Date.now(),
-                cust,
+            const customer = document.getElementById('orderCustomer').value.trim();
+            const note = document.getElementById('orderNote').value.trim();
+            if(cart.length === 0) return alert("Giỏ hàng đang trống!");
+
+            const orderTotal = cart.reduce((sum, item) => sum + item.total, 0);
+            
+            const newOrder = {
+                id: 'ORD' + Date.now().toString().slice(-6),
+                date: new Date().toISOString().split('T')[0],
+                customer: customer || 'Khách lẻ',
+                note: note,
                 items: cart,
-                total: cart.reduce((s,i) => s + i.total, 0),
-                date: new Date().toISOString().split('T')[0]
+                total: orderTotal
             };
-            orders.unshift(order);
-            localStorage.setItem('app_orders', JSON.stringify(orders));
-            alert("Đã lưu đơn hàng!");
-            cart = []; document.getElementById('orderCustomer').value = ''; renderCart();
+
+            orders.unshift(newOrder);
+            localStorage.setItem('pro_orders', JSON.stringify(orders));
+            
+            // Reset
+            cart = [];
+            document.getElementById('orderCustomer').value = '';
+            document.getElementById('orderNote').value = '';
+            renderCart();
+            alert("Đã lưu đơn hàng thành công!");
             openPage('page-lichsu');
         }
 
-        // LỊCH SỬ
+        // --- LỊCH SỬ ---
         function renderHistory() {
-            const tb = document.getElementById('historyTable'); tb.innerHTML = '';
-            orders.forEach((o, idx) => {
-                const itemNames = o.items.map(i => `${i.name} (SL:${i.qty})`).join('<br>');
-                tb.innerHTML += `<tr><td>${idx+1}</td><td><b>${o.cust}</b></td><td class="text-left">${itemNames}</td><td>${o.total.toLocaleString()}</td><td>${o.date}</td><td><button class="btn-danger" onclick="delOrder(${o.id})">X</button></td></tr>`;
+            const tb = document.getElementById('historyTable');
+            tb.innerHTML = '';
+            orders.forEach(o => {
+                let itemsHtml = o.items.map(i => `- ${i.name} (${i.qty} ${i.unitLabel})`).join('<br>');
+                let promosHtml = o.items.filter(i => i.promoText).map(i => i.promoText).join('<br>');
+                
+                tb.innerHTML += `
+                    <tr>
+                        <td><strong>${o.id}</strong><br><span style="font-size:11px; color:var(--text-muted)">${o.date}</span></td>
+                        <td><strong>${o.customer}</strong><br><span style="font-size:12px; color:var(--warning)">${o.note ? 'Ghi chú: ' + o.note : ''}</span></td>
+                        <td style="font-size:13px;">${itemsHtml}</td>
+                        <td style="font-size:12px; color:var(--success)">${promosHtml}</td>
+                        <td class="text-right"><strong>${formatMoney(o.total)}</strong></td>
+                        <td class="text-center"><button class="btn btn-outline" style="padding: 4px 8px; color:var(--danger); font-size:11px" onclick="delOrder('${o.id}')">Xóa</button></td>
+                    </tr>
+                `;
             });
         }
-        function delOrder(id) { if(confirm("Xóa đơn này?")) { orders = orders.filter(x => x.id != id); localStorage.setItem('app_orders', JSON.stringify(orders)); renderHistory(); } }
 
-        // THỐNG KÊ
+        function delOrder(id) {
+            if(confirm("Xóa đơn hàng này khỏi lịch sử?")) {
+                orders = orders.filter(o => o.id !== id);
+                localStorage.setItem('pro_orders', JSON.stringify(orders));
+                renderHistory();
+            }
+        }
+
+        // --- THỐNG KÊ & BIỂU ĐỒ ---
+        function saveTarget() {
+            targetSales = Number(document.getElementById('inputTargetSales').value) || 0;
+            localStorage.setItem('pro_target', targetSales);
+            // Render lại cả 2 trang thống kê nếu đang mở
+            if(document.getElementById('page-tk-ngay').classList.contains('active')) renderStats('day');
+            if(document.getElementById('page-tk-thang').classList.contains('active')) renderStats('month');
+        }
+
         function renderStats(type) {
             const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            const month = today.substring(0, 7);
+            const todayStr = now.toISOString().split('T')[0];
+            const currentMonthStr = todayStr.substring(0, 7);
             
-            let filtered = [];
-            if(type === 'day') {
-                document.getElementById('curDay').innerText = today;
-                filtered = orders.filter(o => o.date === today);
-            } else {
-                document.getElementById('curMonth').innerText = month;
-                filtered = orders.filter(o => o.date.startsWith(month));
-            }
-
-            let rev = 0;
-            let pMap = {};
-            filtered.forEach(o => {
-                rev += o.total;
-                o.items.forEach(i => {
-                    pMap[i.name] = (pMap[i.name] || 0) + i.qty;
-                });
-            });
+            // Tính số ngày trong tháng hiện tại
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const dailyTarget = targetSales > 0 ? (targetSales / daysInMonth) : 0;
 
             if(type === 'day') {
-                document.getElementById('dayRev').innerText = rev.toLocaleString() + ' VNĐ';
-                const tb = document.getElementById('dayStatTable'); tb.innerHTML = '';
-                for(let k in pMap) tb.innerHTML += `<tr><td>${k}</td><td>${pMap[k]}</td><td>-</td></tr>`;
-            } else {
-                document.getElementById('monthRev').innerText = rev.toLocaleString() + ' VNĐ';
-                const tb = document.getElementById('monthStatTable'); tb.innerHTML = '';
-                for(let k in pMap) tb.innerHTML += `<tr><td>${k}</td><td>${pMap[k]}</td><td>-</td></tr>`;
+                document.getElementById('curDayText').innerText = `(${todayStr})`;
+                let dayOrders = orders.filter(o => o.date === todayStr);
+                let actualDay = dayOrders.reduce((sum, o) => sum + o.total, 0);
+                
+                let percent = dailyTarget > 0 ? (actualDay / dailyTarget * 100).toFixed(1) : 0;
+
+                document.getElementById('dayRev').innerText = formatMoney(actualDay);
+                document.getElementById('dayTargetStat').innerText = formatMoney(dailyTarget);
+                document.getElementById('dayPercentStat').innerText = percent + '%';
+
+                drawChart('dayChart', chartDayInstance, 'Doanh thu Ngày', ['Thực tế đạt được', 'Chỉ tiêu ngày'], [actualDay, dailyTarget], ['#10b981', '#cbd5e1']);
+            } 
+            else if (type === 'month') {
+                document.getElementById('curMonthText').innerText = `(${currentMonthStr})`;
+                let monthOrders = orders.filter(o => o.date.startsWith(currentMonthStr));
+                let actualMonth = monthOrders.reduce((sum, o) => sum + o.total, 0);
+                
+                let percent = targetSales > 0 ? (actualMonth / targetSales * 100).toFixed(1) : 0;
+
+                document.getElementById('monthRev').innerText = formatMoney(actualMonth);
+                document.getElementById('monthTargetStat').innerText = formatMoney(targetSales);
+                document.getElementById('monthPercentStat').innerText = percent + '%';
+
+                drawChart('monthChart', chartMonthInstance, 'Doanh thu Tháng', ['Thực tế đạt được', 'Doanh số Khoán'], [actualMonth, targetSales], ['#4f46e5', '#cbd5e1']);
             }
         }
 
-        // INIT
-        goHome();
+        function drawChart(canvasId, instanceObj, label, labelsArr, dataArr, colorsArr) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Hủy biểu đồ cũ nếu tồn tại để vẽ lại
+            if(canvasId === 'dayChart' && chartDayInstance) chartDayInstance.destroy();
+            if(canvasId === 'monthChart' && chartMonthInstance) chartMonthInstance.destroy();
+
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labelsArr,
+                    datasets: [{
+                        label: label,
+                        data: dataArr,
+                        backgroundColor: colorsArr,
+                        borderRadius: 6,
+                        barThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function(value) { return value.toLocaleString() + 'đ'; } } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            if(canvasId === 'dayChart') chartDayInstance = newChart;
+            if(canvasId === 'monthChart') chartMonthInstance = newChart;
+        }
+
     </script>
 </body>
 </html>

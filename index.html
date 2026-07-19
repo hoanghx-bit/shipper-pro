@@ -3,148 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Kho & Đơn Hàng</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Hệ Thống Quản Lý Kho & Đơn Hàng Cải Tiến</title>
+    <!-- Tailwind CSS v3 (Bản ổn định cao) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
+    <!-- Các thư viện bổ trợ (Được bọc chế độ an toàn khi chạy) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS (Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- html2pdf.js (PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-100 text-gray-800 font-sans">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar / Navigation -->
+        <!-- THANH ĐIỀU HƯỚNG BÊN TRÁI (SIDEBAR) -->
         <div class="w-64 bg-slate-900 text-white flex flex-col justify-between hidden md:flex">
             <div class="p-5">
-                <h1 class="text-xl font-bold tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-cubes text-blue-400"></i> RETAIL MANAGER
+                <h1 class="text-xl font-bold tracking-wider flex items-center gap-2 text-blue-400">
+                    <i class="fa-solid fa-store"></i> RETAIL PRO
                 </h1>
                 <nav class="mt-8 space-y-2">
-                    <button onclick="switchTab('dashboard')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-medium transition">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-medium transition">
                         <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
                     </button>
-                    <button onclick="switchTab('inventory')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <button onclick="switchTab('inventory')" id="btn-inventory" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
                         <i class="fa-solid fa-boxes-stacked w-5"></i> Kho Sản Phẩm
                     </button>
-                    <button onclick="switchTab('orders')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                        <i class="fa-solid fa-receipt w-5"></i> Đơn Hàng
+                    <button onclick="switchTab('orders')" id="btn-orders" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fa-solid fa-receipt w-5"></i> Lên Đơn Hàng
                     </button>
-                    <button onclick="switchTab('customers')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                    <button onclick="switchTab('customers')" id="btn-customers" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition">
                         <i class="fa-solid fa-users w-5"></i> Tổng Hợp Khách Hàng
                     </button>
                 </nav>
             </div>
-            <div class="p-5 border-t border-slate-800 text-xs text-gray-500">
-                Phiên bản v1.0.0 &copy; 2026
-            </div>
+            <div class="p-5 border-t border-slate-800 text-xs text-gray-500">Phiên bản ổn định v1.1</div>
         </div>
 
-        <!-- Main Content Area -->
+        <!-- KHU VỰC HIỂN THỊ NỘI DUNG CHÍNH -->
         <div class="flex-1 flex flex-col overflow-y-auto">
-            <!-- Topbar di động -->
-            <header class="bg-white shadow-sm px-6 py-4 flex justify-between items-center md:hidden">
-                <h1 class="text-lg font-bold text-slate-900">Retail Manager</h1>
-                <div class="flex gap-2">
-                    <button onclick="switchTab('dashboard')" class="p-2 text-slate-700"><i class="fa-solid fa-chart-pie"></i></button>
-                    <button onclick="switchTab('inventory')" class="p-2 text-slate-700"><i class="fa-solid fa-boxes-stacked"></i></button>
-                    <button onclick="switchTab('orders')" class="p-2 text-slate-700"><i class="fa-solid fa-receipt"></i></button>
-                    <button onclick="switchTab('customers')" class="p-2 text-slate-700"><i class="fa-solid fa-users"></i></button>
+            <!-- Header trên thiết bị di động -->
+            <header class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center md:hidden shadow-md">
+                <h1 class="text-md font-bold text-blue-400"><i class="fa-solid fa-store"></i> Retail Pro</h1>
+                <div class="flex gap-1 text-sm">
+                    <button onclick="switchTab('dashboard')" class="p-2 hover:bg-slate-800 rounded">Tổng quan</button>
+                    <button onclick="switchTab('inventory')" class="p-2 hover:bg-slate-800 rounded">Kho</button>
+                    <button onclick="switchTab('orders')" class="p-2 hover:bg-slate-800 rounded">Đơn</button>
+                    <button onclick="switchTab('customers')" class="p-2 hover:bg-slate-800 rounded">Khách</button>
                 </div>
             </header>
 
-            <!-- Nội dung chính -->
-            <main class="p-6 max-w-7xl w-full mx-auto space-y-6">
+            <main class="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-6">
 
                 <!-- TAB 1: DASHBOARD -->
                 <div id="dashboard" class="tab-content active space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-2xl font-bold text-slate-800">Tổng quan hệ thống</h2>
-                        <div class="flex gap-2">
-                            <button onclick="exportExcelAll()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition shadow-sm">
-                                <i class="fa-solid fa-file-excel"></i> Xuất Excel Tổng Hợp
-                            </button>
-                        </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <h2 class="text-2xl font-bold text-slate-800">Báo cáo tổng quan</h2>
+                        <button onclick="exportExcelAll()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition shadow">
+                            <i class="fa-solid fa-file-excel"></i> Xuất Excel Hệ Thống
+                        </button>
                     </div>
                     
-                    <!-- Khối thống kê nhanh -->
+                    <!-- Các thẻ đếm số liệu nhanh -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 uppercase">Tổng doanh thu</p>
-                                <p id="stat-revenue" class="text-2xl font-bold text-slate-900 mt-1">0đ</p>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tổng Doanh Thu</p>
+                                <p id="stat-revenue" class="text-2xl font-black text-slate-900 mt-1">0đ</p>
                             </div>
-                            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl"><i class="fa-solid fa-money-bill-wave"></i></div>
+                            <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-money-bill-wave"></i></div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 uppercase">Tổng đơn hàng</p>
-                                <p id="stat-orders" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tổng Đơn Đã Chốt</p>
+                                <p id="stat-orders" class="text-2xl font-black text-slate-900 mt-1">0</p>
                             </div>
-                            <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-cart-shopping"></i></div>
+                            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-cart-shopping"></i></div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 uppercase">Sản phẩm trong kho</p>
-                                <p id="stat-products" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider font-medium">Sản phẩm trong kho</p>
+                                <p id="stat-products" class="text-2xl font-black text-slate-900 mt-1">0</p>
                             </div>
-                            <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 text-xl"><i class="fa-solid fa-box"></i></div>
+                            <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xl"><i class="fa-solid fa-box"></i></div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 uppercase">Khách hàng phát sinh đơn</p>
-                                <p id="stat-customers" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Khách đã mua hàng</p>
+                                <p id="stat-customers" class="text-2xl font-black text-slate-900 mt-1">0</p>
                             </div>
-                            <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 text-xl"><i class="fa-solid fa-user-tag"></i></div>
+                            <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xl"><i class="fa-solid fa-user-tag"></i></div>
                         </div>
                     </div>
 
-                    <!-- Khu vực đồ thị trực quan -->
+                    <!-- Đồ thị trực quan hóa -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Biểu đồ doanh thu đơn hàng</h3>
-                            <div class="h-64"><canvas id="revenueChart"></canvas></div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-chart-line text-blue-500 mr-1"></i> Biểu đồ diễn biến doanh thu</h3>
+                            <div class="h-64 relative"><canvas id="revenueChart"></canvas></div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-column text-amber-500"></i> Cơ cấu sản phẩm theo số lượng kho</h3>
-                            <div class="h-64"><canvas id="productChart"></canvas></div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="font-bold text-slate-700 mb-3"><i class="fa-solid fa-chart-bar text-amber-500 mr-1"></i> So sánh đơn giá sản phẩm trong kho</h3>
+                            <div class="h-64 relative"><canvas id="productChart"></canvas></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 2: QUẢN LÝ KHO HÀNG -->
+                <!-- TAB 2: KHO SẢN PHẨM -->
                 <div id="inventory" class="tab-content space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <h2 class="text-2xl font-bold text-slate-800">Quản lý kho hàng</h2>
-                        <button onclick="openProductModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition shadow-sm w-full sm:w-auto justify-center">
-                            <i class="fa-solid fa-plus"></i> Thêm sản phẩm mới
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-slate-800">Danh mục kho sản phẩm</h2>
+                        <button onclick="openProductModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition shadow">
+                            <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới
                         </button>
                     </div>
 
-                    <!-- Danh sách sản phẩm -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
-                                <thead class="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <thead class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Hình ảnh</th>
-                                        <th class="px-6 py-4">Sản phẩm</th>
-                                        <th class="px-6 py-4">Quy cách / Màu</th>
-                                        <th class="px-6 py-4 text-right">Đơn giá</th>
-                                        <th class="px-6 py-4 text-center">Ưu đãi / KM</th>
-                                        <th class="px-6 py-4 text-center">Thao tác</th>
+                                        <th class="px-6 py-4 w-24">Ảnh</th>
+                                        <th class="px-6 py-4">Thông tin mặt hàng</th>
+                                        <th class="px-6 py-4">Quy cách & Phân loại</th>
+                                        <th class="px-6 py-4 text-right">Đơn giá gốc</th>
+                                        <th class="px-6 py-4 text-center">Khuyến mãi / Chiết khấu</th>
+                                        <th class="px-6 py-4 text-center">Hành động</th>
                                     </tr>
                                 </thead>
-                                <tbody id="product-table-body" class="divide-y divide-gray-100 text-sm">
-                                    <!-- Render động từ JS -->
+                                <tbody id="product-table-body" class="divide-y divide-gray-200 text-sm">
+                                    <!-- Render tự động -->
                                 </tbody>
                             </table>
                         </div>
@@ -154,53 +146,64 @@
                 <!-- TAB 3: ĐƠN HÀNG -->
                 <div id="orders" class="tab-content space-y-6">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Cột trái: Form Lên Đơn -->
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 h-fit space-y-4">
-                            <h3 class="font-bold text-lg text-slate-800 border-b border-gray-100 pb-2"><i class="fa-solid fa-cart-plus text-blue-500"></i> Tạo đơn hàng mới</h3>
+                        <!-- Khối Form Tạo Đơn -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 h-fit space-y-4">
+                            <h3 class="font-bold text-lg text-slate-800 border-b border-gray-100 pb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-cart-plus text-blue-500"></i> Lên đơn hàng mới
+                            </h3>
                             <div>
-                                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Tên khách hàng</label>
-                                <input type="text" id="order-customer" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500" placeholder="Nhập tên khách hàng...">
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên khách hàng *</label>
+                                <input type="text" id="order-customer" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Nhập tên khách hàng...">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Chọn sản phẩm</label>
-                                <select id="order-product-select" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
-                                    <!-- Điền danh sách sản phẩm bằng JS -->
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Chọn sản phẩm từ kho *</label>
+                                <select id="order-product-select" onchange="updateOrderFormPreview()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                    <!-- Options đổ từ kho sản phẩm -->
                                 </select>
                             </div>
+
+                            <!-- Khối hiển thị nhanh thông tin sản phẩm đang chọn để kiểm tra -->
+                            <div id="order-product-preview" class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 text-xs text-slate-700 hidden">
+                                <p><strong>Giá gốc niêm yết:</strong> <span id="preview-price">0đ</span></p>
+                                <p><strong>Chiết khấu áp dụng:</strong> <span id="preview-discount" class="text-blue-600">Giảm 0%</span></p>
+                                <p><strong>Quà tặng/Khuyến mãi:</strong> <span id="preview-promo" class="text-amber-600">Không có</span></p>
+                                <p class="mt-1 pt-1 border-t border-blue-100 font-bold text-slate-900">Giá sau chiết khấu: <span id="preview-final-price" class="text-emerald-600 text-sm">0đ</span></p>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Số lượng mua</label>
-                                    <input type="number" id="order-qty" value="1" min="1" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Số lượng mua</label>
+                                    <input type="number" id="order-qty" value="1" min="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                                 </div>
                                 <div class="flex items-end">
-                                    <button onclick="addItemToOrder()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition">
-                                        <i class="fa-solid fa-plus"></i> Thêm mục
+                                    <button onclick="addItemToOrder()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition">
+                                        <i class="fa-solid fa-plus"></i> Thêm vào đơn
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Danh sách giỏ hàng tạm thời -->
-                            <div class="border-t border-gray-100 pt-3 space-y-2">
-                                <p class="text-xs font-bold text-slate-700 uppercase">Chi tiết giỏ hàng:</p>
+                            <!-- Giỏ hàng tạm tính -->
+                            <div class="border-t border-gray-200 pt-3 space-y-2">
+                                <p class="text-xs font-bold text-slate-700 uppercase">Danh sách mặt hàng đang chọn:</p>
                                 <div id="cart-items-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                    <!-- Danh sách mặt hàng được thêm -->
+                                    <p class="text-xs text-gray-400 italic">Chưa có sản phẩm nào được chọn.</p>
                                 </div>
-                                <div class="border-t border-dashed border-gray-200 pt-2 flex justify-between font-bold text-slate-900">
-                                    <span>Tổng cộng thanh toán:</span>
-                                    <span id="cart-total-bill" class="text-blue-600">0đ</span>
+                                <div class="border-t border-dashed border-gray-200 pt-2 flex justify-between font-bold text-slate-900 text-sm">
+                                    <span>Tổng cộng thành tiền:</span>
+                                    <span id="cart-total-bill" class="text-blue-600 text-base">0đ</span>
                                 </div>
                             </div>
 
-                            <button onclick="submitOrder()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3 rounded-lg shadow transition">
-                                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> HOÀN TẤT LÊN ĐƠN
+                            <button onclick="submitOrder()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check-to-slot"></i> XÁC NHẬN CHỐT ĐƠN
                             </button>
                         </div>
 
-                        <!-- Cột phải: Danh sách đơn hàng đã xuất -->
+                        <!-- Nhật ký các đơn hàng đã tạo -->
                         <div class="lg:col-span-2 space-y-4">
-                            <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-clock-rotate-left text-slate-600"></i> Nhật ký lịch sử đơn hàng</h3>
+                            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-gray-500"></i> Nhật ký lịch sử đơn hàng đã lập</h3>
                             <div id="order-log-container" class="space-y-4">
-                                <!-- Render danh sách đơn hàng đã chốt kèm tính năng xuất file đơn lẻ -->
+                                <!-- Đơn hàng hiển thị ở đây -->
                             </div>
                         </div>
                     </div>
@@ -209,22 +212,22 @@
                 <!-- TAB 4: TỔNG HỢP THEO KHÁCH HÀNG -->
                 <div id="customers" class="tab-content space-y-6">
                     <div class="flex justify-between items-center">
-                        <h2 class="text-2xl font-bold text-slate-800">Tổng hợp đơn hàng theo khách hàng</h2>
+                        <h2 class="text-2xl font-bold text-slate-800">Thống kê tích lũy theo từng khách hàng</h2>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
-                                <thead class="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <thead class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                     <tr>
                                         <th class="px-6 py-4">Tên khách hàng</th>
-                                        <th class="px-6 py-4 text-center">Số lượng đơn đã mua</th>
-                                        <th class="px-6 py-4 text-right">Tổng giá trị tích lũy</th>
-                                        <th class="px-6 py-4 text-center">Thao tác dữ liệu</th>
+                                        <th class="px-6 py-4 text-center">Tổng số đơn hàng đã chốt</th>
+                                        <th class="px-6 py-4 text-right">Tổng giá trị mua tích lũy</th>
+                                        <th class="px-6 py-4 text-center">Hành động</th>
                                     </tr>
                                 </thead>
-                                <tbody id="customer-table-body" class="divide-y divide-gray-100 text-sm">
-                                    <!-- Render thống kê khách từ đơn hàng -->
+                                <tbody id="customer-table-body" class="divide-y divide-gray-200 text-sm">
+                                    <!-- Render dữ liệu -->
                                 </tbody>
                             </table>
                         </div>
@@ -235,516 +238,39 @@
         </div>
     </div>
 
-    <!-- MODAL: THÊM / SỬA SẢN PHẨM -->
+    <!-- MÀN HÌNH MODAL: THÊM / SỬA SẢN PHẨM -->
     <div id="product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
             <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
-                <h3 id="modal-title" class="font-bold text-lg">Thêm sản phẩm</h3>
-                <button onclick="closeProductModal()" class="text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+                <h3 id="modal-title" class="font-bold text-lg">Cập nhật sản phẩm</h3>
+                <button onclick="closeProductModal()" class="text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                 <input type="hidden" id="prod-id">
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tên sản phẩm *</label>
-                    <input type="text" id="prod-name" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+                    <input type="text" id="prod-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Quy cách đóng gói</label>
-                        <input type="text" id="prod-spec" placeholder="Ví dụ: Thùng 10 hộp" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+                        <input type="text" id="prod-spec" placeholder="Ví dụ: Thùng 10 hộp" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Màu sắc / Phân loại</label>
-                        <input type="text" id="prod-color" placeholder="Đỏ, Xanh, Vàng..." class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+                        <input type="text" id="prod-color" placeholder="Đỏ, xanh, túi..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Đơn giá bán (đ) *</label>
-                        <input type="number" id="prod-price" min="0" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+                        <input type="number" id="prod-price" min="0" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Chiết khấu (%)</label>
-                        <input type="number" id="prod-discount" min="0" max="100" value="0" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+                        <input type="number" id="prod-discount" min="0" max="100" value="0" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Chương trình khuyến mãi đi kèm</label>
-                    <input type="text" id="prod-promo" placeholder="Ví dụ: Mua 10 tặng 1 gói lẻ" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Đường dẫn ảnh hoặc Base64</label>
-                    <input type="text" id="prod-img" placeholder="https://link-anh.com/image.jpg" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
-                    <p class="text-[11px] text-gray-400 mt-1">Hoặc có thể dán liên kết ảnh demo có sẵn vào đây.</p>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-6 py-3 flex justify-end gap-2 border-t border-gray-100">
-                <button onclick="closeProductModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-300 transition">Hủy bỏ</button>
-                <button onclick="saveProduct()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition">Lưu dữ liệu</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOGIC NGHIỆP VỤ JAVASCRIPT -->
-    <script>
-        // Khởi tạo trạng thái dữ liệu (Lấy từ localStorage hoặc tạo dữ liệu mẫu nếu trống)
-        let products = JSON.parse(localStorage.getItem('retail_products')) || [
-            { id: 1, name: 'Bánh Tipo 115g', spec: 'Thùng 10 túi', color: 'Vàng kem', price: 240000, discount: 5, promo: 'Khuyến mãi 4 gói lẻ', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=150' },
-            { id: 2, name: 'Bánh mì ngọt Pháp', spec: 'Túi 6 chiếc', color: 'Nâu mật ong', price: 45000, discount: 0, promo: 'Không áp dụng', img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=150' }
-        ];
-
-        let orders = JSON.parse(localStorage.getItem('retail_orders')) || [
-            {
-                id: 'ORD-1001',
-                customer: 'Chị Nậm (Chợ Cam Lộ)',
-                date: '2026-07-18',
-                items: [
-                    { prodId: 1, name: 'Bánh Tipo 115g', qty: 2, spec: 'Thùng 10 túi', color: 'Vàng kem', price: 240000, discount: 5, promo: 'Khuyến mãi 4 gói lẻ', finalPrice: 228000 }
-                ],
-                total: 456000
-            }
-        ];
-
-        let currentCart = [];
-        let revenueChartInstance = null;
-        let productChartInstance = null;
-
-        // Lưu trữ dữ liệu xuống LocalStorage tự động
-        function persistData() {
-            localStorage.setItem('retail_products', JSON.stringify(products));
-            localStorage.setItem('retail_orders', JSON.stringify(orders));
-        }
-
-        // Chuyển đổi qua lại giữa các Tab (Dạng thẻ điều hướng)
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-
-            // Cập nhật trạng thái active trên các nút menu sidebar
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                if(btn.getAttribute('onclick').includes(tabId)) {
-                    btn.className = "tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white font-medium transition";
-                } else {
-                    btn.className = "tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition";
-                }
-            });
-
-            // Tải/Làm mới lại giao diện tương ứng của từng tab
-            if (tabId === 'dashboard') initDashboard();
-            if (tabId === 'inventory') renderInventoryTable();
-            if (tabId === 'orders') initOrderTab();
-            if (tabId === 'customers') renderCustomerSummaryTable();
-        }
-
-        // Định dạng hiển thị tiền VNĐ
-        function formatVND(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-        }
-
-        // --- KHU VỰC XỬ LÝ TAB 1: DASHBOARD ---
-        function initDashboard() {
-            // Tính toán số liệu thống kê nhanh
-            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-            const distinctCustomers = new Set(orders.map(o => o.customer.trim().toLowerCase())).size;
-
-            document.getElementById('stat-revenue').innerText = formatVND(totalRevenue);
-            document.getElementById('stat-orders').innerText = orders.length;
-            document.getElementById('stat-products').innerText = products.length;
-            document.getElementById('stat-customers').innerText = distinctCustomers;
-
-            // Xử lý vẽ biểu đồ doanh thu đơn hàng theo thời gian
-            const revCtx = document.getElementById('revenueChart').getContext('2d');
-            if (revenueChartInstance) revenueChartInstance.destroy();
-
-            // Nhóm doanh thu theo ngày
-            const revDataMap = {};
-            orders.forEach(o => {
-                revDataMap[o.date] = (revDataMap[o.date] || 0) + o.total;
-            });
-            const sortedDates = Object.keys(revDataMap).sort();
-
-            revenueChartInstance = new Chart(revCtx, {
-                type: 'line',
-                data: {
-                    labels: sortedDates.map(d => d.split('-').reverse().slice(0,2).join('/')), // Đổi định dạng DD/MM
-                    datasets: [{
-                        label: 'Doanh thu phát sinh (đ)',
-                        data: sortedDates.map(d => revDataMap[d]),
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        fill: true,
-                        tension: 0.2
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Xử lý vẽ biểu đồ cơ cấu giá trị đơn giá các mặt hàng trong kho
-            const prodCtx = document.getElementById('productChart').getContext('2d');
-            if (productChartInstance) productChartInstance.destroy();
-
-            productChartInstance = new Chart(prodCtx, {
-                type: 'bar',
-                data: {
-                    labels: products.map(p => p.name),
-                    datasets: [{
-                        label: 'Giá bán gốc (đ)',
-                        data: products.map(p => p.price),
-                        backgroundColor: '#f59e0b',
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        // --- KHU VỰC XỬ LÝ TAB 2: KHO HÀNG (CRUD) ---
-        function renderInventoryTable() {
-            const tbody = document.getElementById('product-table-body');
-            tbody.innerHTML = '';
-
-            products.forEach(p => {
-                const discountAmount = (p.price * p.discount) / 100;
-                const finalPrice = p.price - discountAmount;
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4">
-                            <img src="${p.img || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=50'}" alt="${p.name}" class="w-12 h-12 rounded-lg object-cover border border-gray-100">
-                        </td>
-                        <td class="px-6 py-4 font-medium text-slate-900">${p.name}</td>
-                        <td class="px-6 py-4 text-gray-500">${p.spec || '-'} <br><span class="text-xs text-gray-400">Màu: ${p.color || '-'}</span></td>
-                        <td class="px-6 py-4 text-right">
-                            <span class="${p.discount > 0 ? 'line-through text-gray-400 text-xs' : 'font-semibold text-slate-800'}">${formatVND(p.price)}</span>
-                            ${p.discount > 0 ? `<br><span class="font-semibold text-blue-600">${formatVND(finalPrice)}</span>` : ''}
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            ${p.discount > 0 ? `<span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-sm font-medium">Giảm ${p.discount}%</span>` : ''}
-                            ${p.promo && p.promo !== 'Không áp dụng' ? `<br><span class="text-xs text-amber-600 mt-1 block font-medium"><i class="fa-solid fa-gift"></i> ${p.promo}</span>` : ''}
-                        </td>
-                        <td class="px-6 py-4 text-center space-x-2">
-                            <button onclick="openProductModal(${p.id})" class="text-blue-600 hover:text-blue-800 p-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deleteProduct(${p.id})" class="text-red-600 hover:text-red-800 p-1"><i class="fa-solid fa-trash-can"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function openProductModal(id = null) {
-            const modal = document.getElementById('product-modal');
-            modal.classList.remove('hidden');
-
-            if (id) {
-                document.getElementById('modal-title').innerText = "Chỉnh sửa thông tin sản phẩm";
-                const p = products.find(prod => prod.id === id);
-                document.getElementById('prod-id').value = p.id;
-                document.getElementById('prod-name').value = p.name;
-                document.getElementById('prod-spec').value = p.spec;
-                document.getElementById('prod-color').value = p.color;
-                document.getElementById('prod-price').value = p.price;
-                document.getElementById('prod-discount').value = p.discount;
-                document.getElementById('prod-promo').value = p.promo;
-                document.getElementById('prod-img').value = p.img;
-            } else {
-                document.getElementById('modal-title').innerText = "Thêm sản phẩm mới vào kho";
-                document.getElementById('prod-id').value = '';
-                document.getElementById('prod-name').value = '';
-                document.getElementById('prod-spec').value = '';
-                document.getElementById('prod-color').value = '';
-                document.getElementById('prod-price').value = '';
-                document.getElementById('prod-discount').value = '0';
-                document.getElementById('prod-promo').value = '';
-                document.getElementById('prod-img').value = '';
-            }
-        }
-
-        function closeProductModal() {
-            document.getElementById('product-modal').classList.add('hidden');
-        }
-
-        function saveProduct() {
-            const id = document.getElementById('prod-id').value;
-            const name = document.getElementById('prod-name').value.trim();
-            const price = parseFloat(document.getElementById('prod-price').value);
-
-            if (!name || isNaN(price)) {
-                alert('Vui lòng điền đầy đủ các thông tin bắt buộc (Tên và Đơn giá)!');
-                return;
-            }
-
-            const productData = {
-                id: id ? parseInt(id) : Date.now(),
-                name: name,
-                spec: document.getElementById('prod-spec').value.trim(),
-                color: document.getElementById('prod-color').value.trim(),
-                price: price,
-                discount: parseInt(document.getElementById('prod-discount').value) || 0,
-                promo: document.getElementById('prod-promo').value.trim() || 'Không áp dụng',
-                img: document.getElementById('prod-img').value.trim()
-            };
-
-            if (id) {
-                const index = products.findIndex(p => p.id === parseInt(id));
-                products[index] = productData;
-            } else {
-                products.push(productData);
-            }
-
-            persistData();
-            closeProductModal();
-            renderInventoryTable();
-        }
-
-        function deleteProduct(id) {
-            if (confirm('Bạn chắc chắn có muốn xóa sản phẩm này ra khỏi kho hàng dữ liệu?')) {
-                products = products.filter(p => p.id !== id);
-                persistData();
-                renderInventoryTable();
-            }
-        }
-
-        // --- KHU VỰC XỬ LÝ TAB 3: QUẢN LÝ LÊN ĐƠN ---
-        function initOrderTab() {
-            // Đổ dữ liệu sản phẩm vào thẻ Select chọn hàng
-            const select = document.getElementById('order-product-select');
-            select.innerHTML = '';
-            products.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.name} (${formatVND(p.price - (p.price*p.discount/100))})</option>`;
-            });
-            renderCart();
-            renderOrderLogs();
-        }
-
-        function addItemToOrder() {
-            const prodId = parseInt(document.getElementById('order-product-select').value);
-            const qty = parseInt(document.getElementById('order-qty').value);
-            if (!prodId || qty < 1) return;
-
-            const product = products.find(p => p.id === prodId);
-            const finalPrice = product.price - (product.price * product.discount / 100);
-
-            // Kiểm tra xem sản phẩm đã có sẵn trong giỏ hàng tạm thời chưa
-            const existingIndex = currentCart.findIndex(item => item.prodId === prodId);
-            if (existingIndex > -1) {
-                currentCart[existingIndex].qty += qty;
-            } else {
-                currentCart.push({
-                    prodId: product.id,
-                    name: product.name,
-                    qty: qty,
-                    spec: product.spec,
-                    color: product.color,
-                    price: product.price,
-                    discount: product.discount,
-                    promo: product.promo,
-                    finalPrice: finalPrice
-                });
-            }
-            renderCart();
-        }
-
-        function removeCartItem(index) {
-            currentCart.splice(index, 1);
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cart-items-container');
-            container.innerHTML = '';
-            let totalBill = 0;
-
-            currentCart.forEach((item, index) => {
-                const cost = item.finalPrice * item.qty;
-                totalBill += cost;
-                container.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-xs border border-gray-100">
-                        <div>
-                            <p class="font-bold text-slate-800">${item.name} x${item.qty}</p>
-                            <p class="text-[10px] text-gray-400">Quy cách: ${item.spec} | Phân loại: ${item.color}</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-900">${formatVND(cost)}</span>
-                            <button onclick="removeCartItem(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-circle-xmark"></i></button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('cart-total-bill').innerText = formatVND(totalBill);
-        }
-
-        function submitOrder() {
-            const customerName = document.getElementById('order-customer').value.trim();
-            if (!customerName) {
-                alert('Vui lòng điền thông tin người mua (Tên khách hàng)!');
-                return;
-            }
-            if (currentCart.length === 0) {
-                alert('Giỏ hàng hiện đang trống, vui lòng thêm sản phẩm trước!');
-                return;
-            }
-
-            const total = currentCart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
-            const today = new Date().toISOString().split('T')[0];
-
-            const newOrder = {
-                id: 'ORD-' + (Date.now().toString().slice(-4)),
-                customer: customerName,
-                date: today,
-                items: [...currentCart],
-                total: total
-            };
-
-            orders.unshift(newOrder); // Đưa đơn mới lên đầu nhật ký
-            persistData();
-            
-            // Xóa sạch giỏ hàng tạm thời
-            currentCart = [];
-            document.getElementById('order-customer').value = '';
-            
-            renderCart();
-            renderOrderLogs();
-            alert('Chốt đơn và lưu dữ liệu thành công!');
-        }
-
-        function renderOrderLogs() {
-            const container = document.getElementById('order-log-container');
-            container.innerHTML = '';
-
-            orders.forEach(o => {
-                let itemsListHtml = o.items.map(i => `
-                    <div class="flex justify-between text-xs py-1 border-b border-gray-50 text-gray-600">
-                        <span>${i.name} (${i.spec || 'Mẫu'}) <b class="text-slate-800">x${i.qty}</b></span>
-                        <span>${formatVND(i.finalPrice * i.qty)}</span>
-                    </div>
-                `).join('');
-
-                container.innerHTML += `
-                    <div id="invoice-${o.id}" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-3 relative overflow-hidden">
-                        <div class="flex justify-between items-start border-b border-gray-100 pb-2">
-                            <div>
-                                <span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-xs">${o.id}</span>
-                                <h4 class="font-bold text-slate-800 mt-1">${o.customer}</h4>
-                                <p class="text-[11px] text-gray-400"><i class="fa-regular fa-calendar"></i> Ngày lập: ${o.date.split('-').reverse().join('/')}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xs text-gray-400">Tổng thanh toán</p>
-                                <p class="font-extrabold text-blue-600 text-base">${formatVND(o.total)}</p>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50/50 rounded-lg p-3">
-                            ${itemsListHtml}
-                        </div>
-                        <div class="flex justify-between items-center text-xs pt-1">
-                            <span class="text-gray-400 italic">* Đã bao gồm các mức giảm trừ chiết khấu nếu có.</span>
-                            <div class="space-x-1">
-                                <button onclick="exportPDF('${o.id}')" class="bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1 inline-block">
-                                    <i class="fa-solid fa-file-pdf"></i> In PDF đơn
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        // --- KHU VỰC XỬ LÝ TAB 4: TỔNG HỢP KHÁCH HÀNG ---
-        function renderCustomerSummaryTable() {
-            const tbody = document.getElementById('customer-table-body');
-            tbody.innerHTML = '';
-
-            // Tiến hành gộp dữ liệu thống kê từ danh sách đơn hàng toàn hệ thống
-            const customerMap = {};
-            orders.forEach(o => {
-                if (!customerMap[o.customer]) {
-                    customerMap[o.customer] = { count: 0, sum: 0 };
-                }
-                customerMap[o.customer].count += 1;
-                customerMap[o.customer].sum += o.total;
-            });
-
-            Object.keys(customerMap).forEach(custName => {
-                const data = customerMap[custName];
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 font-semibold text-slate-800">${custName}</td>
-                        <td class="px-6 py-4 text-center text-slate-600">${data.count} đơn hàng</td>
-                        <td class="px-6 py-4 text-right font-bold text-emerald-600">${formatVND(data.sum)}</td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="exportExcelCustomer('${custName}')" class="text-emerald-600 hover:text-emerald-800 font-medium text-xs bg-emerald-50 px-2.5 py-1 rounded-md transition">
-                                <i class="fa-solid fa-file-excel"></i> Xuất Excel khách này
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // --- KHU VỰC CHỨC NĂNG: XUẤT FILE (EXCEL / PDF) ---
-
-        // 1. Xuất file PDF cho đơn hàng đơn lẻ bất kỳ
-        function exportPDF(orderId) {
-            const element = document.getElementById(`invoice-${orderId}`);
-            const opt = {
-                margin:       10,
-                filename:     `Don_Hang_${orderId}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            // Ẩn nút chức năng trước khi kết xuất ảnh in PDF
-            html2pdf().from(element).set(opt).save();
-        }
-
-        // 2. Xuất toàn bộ cơ sở dữ liệu hệ thống ra tệp bảng tính Excel đa tầng dữ liệu
-        function exportExcelAll() {
-            const wb = XLSX.utils.book_new();
-            
-            // Trang tính 1: Danh mục sản phẩm kho hàng
-            const prodData = products.map(p => ({
-                "Mã SP": p.id, "Tên Sản Phẩm": p.name, "Quy Cách": p.spec, "Màu Sắc": p.color, "Đơn Giá Gốc": p.price, "Chiết Khấu (%)": p.discount, "Chương Trình KM": p.promo
-            }));
-            const wsProd = XLSX.utils.json_to_sheet(prodData);
-            XLSX.utils.book_append_sheet(wb, wsProd, "Kho Hang");
-
-            // Trang tính 2: Nhật ký lưu trữ lịch sử đơn hàng
-            const orderData = [];
-            orders.forEach(o => {
-                o.items.forEach(i => {
-                    orderData.push({
-                        "Mã Đơn": o.id, "Ngày Xuất": o.date, "Khách Hàng": o.customer, "Sản Phẩm": i.name, "Số Lượng": i.qty, "Đơn Giá Tính": i.finalPrice, "Thành Tiền": i.finalPrice * i.qty
-                    });
-                });
-            });
-            const wsOrder = XLSX.utils.json_to_sheet(orderData);
-            XLSX.utils.book_append_sheet(wb, wsOrder, "Nhat Ky Don Hang");
-
-            XLSX.writeFile(wb, "Bao_Cao_Tong_Hop_Kinh_Doanh.xlsx");
-        }
-
-        // 3. Xuất chi tiết tất cả các đơn mua của một khách hàng cụ thể ra file Excel riêng lẻ
-        function exportExcelCustomer(customerName) {
-            const wb = XLSX.utils.book_new();
-            const custOrders = orders.filter(o => o.customer === customerName);
-            
-            const dataRow = [];
-            custOrders.forEach(o => {
-                o.items.forEach(i => {
-                    dataRow.push({
-                        "Mã Đơn Hàng": o.id, "Ngày Lập Đơn": o.date, "Tên Mặt Hàng": i.name, "Số Lượng Mua": i.qty, "Quy Cách Đóng Gói": i.spec, "Đơn Giá": i.finalPrice, "Tổng Tiền": i.finalPrice * i.qty
-                    });
-                });
-            });
-
-            const ws = XLSX.utils.json_to_sheet(dataRow);
-            XLSX.utils.book_append_sheet(wb, ws, "Chi Tiet");
-            XLSX.writeFile(wb, `Don_Hang_${customerName.replace(/[^a-zA-Z0-9]/g, "_")}.xlsx");
-        }
-
-        // Tự động khởi động chạy Tab Dashboard làm màn hình mặc định ban đầu khi mở trang web
-        window.onload = function() {
-            initDashboard();
-        };
-    </script>
-</body>
-</html>
+                    <input type="text" id="prod-promo" placeholder="Ví dụ: Mua 1 thùng tặng kèm 2 gói lẻ" cla

@@ -27,7 +27,7 @@
             background-color: #f1f5f9;
             color: var(--text-main);
             margin: 0;
-            font-size: 13px; /* Đã điều chỉnh nhỏ lại để không vỡ khung */
+            font-size: 13px;
         }
 
         /* HEADER DÀNH CHO CÁC TRANG CON */
@@ -49,7 +49,7 @@
         .btn {
             cursor: pointer; border: none; border-radius: var(--radius);
             padding: 8px 14px; font-weight: 600; font-size: 13px;
-            transition: all 0.2s; white-space: nowrap;
+            transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .btn-outline:hover { background: var(--secondary); }
@@ -58,7 +58,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
 
-        /* DASHBOARD HERO SECTION TẬP TRUNG TÊN APP NỔI BẬT */
+        /* DASHBOARD HERO SECTION */
         .hero-section { text-align: center; padding: 40px 20px 30px; }
         .hero-title { font-size: 32px; font-weight: 800; color: var(--primary); margin: 0; text-transform: uppercase; letter-spacing: 1px; }
         .hero-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
@@ -112,11 +112,16 @@
         .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #e0e7ff; color: var(--primary); display: inline-block;}
 
         /* BẢNG LỊCH SỬ ĐƠN HÀNG ĐẶC BIỆT */
-        .history-table { border-collapse: collapse; }
+        .history-table { border-collapse: collapse; table-layout: auto; width: 100%; }
         .history-table tbody { border: 2px solid var(--primary); margin-bottom: 10px; }
         .history-table .customer-row { background: #eef2ff; }
-        .history-table .customer-row td { padding: 12px; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 14px; }
+        .history-table .customer-row td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         .history-table .total-row td { background: #f8fafc; font-weight: bold; border-top: 1px dashed var(--border); font-size: 14px; }
+        
+        /* Cố định để nội dung bảng không bị xuống hàng */
+        .history-table td, .history-table th { white-space: nowrap; }
+        /* Cho phép tên SP và KM dài được phép tự động xuống hàng nếu quá dài */
+        .history-table .wrap-text { white-space: normal; min-width: 150px; }
 
         /* BIỂU ĐỒ & THỐNG KÊ */
         .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
@@ -126,18 +131,33 @@
         .chart-container { background: #fff; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 20px; height: 350px;}
 
         .hidden { display: none !important; }
+
+        /* CSS ĐẶC BIỆT DÀNH CHO KHI XUẤT PDF / IN ẤN */
+        @media print {
+            body * { visibility: hidden; } /* Ẩn toàn bộ trang */
+            #page-lichsu, #page-lichsu * { visibility: visible; } /* Chỉ hiện phần lịch sử */
+            #page-lichsu { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0;}
+            
+            .no-print { display: none !important; } /* Ẩn các nút không cần thiết */
+            
+            /* Tinh chỉnh màu sắc bảng khi in */
+            .history-table tbody { border: 2px solid #000 !important; }
+            .history-table th { background-color: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
+            .history-table .customer-row td { background-color: #eef2ff !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
+            .history-table td { border-bottom: 1px solid #ccc !important; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
+    <header class="no-print">
         <div class="header-brand" id="smallBrand">PRO CRM</div>
         <div style="flex-grow: 1;"></div>
-        <button class="btn btn-outline hidden" id="btnBackHome" onclick="goHome()">🏠 Quay lại Trang Chủ</button>
+        <button class="btn btn-outline hidden" id="btnBackHome" onclick="goHome()">🏠 Quay lại Dashboard</button>
     </header>
 
     <div class="wrapper">
-        <!-- TRANG CHỦ DASHBOARD NỔI BẬT -->
+        <!-- TRANG CHỦ DASHBOARD -->
         <div id="home-screen" class="page active" style="margin-top: 0;">
             <div class="hero-section">
                 <h1 class="hero-title">Hệ Thống Quản Lý Bán Hàng</h1>
@@ -309,20 +329,24 @@
 
         <!-- 3. LỊCH SỬ ĐƠN HÀNG -->
         <div id="page-lichsu" class="page">
-            <h2 class="page-title" style="margin-bottom: 20px;">Lịch Sử Đơn Hàng</h2>
-            <div class="table-responsive" style="border: none; background: transparent;">
+            <div class="page-header">
+                <h2 class="page-title">Lịch Sử Đơn Hàng</h2>
+                <!-- Nút Xuất PDF / In được gán class no-print để không in chính nó -->
+                <button class="btn btn-primary no-print" onclick="window.print()">🖨️ Xuất PDF / In</button>
+            </div>
+            
+            <div class="table-responsive" style="border: none; background: transparent; overflow-x: visible;">
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>Sản Phẩm</th>
+                            <th class="wrap-text">Sản Phẩm</th>
                             <th class="text-center">ĐVT</th>
                             <th class="text-center">SL</th>
                             <th class="text-right">Đơn Giá</th>
-                            <th>Khuyến Mãi</th>
+                            <th class="wrap-text">Khuyến Mãi</th>
                             <th class="text-right">Thành Tiền</th>
                         </tr>
                     </thead>
-                    <!-- Dữ liệu lịch sử sẽ render dưới dạng nhiều thẻ tbody tại đây -->
                     <tbody id="historyTableContainer"></tbody>
                 </table>
             </div>
@@ -433,7 +457,7 @@
                 id: id || Date.now().toString(),
                 name,
                 cat,
-                quyCach: Number(document.getElementById('prodQuyCach').value) || 1, // Mới thêm
+                quyCach: Number(document.getElementById('prodQuyCach').value) || 1,
                 priceUnit: Number(document.getElementById('prodPriceUnit').value),
                 priceCarton: Number(document.getElementById('prodPriceCarton').value),
                 disc: Number(document.getElementById('prodDisc').value),
@@ -536,9 +560,8 @@
             let basePrice = type === 'unit' ? p.priceUnit : p.priceCarton;
             let total = basePrice * qty;
             
-            // XỬ LÝ LOGIC QUY CÁCH ĐỂ TÍNH KHUYẾN MÃI
             let quyCachVal = p.quyCach || 1;
-            let totalBaseQty = type === 'carton' ? (qty * quyCachVal) : qty; // Đổi số thùng ra số lẻ để tính KM
+            let totalBaseQty = type === 'carton' ? (qty * quyCachVal) : qty;
 
             let promoArr = [];
             if(p.disc > 0) {
@@ -594,12 +617,12 @@
                 sum += c.total;
                 tb.innerHTML += `
                     <tr>
-                        <td><strong>${c.name}</strong></td>
+                        <td class="wrap-text"><strong>${c.name}</strong></td>
                         <td class="text-center nowrap"><span class="badge">${c.unitLabel}</span></td>
                         <td class="text-center">${c.qty}</td>
                         <td class="text-right nowrap">${formatMoney(c.price)}</td>
                         <td class="text-right nowrap" style="font-weight:bold;">${formatMoney(c.total)}</td>
-                        <td style="color:var(--success);">${c.promoText}</td>
+                        <td class="wrap-text" style="color:var(--success);">${c.promoText}</td>
                         <td class="text-center"><button class="btn btn-outline" style="padding: 2px 8px; color:var(--danger);" onclick="removeFromCart(${index})">X</button></td>
                     </tr>
                 `;
@@ -637,7 +660,7 @@
             openPage('page-lichsu');
         }
 
-        // --- LỊCH SỬ ĐƠN HÀNG (DẠNG BẢNG GỘP) ---
+        // --- LỊCH SỬ ĐƠN HÀNG (CẬP NHẬT CĂN CHỈNH) ---
         function renderHistory() {
             const container = document.getElementById('historyTableContainer');
             container.innerHTML = '';
@@ -650,35 +673,40 @@
             orders.forEach(o => {
                 let noteText = o.note ? ` - <span style="color:var(--text-muted); font-weight:normal;">Ghi chú: ${o.note}</span>` : '';
                 
-                // Khởi tạo tbody riêng biệt cho mỗi khách hàng
                 let tbody = document.createElement('tbody');
                 
-                // Dòng 1: Thông tin khách hàng & Nút Xóa (Trải dài cột)
+                // Dòng 1: Thông tin khách hàng & Nút Xóa được gom gọn trong colspan=6
+                // Nút xóa được đẩy sang phải bằng flexbox và thêm class no-print
                 let trCustomer = `
                     <tr class="customer-row">
-                        <td colspan="5">👤 Khách hàng: <span style="color:var(--primary)">${o.customer}</span> (Ngày: ${o.date}) ${noteText}</td>
-                        <td class="text-right">
-                            <button class="btn btn-danger" style="padding: 4px 10px; font-size:12px;" onclick="delOrder('${o.id}')">Xóa Đơn</button>
+                        <td colspan="6">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>
+                                    <strong>👤 Khách hàng:</strong> <span style="color:var(--primary); font-weight:bold;">${o.customer}</span> 
+                                    (Ngày: ${o.date}) ${noteText}
+                                </span>
+                                <button class="btn btn-danger no-print" style="padding: 4px 10px; font-size:11px;" onclick="delOrder('${o.id}')">Xóa Đơn</button>
+                            </div>
                         </td>
                     </tr>
                 `;
-                let itemsHtml = '';
                 
-                // Các dòng tiếp theo: Chi tiết từng sản phẩm
+                let itemsHtml = '';
+                // Các dòng tiếp theo: Chi tiết từng sản phẩm đảm bảo thẳng 6 cột
                 o.items.forEach(i => {
                     itemsHtml += `
                         <tr>
-                            <td>${i.name}</td>
+                            <td class="wrap-text">${i.name}</td>
                             <td class="text-center nowrap">${i.unitLabel}</td>
                             <td class="text-center">${i.qty}</td>
                             <td class="text-right nowrap">${formatMoney(i.price)}</td>
-                            <td style="color:var(--success); font-size:12px;">${i.promoText}</td>
+                            <td class="wrap-text" style="color:var(--success); font-size:12px;">${i.promoText}</td>
                             <td class="text-right nowrap">${formatMoney(i.total)}</td>
                         </tr>
                     `;
                 });
 
-                // Dòng cuối: Tổng tiền của đơn
+                // Dòng cuối: Tổng tiền của đơn (colspan=5 và 1 cột cuối)
                 let trTotal = `
                     <tr class="total-row">
                         <td colspan="5" class="text-right" style="color:var(--text-muted); text-transform:uppercase;">Tổng thanh toán:</td>

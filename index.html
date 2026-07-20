@@ -60,14 +60,13 @@
         .text-right { text-align: right; } .text-center { text-align: center; }
         .hidden { display: none !important; }
         .badge { padding: 4px 8px; border-radius: 20px; font-size: 12px; background: #e0e7ff; color: var(--primary); display: inline-block; margin-top: 4px; }
-        .badge-gift { background: #fce7f3; color: #db2777; font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 4px; }
+        .badge-gift { color: #db2777; font-size: 12px; font-weight: bold; display: inline-block; }
 
         /* Hộp thoại thêm phân loại/màu */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 400px; max-width: 90%; }
         .modal-overlay.active { display: flex; }
 
-        /* CSS khi in/xuất PDF */
         .pdf-mode .no-print { display: none !important; }
     </style>
 </head>
@@ -99,13 +98,7 @@
                     <div class="form-group" style="grid-column: span 1;">
                         <label>Tên sản phẩm</label> <input type="text" id="pName">
                     </div>
-                    <div class="form-group" style="grid-column: span 1;">
-                        <label>Màu sắc mặc định</label>
-                        <div style="display: flex; gap: 5px;">
-                            <select id="pColorKho" style="flex: 1;"></select>
-                            <button class="btn btn-outline" onclick="openColorModal()">⚙️</button>
-                        </div>
-                    </div>
+                    
                     <div class="form-group">
                         <label>Phân loại</label>
                         <div style="display: flex; gap: 5px;">
@@ -118,23 +111,22 @@
                     <div class="form-group"> <label>Giá Bán Lẻ</label> <input type="number" id="pPriceL" value="0"> </div>
                     <div class="form-group"> <label>Giá Thùng</label> <input type="number" id="pPriceT" value="0"> </div>
                     
+                    <!-- Cài đặt khuyến mãi -->
                     <div class="form-group"> <label>Khuyến mãi: Mua X</label> <input type="number" id="pPromoX" value="0"> </div>
                     <div class="form-group"> <label>Khuyến mãi: Tặng Y</label> <input type="number" id="pPromoY" value="0"> </div>
-                    
                     <div class="form-group"> 
                         <label>Đơn vị tặng</label> 
                         <select id="pPromoUnit">
                             <option value="gói">Gói</option>
                             <option value="hộp">Hộp</option>
                             <option value="thùng">Thùng</option>
+                            <option value="cái">Cái</option>
                         </select> 
                     </div>
-                    
                     <div class="form-group">
                         <label>Sản phẩm Khuyến mãi</label> 
                         <select id="pPromoItem"></select>
                     </div>
-                    
                     <div class="form-group" style="grid-column: 1 / -1;"> <label>Chiết khấu (%)</label> <input type="number" id="pDiscount" value="0" max="100" style="width: 220px;"> </div>
                 </div>
                 <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -153,7 +145,7 @@
             
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>Sản Phẩm (Màu)</th><th>Quy cách</th><th class="text-right">Giá Lẻ/Thùng</th><th>Khuyến Mãi</th><th class="text-center">Thao tác</th></tr></thead>
+                    <thead><tr><th>Sản Phẩm</th><th>Quy cách</th><th class="text-right">Giá Lẻ/Thùng</th><th>Khuyến Mãi</th><th class="text-center">Thao tác</th></tr></thead>
                     <tbody id="inventoryTable"></tbody>
                 </table>
             </div>
@@ -187,20 +179,33 @@
                 </div>
                 
                 <div class="form-group" style="grid-column: span 1;">
-                    <label>Sản Phẩm</label> <select id="selProduct" onchange="updatePromoDisplay()"></select>
+                    <label>Sản Phẩm</label> 
+                    <select id="selProduct" onchange="updatePromoDisplay()"></select>
                 </div>
+                
+                <!-- Phần chọn màu sắc đã được đưa vào đây -->
                 <div class="form-group" style="grid-column: span 1;">
-                    <label>Màu sắc</label> <select id="selColor"></select>
+                    <label>Màu sắc</label>
+                    <div style="display: flex; gap: 5px;">
+                        <select id="selColor" style="flex: 1;"></select>
+                        <button class="btn btn-outline" onclick="openColorModal()">⚙️</button>
+                    </div>
                 </div>
+                
                 <div class="form-group">
                     <label>Hình thức</label> <select id="selType"><option value="le">Lẻ</option><option value="thung">Thùng</option></select>
                 </div>
-                <div class="form-group"> <label>Số lượng</label> <input type="number" id="orderQty" value="1" min="1"> </div>
+                
+                <!-- Bắt sự kiện thay đổi số lượng để tính lại khuyến mãi -->
+                <div class="form-group"> 
+                    <label>Số lượng</label> 
+                    <input type="number" id="orderQty" value="1" min="1" oninput="updatePromoDisplay()"> 
+                </div>
                 
                 <!-- Hiển thị khuyến mãi tự động -->
                 <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>🎁 Khuyến mãi áp dụng</label>
-                    <input type="text" id="orderPromoDisplay" readonly style="background: #f8fafc; color: var(--danger); font-weight: bold; border-color: #fca5a5;" value="Chưa chọn sản phẩm">
+                    <label>🎁 Khuyến mãi nhận được</label>
+                    <input type="text" id="orderPromoDisplay" readonly style="background: #f8fafc; color: var(--danger); font-weight: bold; border-color: #fca5a5;" value="Chưa đủ điều kiện">
                 </div>
             </div>
             <button class="btn btn-success" style="width: 100%; margin-bottom:20px; padding: 12px;" onclick="addToCart()">Thêm Vào Đơn</button>
@@ -242,7 +247,7 @@
         </div>
     </div>
 
-    <!-- HỘP THOẠI PHÂN LOẠI -->
+    <!-- HỘP THOẠI PHÂN LOẠI (Kho Hàng) -->
     <div id="modalCategory" class="modal-overlay">
         <div class="modal-content">
             <h3>⚙️ Quản Lý Phân Loại</h3>
@@ -255,7 +260,7 @@
         </div>
     </div>
 
-    <!-- HỘP THOẠI MÀU SẮC -->
+    <!-- HỘP THOẠI MÀU SẮC (Lên Đơn) -->
     <div id="modalColor" class="modal-overlay">
         <div class="modal-content">
             <h3>🎨 Quản Lý Màu Sắc</h3>
@@ -273,11 +278,11 @@
         function formatMoney(num) { return Number(num).toLocaleString('vi-VN') + ' đ'; }
         function getSafeData(key, defaultVal) { try { return JSON.parse(localStorage.getItem(key)) || defaultVal; } catch(e) { return defaultVal; } }
 
-        let products = getSafeData('app_prods_v5', []);
-        let categories = getSafeData('app_cats_v5', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
-        let colors = getSafeData('app_colors_v5', ['Mặc định', 'Đỏ', 'Xanh', 'Vàng', 'Đen', 'Trắng']);
-        let customers = getSafeData('app_custs_v5', []);
-        let orders = getSafeData('app_ords_v5', []);
+        let products = getSafeData('app_prods_v6', []);
+        let categories = getSafeData('app_cats_v6', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
+        let colors = getSafeData('app_colors_v6', ['Không chọn', 'Đỏ', 'Xanh', 'Vàng', 'Đen', 'Trắng']);
+        let customers = getSafeData('app_custs_v6', []);
+        let orders = getSafeData('app_ords_v6', []);
         let cart = [];
 
         function getNextDayString(dateStr) {
@@ -300,7 +305,7 @@
             document.getElementById(pageId).classList.add('active');
             document.getElementById('btnBack').classList.remove('hidden');
 
-            if(pageId === 'page-kho') { renderColorSelectKho(); renderCatSelect(); renderPromoItemSelect(); renderInventory(); }
+            if(pageId === 'page-kho') { renderCatSelect(); renderPromoItemSelect(); renderInventory(); }
             if(pageId === 'page-khachhang') renderCustomers();
             if(pageId === 'page-lendon') { 
                 prepareOrderPage(); 
@@ -309,7 +314,7 @@
             if(pageId === 'page-lichsu') renderHistory();
         }
 
-        // --- QUẢN LÝ PHÂN LOẠI & MÀU SẮC ---
+        // --- QUẢN LÝ PHÂN LOẠI ---
         function openCatModal() { document.getElementById('modalCategory').classList.add('active'); renderCatList(); }
         function closeCatModal() { document.getElementById('modalCategory').classList.remove('active'); renderCatSelect(); }
         
@@ -323,17 +328,13 @@
             const list = document.getElementById('catList'); list.innerHTML = '';
             categories.forEach((c, i) => { list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">${c} <button class="btn btn-outline" style="padding:2px 8px; color:red;" onclick="delCategory(${i})">Xóa</button></li>`; });
         }
-        function addCategory() { const val = document.getElementById('newCatName').value.trim(); if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v5', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); } }
-        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v5', JSON.stringify(categories)); renderCatList(); }
+        function addCategory() { const val = document.getElementById('newCatName').value.trim(); if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v6', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); } }
+        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v6', JSON.stringify(categories)); renderCatList(); }
 
-        // MÀU SẮC
+        // --- QUẢN LÝ MÀU SẮC (Cho Lên Đơn) ---
         function openColorModal() { document.getElementById('modalColor').classList.add('active'); renderColorList(); }
-        function closeColorModal() { document.getElementById('modalColor').classList.remove('active'); renderColorSelectKho(); renderColorSelectOrder(); }
+        function closeColorModal() { document.getElementById('modalColor').classList.remove('active'); renderColorSelectOrder(); }
         
-        function renderColorSelectKho() {
-            const sel = document.getElementById('pColorKho'); sel.innerHTML = '';
-            colors.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-        }
         function renderColorSelectOrder() {
             const sel = document.getElementById('selColor'); 
             if(sel) {
@@ -345,8 +346,8 @@
             const list = document.getElementById('colorList'); list.innerHTML = '';
             colors.forEach((c, i) => { list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">${c} <button class="btn btn-outline" style="padding:2px 8px; color:red;" onclick="delColor(${i})">Xóa</button></li>`; });
         }
-        function addColor() { const val = document.getElementById('newColorName').value.trim(); if(val && !colors.includes(val)) { colors.push(val); localStorage.setItem('app_colors_v5', JSON.stringify(colors)); document.getElementById('newColorName').value = ''; renderColorList(); } }
-        function delColor(i) { colors.splice(i,1); localStorage.setItem('app_colors_v5', JSON.stringify(colors)); renderColorList(); }
+        function addColor() { const val = document.getElementById('newColorName').value.trim(); if(val && !colors.includes(val)) { colors.push(val); localStorage.setItem('app_colors_v6', JSON.stringify(colors)); document.getElementById('newColorName').value = ''; renderColorList(); } }
+        function delColor(i) { colors.splice(i,1); localStorage.setItem('app_colors_v6', JSON.stringify(colors)); renderColorList(); }
 
         // --- KHO SẢN PHẨM ---
         function renderPromoItemSelect() {
@@ -370,7 +371,6 @@
             
             const p = {
                 id, name, cat: document.getElementById('pCat').value,
-                color: document.getElementById('pColorKho').value,
                 quyCach: Number(document.getElementById('pQuyCach').value),
                 priceL: Number(document.getElementById('pPriceL').value),
                 priceT: Number(document.getElementById('pPriceT').value),
@@ -384,7 +384,7 @@
             const index = products.findIndex(x => x.id === id);
             if(index >= 0) products[index] = p; else products.push(p);
             
-            localStorage.setItem('app_prods_v5', JSON.stringify(products));
+            localStorage.setItem('app_prods_v6', JSON.stringify(products));
             resetForm(); renderPromoItemSelect(); renderInventory();
         }
 
@@ -394,7 +394,6 @@
                 document.getElementById('pId').value = p.id;
                 document.getElementById('pName').value = p.name;
                 document.getElementById('pCat').value = p.cat;
-                document.getElementById('pColorKho').value = p.color || 'Mặc định';
                 document.getElementById('pQuyCach').value = p.quyCach;
                 document.getElementById('pPriceL').value = p.priceL;
                 document.getElementById('pPriceT').value = p.priceT;
@@ -402,11 +401,11 @@
                 document.getElementById('pPromoY').value = p.promoY;
                 document.getElementById('pPromoUnit').value = p.promoUnit || 'gói';
                 document.getElementById('pPromoItem').value = p.promoName || 'Cùng sản phẩm';
-                document.getElementById('pDiscount').value = p.discount;
+                document.getElementById('pDiscount').value = p.discount || 0;
             }
         }
 
-        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v5', JSON.stringify(products)); renderPromoItemSelect(); renderInventory(); } }
+        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v6', JSON.stringify(products)); renderPromoItemSelect(); renderInventory(); } }
 
         function renderInventory() {
             const searchName = document.getElementById('searchKho').value.toLowerCase();
@@ -415,11 +414,11 @@
             
             products.filter(p => p.name.toLowerCase().includes(searchName) && (searchCat === "" || p.cat === searchCat)).forEach(p => {
                 let promoTxt = '';
-                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoUnit} ${p.promoName}</span><br>`;
+                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName}</span><br>`;
                 if(p.discount > 0) promoTxt += `<span class="badge">CK: ${p.discount}%</span>`;
 
                 tb.innerHTML += `<tr>
-                    <td><strong>${p.name}</strong> (${p.color || 'Mặc định'})<br><span class="badge">${p.cat}</span></td>
+                    <td><strong>${p.name}</strong><br><span class="badge">${p.cat}</span></td>
                     <td>${p.quyCach} / Thùng</td>
                     <td class="text-right">${formatMoney(p.priceL)}<br><small style="color:var(--text-muted)">${formatMoney(p.priceT)}</small></td>
                     <td>${promoTxt}</td>
@@ -434,7 +433,7 @@
         // --- KHÁCH HÀNG ---
         function renderCustomers() {
             const tb = document.getElementById('customerListTable'); tb.innerHTML = '';
-            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v5', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
+            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v6', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
         }
 
         // --- LÊN ĐƠN & SỬA ĐƠN ---
@@ -452,8 +451,8 @@
 
         function updatePromoDisplay() {
             const pId = document.getElementById('selProduct').value;
+            const qty = Number(document.getElementById('orderQty').value) || 0;
             const display = document.getElementById('orderPromoDisplay');
-            const colorSel = document.getElementById('selColor');
             
             if(!pId) { 
                 display.value = "Chưa chọn sản phẩm"; 
@@ -462,14 +461,19 @@
             
             const p = products.find(x => x.id === pId);
             if(p) {
-                // Tự động set màu theo màu mặc định trong kho
-                if(p.color) { colorSel.value = p.color; }
-                
                 let text = [];
-                if(p.promoX > 0 && p.promoY > 0) { text.push(`Mua ${p.promoX} tặng ${p.promoY} ${p.promoUnit} (${p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName})`); }
+                // Tính toán số lượng tặng thực tế dựa trên số lượng mua
+                let giftQty = 0;
+                if(p.promoX > 0 && p.promoY > 0 && qty >= p.promoX) { 
+                    giftQty = Math.floor(qty / p.promoX) * p.promoY;
+                    let pNameStr = p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName;
+                    // Yêu cầu: Hiển thị Số lượng + Tên sản phẩm
+                    text.push(`${giftQty} ${pNameStr}`); 
+                }
+                
                 if(p.discount > 0) { text.push(`Chiết khấu: ${p.discount}%`); }
                 
-                display.value = text.length > 0 ? text.join(" | ") : "Không có khuyến mãi";
+                display.value = text.length > 0 ? text.join(" | ") : "Không có";
             }
         }
 
@@ -483,16 +487,16 @@
             if(!p) return alert("Chọn sản phẩm!");
 
             let price = type === 'le' ? p.priceL : p.priceT;
-            let finalPrice = price - (price * (p.discount / 100));
+            let finalPrice = price - (price * ((p.discount || 0) / 100));
             
             let giftQty = 0;
             if(p.promoX > 0 && p.promoY > 0) { giftQty = Math.floor(qty / p.promoX) * p.promoY; }
 
             cart.push({ 
                 id: Date.now(), pId: p.id, name: p.name, typeName: type==='le'?'Lẻ':'Thùng', 
-                color: color,
+                color: color === 'Không chọn' ? '' : color,
                 qty, price: finalPrice, total: finalPrice * qty, 
-                giftQty, giftUnit: p.promoUnit, giftName: p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName 
+                giftQty, giftName: p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName 
             });
             renderCart();
         }
@@ -501,9 +505,12 @@
             const tb = document.getElementById('cartTable'); tb.innerHTML = ''; let sum = 0;
             cart.forEach((c, i) => {
                 sum += c.total;
-                let giftHtml = c.giftQty > 0 ? `<br><span class="badge-gift">+ Tặng ${c.giftQty} ${c.giftUnit} ${c.giftName}</span>` : '';
+                // Hiển thị phần quà tặng dạng: Số lượng + Tên SP
+                let giftHtml = c.giftQty > 0 ? `<br><span class="badge-gift">+ ${c.giftQty} ${c.giftName}</span>` : '';
+                let colorTxt = c.color ? `(${c.color})` : '';
+
                 tb.innerHTML += `<tr>
-                    <td><strong>${c.name}</strong> (${c.color}) - ${c.typeName}${giftHtml}</td>
+                    <td><strong>${c.name}</strong> ${colorTxt} - ${c.typeName}${giftHtml}</td>
                     <td>${c.qty}</td>
                     <td class="text-right">${formatMoney(c.price)}</td>
                     <td class="text-right"><strong>${formatMoney(c.total)}</strong></td>
@@ -522,7 +529,7 @@
 
             if(cusName !== 'Khách vãng lai' && !customers.includes(cusName)) { 
                 customers.push(cusName); 
-                localStorage.setItem('app_custs_v5', JSON.stringify(customers)); 
+                localStorage.setItem('app_custs_v6', JSON.stringify(customers)); 
             }
 
             const totalAmount = cart.reduce((s, i) => s + i.total, 0);
@@ -548,7 +555,7 @@
                 alert("Lưu đơn thành công!");
             }
 
-            localStorage.setItem('app_ords_v5', JSON.stringify(orders));
+            localStorage.setItem('app_ords_v6', JSON.stringify(orders));
             cancelEdit();
             openPage('page-lichsu');
         }
@@ -574,7 +581,8 @@
             document.getElementById('editingOrderId').value = '';
             document.getElementById('orderCustomer').value = '';
             document.getElementById('orderNote').value = '';
-            document.getElementById('orderPromoDisplay').value = 'Chưa chọn sản phẩm';
+            document.getElementById('orderQty').value = 1;
+            document.getElementById('orderPromoDisplay').value = 'Chưa đủ điều kiện';
             cart = [];
             
             document.getElementById('titleLendon').innerText = '🛒 Tạo Đơn Mới';
@@ -637,25 +645,23 @@
                     o.items.forEach((item, i) => {
                         const trClass = (i === 0 && index !== 0) ? 'customer-divider' : '';
                         
-                        // Lấy thông tin quà tặng hiển thị vào cột khuyến mãi
-                        let gift = item.giftQty > 0 ? `<span class="badge-gift">Tặng ${item.giftQty} ${item.giftUnit} ${item.giftName}</span>` : '';
+                        // SỬA LỖI Ở ĐÂY: Trích xuất trực tiếp số lượng + tên sp khuyến mãi vào cột
+                        let giftCellText = item.giftQty > 0 ? `<span style="color: var(--danger); font-weight:bold;">${item.giftQty} ${item.giftName}</span>` : '';
                         
                         html += `<tr class="${trClass}">`;
                         
                         if(i === 0) {
-                            // Ghi chú nằm trong ngoặc đơn dưới tên khách hàng
                             let noteHtml = o.note ? `<br><small style="color: var(--text-muted); font-weight: normal;">(${o.note})</small>` : '';
                             html += `<td rowspan="${rowCount}" style="font-weight: bold; background: #f8fafc; vertical-align: top;">${o.customer}${noteHtml}</td>`;
                         }
                         
-                        // Sản phẩm đi kèm màu sắc và hình thức
                         let colorTxt = item.color ? `(${item.color})` : '';
                         html += `
                             <td>${item.name} ${colorTxt} - ${item.typeName}</td>
                             <td>${item.qty}</td>
                             <td class="text-right">${formatMoney(item.price)}</td>
                             <td class="text-right" style="font-weight: bold;">${formatMoney(item.total)}</td>
-                            <td>${gift}</td>
+                            <td>${giftCellText}</td>
                         `;
                         
                         if(i === 0) {
@@ -689,7 +695,7 @@
             }
         }
 
-        function delOrder(id) { if(confirm("Xóa toàn bộ đơn hàng này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v5', JSON.stringify(orders)); renderHistory(); } }
+        function delOrder(id) { if(confirm("Xóa toàn bộ đơn hàng này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v6', JSON.stringify(orders)); renderHistory(); } }
 
         function exportPDF(elementId, titleDate) {
             const element = document.getElementById(elementId);

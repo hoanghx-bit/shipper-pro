@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý Bán Hàng - Pro</title>
-    <!-- Thư viện hỗ trợ xuất PDF -->
+    <!-- Thư viện xuất PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* --- CSS CƠ BẢN VÀ BỐ CỤC --- */
+        /* --- CSS CƠ BẢN --- */
         :root {
             --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #f8fafc;
             --text-main: #1e293b; --text-muted: #64748b; --border: #cbd5e1;
@@ -29,7 +29,7 @@
 
         .wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-        /* --- TRANG CHỦ --- */
+        /* --- TRANG CHỦ & ĐIỀU HƯỚNG --- */
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
         .dash-card { background: #fff; border-radius: 12px; padding: 30px 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s; }
         .dash-card:hover { border-color: var(--primary); transform: translateY(-5px); }
@@ -39,36 +39,36 @@
         .page.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- FORM & BẢNG --- */
+        /* --- FORM & LƯỚI --- */
         .card-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        /* Chỉnh lưới form cân đối, 3 cột đều nhau */
+        .grid-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 13px; font-weight: bold; color: var(--text-muted); }
         input, select { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; width: 100%; box-sizing: border-box; }
         input:focus, select:focus { border-color: var(--primary); outline: none; }
         
+        /* --- BẢNG (TABLE) --- */
         .table-responsive { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #f8fafc; padding: 12px; font-size: 13px; color: var(--text-muted); text-align: left; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        
+        /* Viền chia cách khách hàng trong bảng lịch sử */
+        .customer-divider td { border-top: 3px solid var(--border); }
+        
         .text-right { text-align: right; } .text-center { text-align: center; }
+        .hidden { display: none !important; }
+        .badge { padding: 4px 8px; border-radius: 20px; font-size: 12px; background: #e0e7ff; color: var(--primary); display: inline-block; }
+        .badge-gift { background: #fce7f3; color: #db2777; font-size: 12px; padding: 2px 6px; border-radius: 10px; }
 
-        /* --- MODAL (HỘP THOẠI TÙY BIẾN) --- */
+        /* Hộp thoại thêm phân loại */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 400px; max-width: 90%; }
         .modal-overlay.active { display: flex; }
 
-        /* --- LỊCH SỬ NHÓM --- */
-        .date-group { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; overflow: hidden; }
-        .date-header { background: var(--primary); color: white; padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .date-content { padding: 15px; display: none; }
-        .date-content.open { display: block; }
-        .order-box { border: 1px solid var(--border); margin-bottom: 15px; border-radius: 8px; background: #fff; }
-        .order-head { background: #f8fafc; padding: 10px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-weight: bold; }
-        
-        .hidden { display: none !important; }
-        .badge { padding: 4px 8px; border-radius: 20px; font-size: 12px; background: #e0e7ff; color: var(--primary); display: inline-block; }
-        .badge-gift { background: #fce7f3; color: #db2777; }
+        /* CSS khi in/xuất PDF sẽ ẩn các nút thao tác */
+        .pdf-mode .no-print { display: none !important; }
     </style>
 </head>
 <body>
@@ -86,35 +86,44 @@
                 <div class="dash-card" onclick="openPage('page-kho')"> <span class="dash-icon">📦</span> <b>Kho Sản Phẩm</b> </div>
                 <div class="dash-card" onclick="openPage('page-khachhang')"> <span class="dash-icon">👥</span> <b>Khách Hàng</b> </div>
                 <div class="dash-card" onclick="openPage('page-lendon')"> <span class="dash-icon">🛒</span> <b>Tạo Đơn Mới</b> </div>
-                <div class="dash-card" onclick="openPage('page-lichsu')"> <span class="dash-icon">📑</span> <b>Lịch Sử Bán</b> </div>
+                <div class="dash-card" onclick="openPage('page-lichsu')"> <span class="dash-icon">📑</span> <b>Lịch Sử Đơn Hàng</b> </div>
             </div>
         </div>
 
         <!-- ================= KHO HÀNG ================= -->
         <div id="page-kho" class="page">
-            <h2 style="color: var(--primary);">📦 Kho Sản Phẩm</h2>
+            <h2 style="color: var(--primary);">📦 Quản Lý Kho</h2>
             <div class="card-container">
-                <input type="hidden" id="pId"> <!-- Dùng để xác định đang sửa hay thêm mới -->
+                <input type="hidden" id="pId">
                 <div class="grid-form">
                     <div class="form-group" style="grid-column: span 2;">
-                        <label>Tên sản phẩm</label> <input type="text" id="pName" placeholder="Tên sản phẩm...">
+                        <label>Tên sản phẩm</label> <input type="text" id="pName">
                     </div>
                     <div class="form-group">
                         <label>Phân loại</label>
                         <div style="display: flex; gap: 5px;">
                             <select id="pCat" style="flex: 1;"></select>
-                            <button class="btn btn-outline" title="Tùy biến phân loại" onclick="openCatModal()">⚙️</button>
+                            <button class="btn btn-outline" onclick="openCatModal()">⚙️</button>
                         </div>
                     </div>
                     <div class="form-group"> <label>Quy cách (SL hộp/Thùng)</label> <input type="number" id="pQuyCach" value="1" min="1"> </div>
                     <div class="form-group"> <label>Giá Bán Lẻ</label> <input type="number" id="pPriceL" value="0"> </div>
                     <div class="form-group"> <label>Giá Thùng</label> <input type="number" id="pPriceT" value="0"> </div>
                     
-                    <div class="form-group"> <label>Khuyến mãi: Mua X</label> <input type="number" id="pPromoX" value="0" placeholder="Số lượng mua"> </div>
-                    <div class="form-group"> <label>Khuyến mãi: Tặng Y</label> <input type="number" id="pPromoY" value="0" placeholder="Số lượng tặng"> </div>
+                    <div class="form-group"> <label>Khuyến mãi: Mua X</label> <input type="number" id="pPromoX" value="0"> </div>
+                    <div class="form-group"> <label>Khuyến mãi: Tặng Y</label> <input type="number" id="pPromoY" value="0"> </div>
+                    <div class="form-group"> 
+                        <label>Đơn vị tặng</label> 
+                        <select id="pPromoUnit">
+                            <option value="gói">Gói</option>
+                            <option value="hộp">Hộp</option>
+                            <option value="thùng">Thùng</option>
+                        </select> 
+                    </div>
+                    
                     <div class="form-group" style="grid-column: span 2;">
-                        <label>Tên Sản phẩm tặng kèm (Để trống nếu tặng chính sản phẩm đó)</label> 
-                        <input type="text" id="pPromoName" placeholder="Ví dụ: 1 Cốc thủy tinh">
+                        <label>Sản phẩm Khuyến mãi</label> 
+                        <select id="pPromoItem"></select>
                     </div>
                     <div class="form-group"> <label>Chiết khấu (%)</label> <input type="number" id="pDiscount" value="0" max="100"> </div>
                 </div>
@@ -124,9 +133,14 @@
                 </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 15px;">
+            <!-- BỘ LỌC KHO -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <select id="filterKhoCat" onchange="renderInventory()" style="width: 200px;">
+                    <option value="">Tất cả phân loại</option>
+                </select>
                 <input type="text" id="searchKho" placeholder="🔍 Nhập tên sản phẩm để tìm kiếm..." onkeyup="renderInventory()">
             </div>
+            
             <div class="table-responsive">
                 <table>
                     <thead><tr><th>Sản Phẩm</th><th>Quy cách</th><th class="text-right">Giá Lẻ/Thùng</th><th>Khuyến Mãi</th><th class="text-center">Thao tác</th></tr></thead>
@@ -149,9 +163,9 @@
         <!-- ================= LÊN ĐƠN ================= -->
         <div id="page-lendon" class="page">
             <h2 style="color: var(--primary);">🛒 Tạo Đơn Mới</h2>
-            <div class="card-container grid-form">
-                <div class="form-group" style="grid-column: span 2;">
-                    <label>Khách Hàng (Nhập tên mới hệ thống sẽ tự lưu)</label>
+            <div class="card-container grid-form" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="form-group" style="grid-column: span 4;">
+                    <label>Khách Hàng</label>
                     <input type="text" id="orderCustomer" list="customerDatalist" placeholder="Chọn hoặc nhập tên...">
                     <datalist id="customerDatalist"></datalist>
                 </div>
@@ -179,14 +193,28 @@
 
         <!-- ================= LỊCH SỬ ================= -->
         <div id="page-lichsu" class="page">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="color: var(--primary);">📑 Lịch Sử Đơn Hàng</h2>
+            <h2 style="color: var(--primary);">📑 Lịch Sử Đơn Hàng</h2>
+            
+            <!-- BỘ LỌC LỊCH SỬ CHUNG -->
+            <div class="card-container" style="display: flex; gap: 15px;">
+                <div class="form-group" style="width: 200px;">
+                    <label>Chọn Ngày</label>
+                    <input type="date" id="hisSearchDate" onchange="renderHistory()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Tìm Khách Hàng</label>
+                    <input type="text" id="hisSearchName" placeholder="Nhập thông tin khách..." onkeyup="renderHistory()">
+                </div>
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button class="btn btn-outline" onclick="document.getElementById('hisSearchDate').value=''; document.getElementById('hisSearchName').value=''; renderHistory();">Xóa Lọc</button>
+                </div>
             </div>
-            <div id="historyContainer" style="margin-top: 15px;"></div>
+
+            <div id="historyContainer"></div>
         </div>
     </div>
 
-    <!-- HỘP THOẠI QUẢN LÝ PHÂN LOẠI -->
+    <!-- HỘP THOẠI PHÂN LOẠI -->
     <div id="modalCategory" class="modal-overlay">
         <div class="modal-content">
             <h3>⚙️ Quản Lý Phân Loại</h3>
@@ -200,17 +228,26 @@
     </div>
 
     <script>
-        // --- 1. DỮ LIỆU & TIỆN ÍCH ---
+        // --- DỮ LIỆU & TIỆN ÍCH ---
         function formatMoney(num) { return Number(num).toLocaleString('vi-VN') + ' đ'; }
         function getSafeData(key, defaultVal) { try { return JSON.parse(localStorage.getItem(key)) || defaultVal; } catch(e) { return defaultVal; } }
 
-        let products = getSafeData('app_prods_v3', []);
-        let categories = getSafeData('app_cats_v3', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
-        let customers = getSafeData('app_custs_v3', []);
-        let orders = getSafeData('app_ords_v3', []);
+        let products = getSafeData('app_prods_v4', []);
+        let categories = getSafeData('app_cats_v4', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
+        let customers = getSafeData('app_custs_v4', []);
+        let orders = getSafeData('app_ords_v4', []);
         let cart = [];
 
-        // --- 2. ĐIỀU HƯỚNG ---
+        // Cộng thêm 1 ngày vào chuỗi ngày định dạng DD/MM/YYYY
+        function getNextDayString(dateStr) {
+            const parts = dateStr.split('/');
+            if(parts.length !== 3) return dateStr;
+            const d = new Date(parts[2], parts[1] - 1, parts[0]);
+            d.setDate(d.getDate() + 1);
+            return d.toLocaleDateString('vi-VN');
+        }
+
+        // --- ĐIỀU HƯỚNG ---
         function goHome() {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-home').classList.add('active');
@@ -222,36 +259,47 @@
             document.getElementById(pageId).classList.add('active');
             document.getElementById('btnBack').classList.remove('hidden');
 
-            if(pageId === 'page-kho') { renderCatSelect(); renderInventory(); }
+            if(pageId === 'page-kho') { renderCatSelect(); renderPromoItemSelect(); renderInventory(); }
             if(pageId === 'page-khachhang') renderCustomers();
             if(pageId === 'page-lendon') prepareOrderPage();
             if(pageId === 'page-lichsu') renderHistory();
         }
 
-        // --- 3. QUẢN LÝ PHÂN LOẠI ---
+        // --- QUẢN LÝ PHÂN LOẠI ---
         function openCatModal() { document.getElementById('modalCategory').classList.add('active'); renderCatList(); }
         function closeCatModal() { document.getElementById('modalCategory').classList.remove('active'); renderCatSelect(); }
         
         function renderCatSelect() {
             const sel = document.getElementById('pCat'); sel.innerHTML = '';
-            categories.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+            const filterSel = document.getElementById('filterKhoCat'); 
+            filterSel.innerHTML = '<option value="">Tất cả phân loại</option>';
+            
+            categories.forEach(c => {
+                sel.innerHTML += `<option value="${c}">${c}</option>`;
+                filterSel.innerHTML += `<option value="${c}">${c}</option>`;
+            });
         }
         function renderCatList() {
             const list = document.getElementById('catList'); list.innerHTML = '';
-            categories.forEach((c, i) => {
-                list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
-                    ${c} <button class="btn btn-outline" style="padding:2px 8px; color:red;" onclick="delCategory(${i})">Xóa</button>
-                </li>`;
-            });
+            categories.forEach((c, i) => { list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">${c} <button class="btn btn-outline" style="padding:2px 8px; color:red;" onclick="delCategory(${i})">Xóa</button></li>`; });
         }
-        function addCategory() {
-            const val = document.getElementById('newCatName').value.trim();
-            if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v3', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); }
-        }
-        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v3', JSON.stringify(categories)); renderCatList(); }
+        function addCategory() { const val = document.getElementById('newCatName').value.trim(); if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v4', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); } }
+        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v4', JSON.stringify(categories)); renderCatList(); }
 
-        // --- 4. KHO SẢN PHẨM ---
-        function resetForm() { document.getElementById('pId').value = ''; document.querySelectorAll('#page-kho input').forEach(inpt => { if(inpt.id !== 'searchKho') inpt.value = inpt.type==='number' ? '0' : ''; }); document.getElementById('pQuyCach').value = '1'; }
+        // --- KHO SẢN PHẨM ---
+        function renderPromoItemSelect() {
+            const pPromoItem = document.getElementById('pPromoItem');
+            pPromoItem.innerHTML = '<option value="Cùng sản phẩm">Cùng sản phẩm</option>';
+            products.forEach(p => pPromoItem.innerHTML += `<option value="${p.name}">${p.name}</option>`);
+        }
+
+        function resetForm() { 
+            document.getElementById('pId').value = ''; 
+            document.querySelectorAll('#page-kho input').forEach(inpt => { if(inpt.id !== 'searchKho') inpt.value = inpt.type==='number' ? '0' : ''; }); 
+            document.getElementById('pQuyCach').value = '1'; 
+            document.getElementById('pPromoItem').value = 'Cùng sản phẩm';
+            document.getElementById('pPromoUnit').value = 'gói';
+        }
         
         function saveProduct() {
             const id = document.getElementById('pId').value || Date.now().toString();
@@ -265,15 +313,16 @@
                 priceT: Number(document.getElementById('pPriceT').value),
                 promoX: Number(document.getElementById('pPromoX').value),
                 promoY: Number(document.getElementById('pPromoY').value),
-                promoName: document.getElementById('pPromoName').value.trim(),
+                promoUnit: document.getElementById('pPromoUnit').value,
+                promoName: document.getElementById('pPromoItem').value,
                 discount: Number(document.getElementById('pDiscount').value)
             };
 
             const index = products.findIndex(x => x.id === id);
             if(index >= 0) products[index] = p; else products.push(p);
             
-            localStorage.setItem('app_prods_v3', JSON.stringify(products));
-            resetForm(); renderInventory();
+            localStorage.setItem('app_prods_v4', JSON.stringify(products));
+            resetForm(); renderPromoItemSelect(); renderInventory();
         }
 
         function editProduct(id) {
@@ -287,20 +336,26 @@
                 document.getElementById('pPriceT').value = p.priceT;
                 document.getElementById('pPromoX').value = p.promoX;
                 document.getElementById('pPromoY').value = p.promoY;
-                document.getElementById('pPromoName').value = p.promoName;
+                document.getElementById('pPromoUnit').value = p.promoUnit || 'gói';
+                document.getElementById('pPromoItem').value = p.promoName || 'Cùng sản phẩm';
                 document.getElementById('pDiscount').value = p.discount;
             }
         }
 
-        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v3', JSON.stringify(products)); renderInventory(); } }
+        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v4', JSON.stringify(products)); renderPromoItemSelect(); renderInventory(); } }
 
         function renderInventory() {
-            const search = document.getElementById('searchKho').value.toLowerCase();
+            const searchName = document.getElementById('searchKho').value.toLowerCase();
+            const searchCat = document.getElementById('filterKhoCat').value;
             const tb = document.getElementById('inventoryTable'); tb.innerHTML = '';
             
-            products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
+            products.filter(p => {
+                const matchName = p.name.toLowerCase().includes(searchName);
+                const matchCat = searchCat === "" || p.cat === searchCat;
+                return matchName && matchCat;
+            }).forEach(p => {
                 let promoTxt = '';
-                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoName || 'cùng loại'}</span><br>`;
+                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoUnit} ${p.promoName}</span><br>`;
                 if(p.discount > 0) promoTxt += `<span class="badge">CK: ${p.discount}%</span>`;
 
                 tb.innerHTML += `<tr>
@@ -316,13 +371,13 @@
             });
         }
 
-        // --- 5. KHÁCH HÀNG ---
+        // --- KHÁCH HÀNG ---
         function renderCustomers() {
             const tb = document.getElementById('customerListTable'); tb.innerHTML = '';
-            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v3', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
+            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v4', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
         }
 
-        // --- 6. LÊN ĐƠN ---
+        // --- LÊN ĐƠN ---
         function prepareOrderPage() {
             const cList = document.getElementById('customerDatalist'); cList.innerHTML = '';
             customers.forEach(c => cList.innerHTML += `<option value="${c}">`);
@@ -340,13 +395,16 @@
             if(!p) return alert("Chọn sản phẩm!");
 
             let price = type === 'le' ? p.priceL : p.priceT;
-            let finalPrice = price - (price * (p.discount / 100)); // Tính chiết khấu
+            let finalPrice = price - (price * (p.discount / 100));
             
-            // Tính số lượng quà tặng (nếu có khuyến mãi mua X tặng Y)
             let giftQty = 0;
             if(p.promoX > 0 && p.promoY > 0) { giftQty = Math.floor(qty / p.promoX) * p.promoY; }
 
-            cart.push({ id: Date.now(), pId: p.id, name: p.name, typeName: type==='le'?'Lẻ':'Thùng', qty, price: finalPrice, total: finalPrice * qty, giftQty, giftName: p.promoName || p.name });
+            cart.push({ 
+                id: Date.now(), pId: p.id, name: p.name, typeName: type==='le'?'Lẻ':'Thùng', 
+                qty, price: finalPrice, total: finalPrice * qty, 
+                giftQty, giftUnit: p.promoUnit, giftName: p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName 
+            });
             renderCart();
         }
 
@@ -354,7 +412,7 @@
             const tb = document.getElementById('cartTable'); tb.innerHTML = ''; let sum = 0;
             cart.forEach((c, i) => {
                 sum += c.total;
-                let giftHtml = c.giftQty > 0 ? `<br><small class="badge-gift">+ Tặng ${c.giftQty} ${c.giftName}</small>` : '';
+                let giftHtml = c.giftQty > 0 ? `<br><span class="badge-gift">+ Tặng ${c.giftQty} ${c.giftUnit} ${c.giftName}</span>` : '';
                 tb.innerHTML += `<tr>
                     <td><strong>${c.name}</strong> (${c.typeName})${giftHtml}</td>
                     <td>${c.qty}</td>
@@ -369,74 +427,126 @@
         function saveOrder() {
             if(cart.length === 0) return alert("Giỏ hàng trống!");
             let cusName = document.getElementById('orderCustomer').value.trim() || 'Khách vãng lai';
-            if(cusName !== 'Khách vãng lai' && !customers.includes(cusName)) { customers.push(cusName); localStorage.setItem('app_custs_v3', JSON.stringify(customers)); }
+            if(cusName !== 'Khách vãng lai' && !customers.includes(cusName)) { customers.push(cusName); localStorage.setItem('app_custs_v4', JSON.stringify(customers)); }
 
             orders.push({ id: Date.now().toString(), date: new Date().toLocaleDateString('vi-VN'), customer: cusName, items: [...cart], total: cart.reduce((s, i) => s + i.total, 0) });
-            localStorage.setItem('app_ords_v3', JSON.stringify(orders));
+            localStorage.setItem('app_ords_v4', JSON.stringify(orders));
             cart = []; document.getElementById('orderCustomer').value = ''; renderCart();
             alert("Lưu đơn thành công!"); openPage('page-lichsu');
         }
 
-        // --- 7. LỊCH SỬ & XUẤT PDF ---
+        // --- LỊCH SỬ & XUẤT BẢNG ---
         function renderHistory() {
             const container = document.getElementById('historyContainer'); container.innerHTML = '';
-            const grouped = {};
-            [...orders].reverse().forEach(o => { if(!grouped[o.date]) grouped[o.date] = []; grouped[o.date].push(o); });
+            
+            // Lấy thông tin bộ lọc
+            let sDate = document.getElementById('hisSearchDate').value; 
+            if(sDate) { const p = sDate.split('-'); sDate = `${p[2]}/${p[1]}/${p[0]}`; } // Chuyển YYYY-MM-DD sang DD/MM/YYYY
+            const sName = document.getElementById('hisSearchName').value.toLowerCase();
 
+            // Gom nhóm đơn hàng theo ngày
+            const grouped = {};
+            [...orders].reverse().forEach(o => { 
+                const matchDate = !sDate || o.date === sDate;
+                const matchName = !sName || o.customer.toLowerCase().includes(sName);
+                
+                if(matchDate && matchName) {
+                    if(!grouped[o.date]) grouped[o.date] = []; 
+                    grouped[o.date].push(o); 
+                }
+            });
+
+            // Vẽ giao diện
             for (let dateKey in grouped) {
                 const list = grouped[dateKey];
                 const totalDay = list.reduce((sum, o) => sum + o.total, 0);
-                const blockId = 'date-' + dateKey.replace(/\//g, '');
+                const blockId = 'print-date-' + dateKey.replace(/\//g, '');
+                const titleDate = getNextDayString(dateKey); // Đơn hàng + (ngày tạo đơn + 1)
                 
-                let html = `<div class="date-group">
-                    <div class="date-header" onclick="document.getElementById('${blockId}').classList.toggle('open')">
-                        <span>📅 Ngày ${dateKey} (${list.length} đơn)</span> <span>Tổng: ${formatMoney(totalDay)}</span>
+                let html = `
+                <div class="card-container" id="${blockId}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: var(--primary); margin: 0;">Đơn hàng ${titleDate}</h3>
+                        <div class="no-print">
+                            <span style="margin-right: 15px; font-weight: bold; color: var(--danger);">Tổng: ${formatMoney(totalDay)}</span>
+                            <button class="btn btn-success" onclick="exportPDF('${blockId}', '${titleDate}')">🖨️ In Bảng Ngày Này</button>
+                        </div>
                     </div>
-                    <div id="${blockId}" class="date-content">`;
+                    
+                    <div class="table-responsive" style="border: none;">
+                        <table style="width: 100%; border: 1px solid var(--border);">
+                            <thead>
+                                <tr style="background: var(--secondary);">
+                                    <th>Khách hàng</th>
+                                    <th>Sản phẩm</th>
+                                    <th>SL</th>
+                                    <th class="text-right">Đơn giá</th>
+                                    <th class="text-right">Thành tiền</th>
+                                    <th>Khuyến mãi</th>
+                                    <th class="text-center no-print">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
 
-                list.forEach(o => {
-                    html += `<div class="order-box" id="print-order-${o.id}">
-                        <div class="order-head">
-                            <span>👤 ${o.customer}</span>
-                            <div>
-                                <button class="btn btn-success" style="padding:4px 8px; font-size:12px;" onclick="exportPDF('print-order-${o.id}', '${o.customer}')">🖨️ Xuất PDF</button>
-                                <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="delOrder('${o.id}')">Xóa</button>
-                            </div>
-                        </div>
-                        <div class="table-responsive" style="border:none; padding:10px;">
-                            <table style="width:100%; font-size:13px;">
-                                <thead><tr><th style="background:#fff">Sản phẩm</th><th style="background:#fff">SL</th><th class="text-right" style="background:#fff">Thành tiền</th></tr></thead>
-                                <tbody>`;
-                    o.items.forEach(i => {
-                        let gift = i.giftQty > 0 ? `<br><small style="color:#db2777;">+ Tặng: ${i.giftQty} x ${i.giftName}</small>` : '';
-                        html += `<tr><td>${i.name} (${i.typeName})${gift}</td><td>${i.qty}</td><td class="text-right">${formatMoney(i.total)}</td></tr>`;
+                list.forEach((o, index) => {
+                    const rowCount = o.items.length;
+                    o.items.forEach((item, i) => {
+                        // Thêm viền trên đậm nếu là sản phẩm đầu tiên của một đơn hàng mới (ngăn cách các khách)
+                        const trClass = (i === 0 && index !== 0) ? 'customer-divider' : '';
+                        
+                        let gift = item.giftQty > 0 ? `<span style="color:#db2777; font-size:13px;">Tặng ${item.giftQty} ${item.giftUnit} ${item.giftName}</span>` : '';
+                        
+                        html += `<tr class="${trClass}">`;
+                        // Nếu là dòng đầu tiên của đơn, in ra Cột Khách Hàng và Cột Thao tác gộp hàng (rowspan)
+                        if(i === 0) {
+                            html += `<td rowspan="${rowCount}" style="font-weight: bold; vertical-align: top; background: #f8fafc;">${o.customer}</td>`;
+                        }
+                        
+                        html += `
+                            <td>${item.name} (${item.typeName})</td>
+                            <td>${item.qty}</td>
+                            <td class="text-right">${formatMoney(item.price)}</td>
+                            <td class="text-right" style="font-weight: bold;">${formatMoney(item.total)}</td>
+                            <td>${gift}</td>
+                        `;
+                        
+                        if(i === 0) {
+                            html += `<td rowspan="${rowCount}" class="text-center no-print" style="vertical-align: top;">
+                                <button class="btn btn-danger" style="padding:4px 8px;" onclick="delOrder('${o.id}')">Xóa đơn</button>
+                            </td>`;
+                        }
+                        html += `</tr>`;
                     });
-                    html += `</tbody></table><div class="text-right" style="font-weight:bold; color:var(--danger); padding-top:10px; font-size:16px;">Tổng: ${formatMoney(o.total)}</div>
-                        </div>
-                    </div>`;
                 });
-                html += `</div></div>`; container.innerHTML += html;
+
+                html += `       </tbody>
+                            </table>
+                        </div>
+                    </div>`; 
+                container.innerHTML += html;
+            }
+            
+            if(Object.keys(grouped).length === 0) {
+                container.innerHTML = `<div class="card-container text-center" style="color: var(--text-muted);">Không tìm thấy đơn hàng nào phù hợp với bộ lọc.</div>`;
             }
         }
 
-        function delOrder(id) { if(confirm("Xóa đơn này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v3', JSON.stringify(orders)); renderHistory(); } }
+        function delOrder(id) { if(confirm("Xóa toàn bộ đơn hàng của khách này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v4', JSON.stringify(orders)); renderHistory(); } }
 
-        function exportPDF(elementId, customerName) {
+        function exportPDF(elementId, titleDate) {
             const element = document.getElementById(elementId);
+            element.classList.add('pdf-mode'); // Thêm class để CSS tự ẩn các nút "no-print"
+            
             const opt = {
                 margin: 0.5,
-                filename: `DonHang_${customerName.replace(/\s+/g, '')}.pdf`,
+                filename: `BangDonHang_${titleDate.replace(/\//g, '')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } // Dùng landscape (ngang) vì bảng nhiều cột
             };
-            // Ẩn các nút thao tác trước khi in để bản in sạch sẽ
-            const btns = element.querySelectorAll('.btn');
-            btns.forEach(b => b.style.display = 'none');
             
             html2pdf().set(opt).from(element).save().then(() => {
-                // Hiển thị lại nút sau khi xuất xong
-                btns.forEach(b => b.style.display = 'inline-block');
+                element.classList.remove('pdf-mode'); // Gỡ class sau khi in xong
             });
         }
     </script>

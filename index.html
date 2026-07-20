@@ -3,102 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Bán Hàng</title>
+    <title>Hệ Thống Quản Lý Bán Hàng - Pro</title>
+    <!-- Thư viện hỗ trợ xuất PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* --- CSS: TRANG TRÍ VÀ BỐ CỤC --- */
+        /* --- CSS CƠ BẢN VÀ BỐ CỤC --- */
         :root {
             --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #f8fafc;
             --text-main: #1e293b; --text-muted: #64748b; --border: #cbd5e1;
-            --success: #10b981; --danger: #ef4444;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --radius: 8px;
         }
-
-        body { font-family: Arial, sans-serif; background-color: #f1f5f9; color: var(--text-main); margin: 0; font-size: 14px; }
-
-        /* Thanh tiêu đề trên cùng */
-        header { background: #ffffff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .header-brand { font-size: 16px; font-weight: bold; color: var(--primary); }
-
-        /* Nút bấm dùng chung */
-        .btn { cursor: pointer; border: none; border-radius: var(--radius); padding: 8px 12px; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; color: var(--text-main); margin: 0; font-size: 14px; }
+        header { background: #ffffff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .header-brand { font-size: 18px; font-weight: bold; color: var(--primary); }
+        
+        .btn { cursor: pointer; border: none; border-radius: var(--radius); padding: 8px 15px; font-weight: bold; font-size: 14px; transition: 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 5px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border); }
+        .btn:hover { opacity: 0.9; }
 
-        /* Khung chứa nội dung chính */
-        .wrapper { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-        /* Thiết kế dạng thẻ (Card) cho trang chủ */
-        .dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
-        .dash-card { background: #fff; border-radius: var(--radius); padding: 25px 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); cursor: pointer; }
-        .dash-card:hover { border-color: var(--primary); background: #f8fafc; }
-        .dash-icon { font-size: 30px; display: block; margin-bottom: 10px; }
-
-        /* Ẩn/Hiện các trang nội dung (Tab) */
+        /* --- TRANG CHỦ --- */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
+        .dash-card { background: #fff; border-radius: 12px; padding: 30px 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s; }
+        .dash-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .dash-icon { font-size: 40px; display: block; margin-bottom: 15px; }
+        
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Định dạng form nhập liệu */
-        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: var(--text-muted); }
+        /* --- FORM & BẢNG --- */
+        .card-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: bold; color: var(--text-muted); }
         input, select { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; width: 100%; box-sizing: border-box; }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
         
-        /* Bảng dữ liệu */
-        .table-responsive { overflow-x: auto; background: #fff; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; padding: 10px; font-size: 12px; color: var(--text-muted); text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid var(--border); }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
+        .table-responsive { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: #f8fafc; padding: 12px; font-size: 13px; color: var(--text-muted); text-align: left; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .text-right { text-align: right; } .text-center { text-align: center; }
 
-        /* Lịch sử gom nhóm theo ngày */
-        .date-group { margin-bottom: 15px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; }
-        .date-header { background: var(--primary); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: var(--radius) var(--radius) 0 0; }
+        /* --- MODAL (HỘP THOẠI TÙY BIẾN) --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 400px; max-width: 90%; }
+        .modal-overlay.active { display: flex; }
+
+        /* --- LỊCH SỬ NHÓM --- */
+        .date-group { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; overflow: hidden; }
+        .date-header { background: var(--primary); color: white; padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .date-content { padding: 15px; display: none; }
         .date-content.open { display: block; }
-        .order-box { border: 1px dashed var(--border); padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #f8fafc; }
-
+        .order-box { border: 1px solid var(--border); margin-bottom: 15px; border-radius: 8px; background: #fff; }
+        .order-head { background: #f8fafc; padding: 10px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-weight: bold; }
+        
         .hidden { display: none !important; }
+        .badge { padding: 4px 8px; border-radius: 20px; font-size: 12px; background: #e0e7ff; color: var(--primary); display: inline-block; }
+        .badge-gift { background: #fce7f3; color: #db2777; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-brand">📝 Quản Lý Bán Hàng</div>
-        <div>
-            <!-- Nút dọn dẹp dữ liệu lỗi, chỉ hiện ở trang chủ -->
-            <button class="btn btn-danger" id="btnReset" onclick="resetSystem()" style="font-size: 11px;">⚠️ Làm mới hệ thống</button>
-            <!-- Nút quay về trang chủ, ẩn khi đang ở trang chủ -->
-            <button class="btn btn-outline hidden" id="btnBack" onclick="goHome()">🏠 Quay lại</button>
-        </div>
+        <div class="header-brand">📝 Quản Lý Bán Hàng Pro</div>
+        <div><button class="btn btn-outline hidden" id="btnBack" onclick="goHome()">🏠 Trang chủ</button></div>
     </header>
 
     <div class="wrapper">
         <!-- ================= TRANG CHỦ ================= -->
         <div id="page-home" class="page active">
-            <h2 style="text-align: center; color: var(--primary);">Chọn chức năng</h2>
+            <h2 style="text-align: center; color: var(--primary);">Chọn chức năng làm việc</h2>
             <div class="dash-grid">
-                <div class="dash-card" onclick="openPage('page-kho')">
-                    <span class="dash-icon">📦</span><strong>Kho Hàng</strong>
-                </div>
-                <div class="dash-card" onclick="openPage('page-khachhang')">
-                    <span class="dash-icon">👥</span><strong>Khách Hàng</strong>
-                </div>
-                <div class="dash-card" onclick="openPage('page-lendon')">
-                    <span class="dash-icon">🛒</span><strong>Lên Đơn Mới</strong>
-                </div>
-                <div class="dash-card" onclick="openPage('page-lichsu')">
-                    <span class="dash-icon">📑</span><strong>Lịch Sử Đơn</strong>
-                </div>
+                <div class="dash-card" onclick="openPage('page-kho')"> <span class="dash-icon">📦</span> <b>Kho Sản Phẩm</b> </div>
+                <div class="dash-card" onclick="openPage('page-khachhang')"> <span class="dash-icon">👥</span> <b>Khách Hàng</b> </div>
+                <div class="dash-card" onclick="openPage('page-lendon')"> <span class="dash-icon">🛒</span> <b>Tạo Đơn Mới</b> </div>
+                <div class="dash-card" onclick="openPage('page-lichsu')"> <span class="dash-icon">📑</span> <b>Lịch Sử Bán</b> </div>
             </div>
         </div>
 
-        <!-- ================= TRANG KHÁCH HÀNG ================= -->
+        <!-- ================= KHO HÀNG ================= -->
+        <div id="page-kho" class="page">
+            <h2 style="color: var(--primary);">📦 Kho Sản Phẩm</h2>
+            <div class="card-container">
+                <input type="hidden" id="pId"> <!-- Dùng để xác định đang sửa hay thêm mới -->
+                <div class="grid-form">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tên sản phẩm</label> <input type="text" id="pName" placeholder="Tên sản phẩm...">
+                    </div>
+                    <div class="form-group">
+                        <label>Phân loại</label>
+                        <div style="display: flex; gap: 5px;">
+                            <select id="pCat" style="flex: 1;"></select>
+                            <button class="btn btn-outline" title="Tùy biến phân loại" onclick="openCatModal()">⚙️</button>
+                        </div>
+                    </div>
+                    <div class="form-group"> <label>Quy cách (SL hộp/Thùng)</label> <input type="number" id="pQuyCach" value="1" min="1"> </div>
+                    <div class="form-group"> <label>Giá Bán Lẻ</label> <input type="number" id="pPriceL" value="0"> </div>
+                    <div class="form-group"> <label>Giá Thùng</label> <input type="number" id="pPriceT" value="0"> </div>
+                    
+                    <div class="form-group"> <label>Khuyến mãi: Mua X</label> <input type="number" id="pPromoX" value="0" placeholder="Số lượng mua"> </div>
+                    <div class="form-group"> <label>Khuyến mãi: Tặng Y</label> <input type="number" id="pPromoY" value="0" placeholder="Số lượng tặng"> </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tên Sản phẩm tặng kèm (Để trống nếu tặng chính sản phẩm đó)</label> 
+                        <input type="text" id="pPromoName" placeholder="Ví dụ: 1 Cốc thủy tinh">
+                    </div>
+                    <div class="form-group"> <label>Chiết khấu (%)</label> <input type="number" id="pDiscount" value="0" max="100"> </div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-outline" onclick="resetForm()">Làm mới</button>
+                    <button class="btn btn-primary" onclick="saveProduct()">💾 LƯU SẢN PHẨM</button>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <input type="text" id="searchKho" placeholder="🔍 Nhập tên sản phẩm để tìm kiếm..." onkeyup="renderInventory()">
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Sản Phẩm</th><th>Quy cách</th><th class="text-right">Giá Lẻ/Thùng</th><th>Khuyến Mãi</th><th class="text-center">Thao tác</th></tr></thead>
+                    <tbody id="inventoryTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= KHÁCH HÀNG ================= -->
         <div id="page-khachhang" class="page">
-            <h2>Danh Sách Khách Hàng</h2>
+            <h2 style="color: var(--primary);">👥 Khách Hàng</h2>
             <div class="table-responsive">
                 <table>
                     <thead><tr><th>Tên Khách Hàng</th><th class="text-center">Thao tác</th></tr></thead>
@@ -107,319 +146,298 @@
             </div>
         </div>
 
-        <!-- ================= TRANG KHO HÀNG ================= -->
-        <div id="page-kho" class="page">
-            <h2>Quản Lý Sản Phẩm</h2>
-            <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                <div class="form-group">
-                    <label>Tên sản phẩm</label>
-                    <input type="text" id="pName" placeholder="VD: Bánh quy...">
-                </div>
-                <!-- Tính năng phân loại nằm ở Kho Hàng -->
-                <div class="form-group">
-                    <label>Phân loại (Hàng thường, Hàng tết, Bánh mì...)</label>
-                    <input type="text" id="pCat" list="catDatalist" placeholder="Chọn hoặc nhập mới...">
-                    <datalist id="catDatalist"></datalist>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-group">
-                        <label>Giá Bán Lẻ</label>
-                        <input type="number" id="pPriceL" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Giá Nguyên Thùng</label>
-                        <input type="number" id="pPriceT" value="0">
-                    </div>
-                </div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="addProduct()">Lưu Sản Phẩm</button>
-            </div>
-
-            <div class="table-responsive">
-                <table>
-                    <thead><tr><th>Sản Phẩm</th><th>Giá Lẻ</th><th>Giá Thùng</th><th class="text-center">Xóa</th></tr></thead>
-                    <tbody id="inventoryTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ================= TRANG LÊN ĐƠN ================= -->
+        <!-- ================= LÊN ĐƠN ================= -->
         <div id="page-lendon" class="page">
-            <h2>Tạo Đơn Hàng Mới</h2>
-            <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px;">
-                <div class="form-group">
-                    <label>Khách Hàng</label>
-                    <input type="text" id="orderCustomer" list="customerDatalist" placeholder="Nhập tên khách...">
+            <h2 style="color: var(--primary);">🛒 Tạo Đơn Mới</h2>
+            <div class="card-container grid-form">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Khách Hàng (Nhập tên mới hệ thống sẽ tự lưu)</label>
+                    <input type="text" id="orderCustomer" list="customerDatalist" placeholder="Chọn hoặc nhập tên...">
                     <datalist id="customerDatalist"></datalist>
                 </div>
-            </div>
-
-            <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Sản Phẩm</label> <select id="selProduct"></select>
+                </div>
                 <div class="form-group">
-                    <label>Chọn Sản Phẩm</label>
-                    <select id="selProduct"></select>
+                    <label>Hình thức</label> <select id="selType"><option value="le">Lẻ</option><option value="thung">Thùng</option></select>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-group">
-                        <label>Hình thức</label>
-                        <select id="selType">
-                            <option value="le">Bán Lẻ</option>
-                            <option value="thung">Bán Thùng</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Số lượng</label>
-                        <input type="number" id="orderQty" value="1" min="1">
-                    </div>
-                </div>
-                <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="addToCart()">Thêm Vào Đơn</button>
+                <div class="form-group"> <label>Số lượng</label> <input type="number" id="orderQty" value="1" min="1"> </div>
             </div>
+            <button class="btn btn-success" style="width: 100%; margin-bottom:20px; padding: 12px;" onclick="addToCart()">Thêm Vào Đơn</button>
 
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>Sản phẩm</th><th>SL</th><th class="text-right">Thành tiền</th><th>Xóa</th></tr></thead>
+                    <thead><tr><th>Sản phẩm</th><th>SL</th><th class="text-right">Đơn giá</th><th class="text-right">Thành tiền</th><th class="text-center">Xóa</th></tr></thead>
                     <tbody id="cartTable"></tbody>
                 </table>
             </div>
-
-            <div style="margin-top: 15px; background: #fff; padding: 15px; border: 1px solid var(--border); text-align: right;">
-                <h3 style="margin: 0 0 10px 0;">Tổng: <span id="cartTotal" style="color: red;">0</span>đ</h3>
-                <button class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveOrder()">LƯU ĐƠN HÀNG</button>
+            <div class="card-container" style="margin-top: 20px; text-align: right;">
+                <h3>Tổng cộng: <span id="cartTotal" style="color: var(--danger); font-size: 24px;">0 đ</span></h3>
+                <button class="btn btn-primary" style="padding: 15px 30px;" onclick="saveOrder()">✅ LƯU ĐƠN HÀNG</button>
             </div>
         </div>
 
-        <!-- ================= TRANG LỊCH SỬ ================= -->
+        <!-- ================= LỊCH SỬ ================= -->
         <div id="page-lichsu" class="page">
-            <h2>Lịch Sử Bán Hàng</h2>
-            <div id="historyContainer"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--primary);">📑 Lịch Sử Đơn Hàng</h2>
+            </div>
+            <div id="historyContainer" style="margin-top: 15px;"></div>
         </div>
     </div>
 
-    <!-- === JAVASCRIPT: XỬ LÝ LOGIC === -->
-    <script>
-        // HÀM TIỆN ÍCH
-        function formatMoney(num) { return Number(num).toLocaleString('vi-VN') + 'đ'; }
-        
-        // CƠ CHẾ LẤY DỮ LIỆU AN TOÀN TRÁNH LỖI CACHE
-        function getSafeData(key, defaultVal) {
-            try { return JSON.parse(localStorage.getItem(key)) || defaultVal; } 
-            catch(e) { return defaultVal; }
-        }
+    <!-- HỘP THOẠI QUẢN LÝ PHÂN LOẠI -->
+    <div id="modalCategory" class="modal-overlay">
+        <div class="modal-content">
+            <h3>⚙️ Quản Lý Phân Loại</h3>
+            <div class="form-group" style="flex-direction: row;">
+                <input type="text" id="newCatName" placeholder="Tên phân loại mới...">
+                <button class="btn btn-success" onclick="addCategory()">Thêm</button>
+            </div>
+            <ul id="catList" style="list-style: none; padding: 0; margin-top: 15px;"></ul>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 15px;" onclick="closeCatModal()">Đóng</button>
+        </div>
+    </div>
 
-        // KHỞI TẠO DỮ LIỆU
-        let products = getSafeData('app_prods', []);
-        let categories = getSafeData('app_cats', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
-        let customers = getSafeData('app_custs', []);
-        let orders = getSafeData('app_ords', []);
+    <script>
+        // --- 1. DỮ LIỆU & TIỆN ÍCH ---
+        function formatMoney(num) { return Number(num).toLocaleString('vi-VN') + ' đ'; }
+        function getSafeData(key, defaultVal) { try { return JSON.parse(localStorage.getItem(key)) || defaultVal; } catch(e) { return defaultVal; } }
+
+        let products = getSafeData('app_prods_v3', []);
+        let categories = getSafeData('app_cats_v3', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
+        let customers = getSafeData('app_custs_v3', []);
+        let orders = getSafeData('app_ords_v3', []);
         let cart = [];
 
-        // HÀM DỌN DẸP LỖI (FACTORY RESET)
-        function resetSystem() {
-            if(confirm("Hành động này sẽ XÓA TOÀN BỘ dữ liệu để làm mới ứng dụng. Bạn có chắc chắn?")) {
-                localStorage.clear();
-                alert("Đã làm mới! Ứng dụng sẽ tải lại.");
-                location.reload();
-            }
-        }
-
-        // ĐIỀU HƯỚNG CÁC TAB
+        // --- 2. ĐIỀU HƯỚNG ---
         function goHome() {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-home').classList.add('active');
             document.getElementById('btnBack').classList.add('hidden');
-            document.getElementById('btnReset').classList.remove('hidden');
         }
 
         function openPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             document.getElementById('btnBack').classList.remove('hidden');
-            document.getElementById('btnReset').classList.add('hidden');
 
-            // Gọi các hàm hiển thị tương ứng với từng tab
-            if(pageId === 'page-kho') renderInventory();
+            if(pageId === 'page-kho') { renderCatSelect(); renderInventory(); }
             if(pageId === 'page-khachhang') renderCustomers();
             if(pageId === 'page-lendon') prepareOrderPage();
             if(pageId === 'page-lichsu') renderHistory();
         }
 
-        // === CHỨC NĂNG KHO HÀNG ===
-        function renderInventory() {
-            // Cập nhật danh sách phân loại
-            const dl = document.getElementById('catDatalist'); dl.innerHTML = '';
-            categories.forEach(c => dl.innerHTML += `<option value="${c}">`);
-
-            // Hiển thị bảng sản phẩm
-            const tb = document.getElementById('inventoryTable'); tb.innerHTML = '';
-            products.forEach((p, i) => {
-                tb.innerHTML += `
-                    <tr>
-                        <td><strong>${p.name}</strong><br><small style="color:var(--primary);">${p.cat}</small></td>
-                        <td>${formatMoney(p.priceL)}</td>
-                        <td>${formatMoney(p.priceT)}</td>
-                        <td class="text-center"><button class="btn btn-danger" onclick="delProduct(${i})">X</button></td>
-                    </tr>`;
+        // --- 3. QUẢN LÝ PHÂN LOẠI ---
+        function openCatModal() { document.getElementById('modalCategory').classList.add('active'); renderCatList(); }
+        function closeCatModal() { document.getElementById('modalCategory').classList.remove('active'); renderCatSelect(); }
+        
+        function renderCatSelect() {
+            const sel = document.getElementById('pCat'); sel.innerHTML = '';
+            categories.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+        function renderCatList() {
+            const list = document.getElementById('catList'); list.innerHTML = '';
+            categories.forEach((c, i) => {
+                list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
+                    ${c} <button class="btn btn-outline" style="padding:2px 8px; color:red;" onclick="delCategory(${i})">Xóa</button>
+                </li>`;
             });
         }
+        function addCategory() {
+            const val = document.getElementById('newCatName').value.trim();
+            if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v3', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); }
+        }
+        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v3', JSON.stringify(categories)); renderCatList(); }
 
-        function addProduct() {
+        // --- 4. KHO SẢN PHẨM ---
+        function resetForm() { document.getElementById('pId').value = ''; document.querySelectorAll('#page-kho input').forEach(inpt => { if(inpt.id !== 'searchKho') inpt.value = inpt.type==='number' ? '0' : ''; }); document.getElementById('pQuyCach').value = '1'; }
+        
+        function saveProduct() {
+            const id = document.getElementById('pId').value || Date.now().toString();
             const name = document.getElementById('pName').value.trim();
-            const cat = document.getElementById('pCat').value.trim();
-            if(!name) return alert("Vui lòng nhập tên sản phẩm!");
-
-            // Lưu phân loại mới nếu chưa có
-            if(cat && !categories.includes(cat)) { categories.push(cat); localStorage.setItem('app_cats', JSON.stringify(categories)); }
-
-            products.push({
-                id: Date.now().toString(), name, cat: cat || 'Khác',
-                priceL: Number(document.getElementById('pPriceL').value),
-                priceT: Number(document.getElementById('pPriceT').value)
-            });
-            localStorage.setItem('app_prods', JSON.stringify(products));
+            if(!name) return alert("Nhập tên sản phẩm!");
             
-            // Xóa form và tải lại bảng
-            document.getElementById('pName').value = '';
-            document.getElementById('pPriceL').value = 0; document.getElementById('pPriceT').value = 0;
-            renderInventory();
-        }
-        function delProduct(i) { products.splice(i,1); localStorage.setItem('app_prods', JSON.stringify(products)); renderInventory(); }
+            const p = {
+                id, name, cat: document.getElementById('pCat').value,
+                quyCach: Number(document.getElementById('pQuyCach').value),
+                priceL: Number(document.getElementById('pPriceL').value),
+                priceT: Number(document.getElementById('pPriceT').value),
+                promoX: Number(document.getElementById('pPromoX').value),
+                promoY: Number(document.getElementById('pPromoY').value),
+                promoName: document.getElementById('pPromoName').value.trim(),
+                discount: Number(document.getElementById('pDiscount').value)
+            };
 
-        // === CHỨC NĂNG KHÁCH HÀNG ===
+            const index = products.findIndex(x => x.id === id);
+            if(index >= 0) products[index] = p; else products.push(p);
+            
+            localStorage.setItem('app_prods_v3', JSON.stringify(products));
+            resetForm(); renderInventory();
+        }
+
+        function editProduct(id) {
+            const p = products.find(x => x.id === id);
+            if(p) {
+                document.getElementById('pId').value = p.id;
+                document.getElementById('pName').value = p.name;
+                document.getElementById('pCat').value = p.cat;
+                document.getElementById('pQuyCach').value = p.quyCach;
+                document.getElementById('pPriceL').value = p.priceL;
+                document.getElementById('pPriceT').value = p.priceT;
+                document.getElementById('pPromoX').value = p.promoX;
+                document.getElementById('pPromoY').value = p.promoY;
+                document.getElementById('pPromoName').value = p.promoName;
+                document.getElementById('pDiscount').value = p.discount;
+            }
+        }
+
+        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v3', JSON.stringify(products)); renderInventory(); } }
+
+        function renderInventory() {
+            const search = document.getElementById('searchKho').value.toLowerCase();
+            const tb = document.getElementById('inventoryTable'); tb.innerHTML = '';
+            
+            products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
+                let promoTxt = '';
+                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoName || 'cùng loại'}</span><br>`;
+                if(p.discount > 0) promoTxt += `<span class="badge">CK: ${p.discount}%</span>`;
+
+                tb.innerHTML += `<tr>
+                    <td><strong>${p.name}</strong><br><span class="badge">${p.cat}</span></td>
+                    <td>${p.quyCach} / Thùng</td>
+                    <td class="text-right">${formatMoney(p.priceL)}<br><small style="color:var(--text-muted)">${formatMoney(p.priceT)}</small></td>
+                    <td>${promoTxt}</td>
+                    <td class="text-center">
+                        <button class="btn btn-warning" style="padding:4px 8px;" onclick="editProduct('${p.id}')">Sửa</button>
+                        <button class="btn btn-danger" style="padding:4px 8px;" onclick="delProduct('${p.id}')">X</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // --- 5. KHÁCH HÀNG ---
         function renderCustomers() {
             const tb = document.getElementById('customerListTable'); tb.innerHTML = '';
-            if(customers.length === 0) tb.innerHTML = `<tr><td colspan="2" class="text-center">Chưa có khách hàng</td></tr>`;
-            customers.forEach((c, i) => {
-                tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="delCustomer(${i})">Xóa</button></td></tr>`;
-            });
+            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v3', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
         }
-        function delCustomer(i) { customers.splice(i,1); localStorage.setItem('app_custs', JSON.stringify(customers)); renderCustomers(); }
 
-        // === CHỨC NĂNG LÊN ĐƠN ===
+        // --- 6. LÊN ĐƠN ---
         function prepareOrderPage() {
-            // Danh sách gợi ý khách hàng
             const cList = document.getElementById('customerDatalist'); cList.innerHTML = '';
             customers.forEach(c => cList.innerHTML += `<option value="${c}">`);
-            
-            // Danh sách chọn sản phẩm
-            const pSel = document.getElementById('selProduct'); pSel.innerHTML = '';
-            products.forEach(p => pSel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+            const pSel = document.getElementById('selProduct'); pSel.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+            products.forEach(p => pSel.innerHTML += `<option value="${p.id}">${p.name} (Kho: ${p.cat})</option>`);
             renderCart();
         }
 
         function addToCart() {
-            const id = document.getElementById('selProduct').value;
-            const type = document.getElementById('selType').value;
+            const pId = document.getElementById('selProduct').value;
             const qty = Number(document.getElementById('orderQty').value);
+            const type = document.getElementById('selType').value;
             
-            const p = products.find(x => x.id === id);
-            if(!p) return alert("Vui lòng thêm sản phẩm vào kho trước!");
+            const p = products.find(x => x.id === pId);
+            if(!p) return alert("Chọn sản phẩm!");
 
-            const price = type === 'le' ? p.priceL : p.priceT;
-            const total = price * qty;
+            let price = type === 'le' ? p.priceL : p.priceT;
+            let finalPrice = price - (price * (p.discount / 100)); // Tính chiết khấu
             
-            cart.push({ name: p.name, typeName: type === 'le' ? 'Lẻ' : 'Thùng', qty, total });
+            // Tính số lượng quà tặng (nếu có khuyến mãi mua X tặng Y)
+            let giftQty = 0;
+            if(p.promoX > 0 && p.promoY > 0) { giftQty = Math.floor(qty / p.promoX) * p.promoY; }
+
+            cart.push({ id: Date.now(), pId: p.id, name: p.name, typeName: type==='le'?'Lẻ':'Thùng', qty, price: finalPrice, total: finalPrice * qty, giftQty, giftName: p.promoName || p.name });
             renderCart();
         }
 
         function renderCart() {
-            const tb = document.getElementById('cartTable'); tb.innerHTML = '';
-            let sum = 0;
+            const tb = document.getElementById('cartTable'); tb.innerHTML = ''; let sum = 0;
             cart.forEach((c, i) => {
                 sum += c.total;
+                let giftHtml = c.giftQty > 0 ? `<br><small class="badge-gift">+ Tặng ${c.giftQty} ${c.giftName}</small>` : '';
                 tb.innerHTML += `<tr>
-                    <td>${c.name}<br><small>${c.typeName}</small></td>
+                    <td><strong>${c.name}</strong> (${c.typeName})${giftHtml}</td>
                     <td>${c.qty}</td>
-                    <td class="text-right">${formatMoney(c.total)}</td>
-                    <td><button class="btn btn-outline" style="color: red; padding: 2px 6px;" onclick="cart.splice(${i},1); renderCart()">X</button></td>
+                    <td class="text-right">${formatMoney(c.price)}</td>
+                    <td class="text-right"><strong>${formatMoney(c.total)}</strong></td>
+                    <td class="text-center"><button class="btn btn-danger" style="padding:4px 8px;" onclick="cart.splice(${i},1); renderCart()">X</button></td>
                 </tr>`;
             });
-            document.getElementById('cartTotal').innerText = Number(sum).toLocaleString('vi-VN');
+            document.getElementById('cartTotal').innerText = formatMoney(sum);
         }
 
         function saveOrder() {
             if(cart.length === 0) return alert("Giỏ hàng trống!");
-            let cusName = document.getElementById('orderCustomer').value.trim() || 'Khách lẻ';
+            let cusName = document.getElementById('orderCustomer').value.trim() || 'Khách vãng lai';
+            if(cusName !== 'Khách vãng lai' && !customers.includes(cusName)) { customers.push(cusName); localStorage.setItem('app_custs_v3', JSON.stringify(customers)); }
 
-            // Tự động lưu khách hàng mới
-            if(cusName !== 'Khách lẻ' && !customers.includes(cusName)) {
-                customers.push(cusName); localStorage.setItem('app_custs', JSON.stringify(customers));
-            }
-
-            const newOrder = {
-                id: Date.now().toString(),
-                date: new Date().toLocaleDateString('vi-VN'),
-                customer: cusName,
-                items: [...cart],
-                total: cart.reduce((sum, item) => sum + item.total, 0)
-            };
-
-            orders.push(newOrder);
-            localStorage.setItem('app_ords', JSON.stringify(orders));
-            
-            // Reset form
+            orders.push({ id: Date.now().toString(), date: new Date().toLocaleDateString('vi-VN'), customer: cusName, items: [...cart], total: cart.reduce((s, i) => s + i.total, 0) });
+            localStorage.setItem('app_ords_v3', JSON.stringify(orders));
             cart = []; document.getElementById('orderCustomer').value = ''; renderCart();
-            alert("Lưu đơn thành công!");
-            openPage('page-lichsu');
+            alert("Lưu đơn thành công!"); openPage('page-lichsu');
         }
 
-        // === CHỨC NĂNG LỊCH SỬ TỪNG NGÀY ===
-        function toggleDate(id) {
-            document.getElementById(id).classList.toggle('open');
-        }
-
+        // --- 7. LỊCH SỬ & XUẤT PDF ---
         function renderHistory() {
             const container = document.getElementById('historyContainer'); container.innerHTML = '';
-            
-            // Gom nhóm theo ngày
             const grouped = {};
-            [...orders].reverse().forEach(o => {
-                const d = o.date || "Ngày cũ";
-                if(!grouped[d]) grouped[d] = [];
-                grouped[d].push(o);
-            });
+            [...orders].reverse().forEach(o => { if(!grouped[o.date]) grouped[o.date] = []; grouped[o.date].push(o); });
 
-            // Hiển thị ra giao diện
             for (let dateKey in grouped) {
                 const list = grouped[dateKey];
                 const totalDay = list.reduce((sum, o) => sum + o.total, 0);
                 const blockId = 'date-' + dateKey.replace(/\//g, '');
                 
-                // Mặc định mở ngày hôm nay
-                const today = new Date().toLocaleDateString('vi-VN');
-                const isOpen = (dateKey === today) ? 'open' : '';
-
-                let html = `
-                    <div class="date-group">
-                        <div class="date-header" onclick="toggleDate('${blockId}')">
-                            <span>📅 ${dateKey} (${list.length} đơn)</span>
-                            <span>Tổng: ${formatMoney(totalDay)}</span>
-                        </div>
-                        <div id="${blockId}" class="date-content ${isOpen}">
-                `;
+                let html = `<div class="date-group">
+                    <div class="date-header" onclick="document.getElementById('${blockId}').classList.toggle('open')">
+                        <span>📅 Ngày ${dateKey} (${list.length} đơn)</span> <span>Tổng: ${formatMoney(totalDay)}</span>
+                    </div>
+                    <div id="${blockId}" class="date-content">`;
 
                 list.forEach(o => {
-                    html += `<div class="order-box">
-                        <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px;">👤 ${o.customer} 
-                            <button class="btn btn-danger" style="float: right; padding: 2px 5px; font-size: 11px;" onclick="delOrder('${o.id}')">Xóa đơn</button>
+                    html += `<div class="order-box" id="print-order-${o.id}">
+                        <div class="order-head">
+                            <span>👤 ${o.customer}</span>
+                            <div>
+                                <button class="btn btn-success" style="padding:4px 8px; font-size:12px;" onclick="exportPDF('print-order-${o.id}', '${o.customer}')">🖨️ Xuất PDF</button>
+                                <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="delOrder('${o.id}')">Xóa</button>
+                            </div>
                         </div>
-                        <table style="font-size: 13px; margin-bottom: 5px;">`;
+                        <div class="table-responsive" style="border:none; padding:10px;">
+                            <table style="width:100%; font-size:13px;">
+                                <thead><tr><th style="background:#fff">Sản phẩm</th><th style="background:#fff">SL</th><th class="text-right" style="background:#fff">Thành tiền</th></tr></thead>
+                                <tbody>`;
                     o.items.forEach(i => {
-                        html += `<tr><td>- ${i.name} (${i.typeName})</td><td>x${i.qty}</td><td class="text-right">${formatMoney(i.total)}</td></tr>`;
+                        let gift = i.giftQty > 0 ? `<br><small style="color:#db2777;">+ Tặng: ${i.giftQty} x ${i.giftName}</small>` : '';
+                        html += `<tr><td>${i.name} (${i.typeName})${gift}</td><td>${i.qty}</td><td class="text-right">${formatMoney(i.total)}</td></tr>`;
                     });
-                    html += `</table><div class="text-right" style="font-weight: bold; color: red; border-top: 1px solid #ddd; padding-top: 5px;">Thành tiền: ${formatMoney(o.total)}</div>
+                    html += `</tbody></table><div class="text-right" style="font-weight:bold; color:var(--danger); padding-top:10px; font-size:16px;">Tổng: ${formatMoney(o.total)}</div>
+                        </div>
                     </div>`;
                 });
-
-                html += `</div></div>`;
-                container.innerHTML += html;
+                html += `</div></div>`; container.innerHTML += html;
             }
         }
 
-        function delOrder(id) {
-            if(confirm("Xóa đơn hàng này?")) {
-                orders = orders.filter(o => o.id !== id);
-                localStorage.setItem('app_ords', JSON.stringify(orders));
-                renderHistory();
-            }
+        function delOrder(id) { if(confirm("Xóa đơn này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v3', JSON.stringify(orders)); renderHistory(); } }
+
+        function exportPDF(elementId, customerName) {
+            const element = document.getElementById(elementId);
+            const opt = {
+                margin: 0.5,
+                filename: `DonHang_${customerName.replace(/\s+/g, '')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            // Ẩn các nút thao tác trước khi in để bản in sạch sẽ
+            const btns = element.querySelectorAll('.btn');
+            btns.forEach(b => b.style.display = 'none');
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Hiển thị lại nút sau khi xuất xong
+                btns.forEach(b => b.style.display = 'inline-block');
+            });
         }
     </script>
 </body>

@@ -106,6 +106,7 @@
                             <button class="btn btn-outline" onclick="openCatModal()">⚙️</button>
                         </div>
                     </div>
+                    <!-- Quy cách đóng vai trò quan trọng trong tính KM nếu mua thùng -->
                     <div class="form-group"> <label>Quy cách (SL/Thùng)</label> <input type="number" id="pQuyCach" value="1" min="1"> </div>
                     
                     <div class="form-group"> <label>Giá Bán Lẻ</label> <input type="number" id="pPriceL" value="0"> </div>
@@ -183,7 +184,6 @@
                     <select id="selProduct" onchange="updatePromoDisplay()"></select>
                 </div>
                 
-                <!-- Phần chọn màu sắc đã được đưa vào đây -->
                 <div class="form-group" style="grid-column: span 1;">
                     <label>Màu sắc</label>
                     <div style="display: flex; gap: 5px;">
@@ -193,16 +193,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Hình thức</label> <select id="selType"><option value="le">Lẻ</option><option value="thung">Thùng</option></select>
+                    <!-- Thêm sự kiện onchange để tự động tính lại quà khi đổi từ Lẻ sang Thùng -->
+                    <label>Hình thức</label> <select id="selType" onchange="updatePromoDisplay()"><option value="le">Lẻ</option><option value="thung">Thùng</option></select>
                 </div>
                 
-                <!-- Bắt sự kiện thay đổi số lượng để tính lại khuyến mãi -->
                 <div class="form-group"> 
                     <label>Số lượng</label> 
                     <input type="number" id="orderQty" value="1" min="1" oninput="updatePromoDisplay()"> 
                 </div>
                 
-                <!-- Hiển thị khuyến mãi tự động -->
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label>🎁 Khuyến mãi nhận được</label>
                     <input type="text" id="orderPromoDisplay" readonly style="background: #f8fafc; color: var(--danger); font-weight: bold; border-color: #fca5a5;" value="Chưa đủ điều kiện">
@@ -212,7 +211,8 @@
 
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>Sản phẩm</th><th>SL</th><th class="text-right">Đơn giá</th><th class="text-right">Thành tiền</th><th class="text-center">Xóa</th></tr></thead>
+                    <!-- Thêm cột Đơn vị -->
+                    <thead><tr><th>Sản phẩm</th><th>Đơn vị</th><th>SL</th><th class="text-right">Đơn giá</th><th class="text-right">Thành tiền</th><th class="text-center">Xóa</th></tr></thead>
                     <tbody id="cartTable"></tbody>
                 </table>
             </div>
@@ -414,7 +414,7 @@
             
             products.filter(p => p.name.toLowerCase().includes(searchName) && (searchCat === "" || p.cat === searchCat)).forEach(p => {
                 let promoTxt = '';
-                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName}</span><br>`;
+                if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoUnit || 'gói'} ${p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName}</span><br>`;
                 if(p.discount > 0) promoTxt += `<span class="badge">CK: ${p.discount}%</span>`;
 
                 tb.innerHTML += `<tr>
@@ -449,9 +449,11 @@
             updatePromoDisplay();
         }
 
+        // LOGIC TÍNH KHUYẾN MÃI MỚI DỰA TRÊN QUY CÁCH
         function updatePromoDisplay() {
             const pId = document.getElementById('selProduct').value;
             const qty = Number(document.getElementById('orderQty').value) || 0;
+            const selType = document.getElementById('selType').value;
             const display = document.getElementById('orderPromoDisplay');
             
             if(!pId) { 
@@ -462,13 +464,17 @@
             const p = products.find(x => x.id === pId);
             if(p) {
                 let text = [];
-                // Tính toán số lượng tặng thực tế dựa trên số lượng mua
+                // Nếu khách mua theo thùng, quy đổi số lượng ra đơn vị lẻ để tính KM
+                let baseQty = selType === 'thung' ? (qty * p.quyCach) : qty;
+                
                 let giftQty = 0;
-                if(p.promoX > 0 && p.promoY > 0 && qty >= p.promoX) { 
-                    giftQty = Math.floor(qty / p.promoX) * p.promoY;
+                if(p.promoX > 0 && p.promoY > 0 && baseQty >= p.promoX) { 
+                    giftQty = Math.floor(baseQty / p.promoX) * p.promoY;
                     let pNameStr = p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName;
-                    // Yêu cầu: Hiển thị Số lượng + Tên sản phẩm
-                    text.push(`${giftQty} ${pNameStr}`); 
+                    let pUnit = p.promoUnit || 'gói';
+                    
+                    // Hiển thị đầy đủ: Số lượng + Đơn vị tặng + Tên sản phẩm
+                    text.push(`${giftQty} ${pUnit} ${pNameStr}`); 
                 }
                 
                 if(p.discount > 0) { text.push(`Chiết khấu: ${p.discount}%`); }
@@ -489,14 +495,18 @@
             let price = type === 'le' ? p.priceL : p.priceT;
             let finalPrice = price - (price * ((p.discount || 0) / 100));
             
+            // Tính số lượng quà tặng theo quy cách
+            let baseQty = type === 'thung' ? (qty * p.quyCach) : qty;
             let giftQty = 0;
-            if(p.promoX > 0 && p.promoY > 0) { giftQty = Math.floor(qty / p.promoX) * p.promoY; }
+            if(p.promoX > 0 && p.promoY > 0) { giftQty = Math.floor(baseQty / p.promoX) * p.promoY; }
 
             cart.push({ 
                 id: Date.now(), pId: p.id, name: p.name, typeName: type==='le'?'Lẻ':'Thùng', 
                 color: color === 'Không chọn' ? '' : color,
                 qty, price: finalPrice, total: finalPrice * qty, 
-                giftQty, giftName: p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName 
+                giftQty, 
+                giftUnit: p.promoUnit || 'gói',
+                giftName: p.promoName === 'Cùng sản phẩm' ? p.name : p.promoName 
             });
             renderCart();
         }
@@ -505,12 +515,14 @@
             const tb = document.getElementById('cartTable'); tb.innerHTML = ''; let sum = 0;
             cart.forEach((c, i) => {
                 sum += c.total;
-                // Hiển thị phần quà tặng dạng: Số lượng + Tên SP
-                let giftHtml = c.giftQty > 0 ? `<br><span class="badge-gift">+ ${c.giftQty} ${c.giftName}</span>` : '';
+                // Hiển thị phần quà tặng dạng: Số lượng + Đơn vị + Tên SP
+                let giftHtml = c.giftQty > 0 ? `<br><span class="badge-gift">+ ${c.giftQty} ${c.giftUnit} ${c.giftName}</span>` : '';
                 let colorTxt = c.color ? `(${c.color})` : '';
 
                 tb.innerHTML += `<tr>
-                    <td><strong>${c.name}</strong> ${colorTxt} - ${c.typeName}${giftHtml}</td>
+                    <td><strong>${c.name}</strong> ${colorTxt}${giftHtml}</td>
+                    <!-- Hiển thị Đơn vị thành cột riêng -->
+                    <td>${c.typeName}</td>
                     <td>${c.qty}</td>
                     <td class="text-right">${formatMoney(c.price)}</td>
                     <td class="text-right"><strong>${formatMoney(c.total)}</strong></td>
@@ -631,6 +643,8 @@
                                 <tr style="background: var(--secondary);">
                                     <th style="width: 20%;">Khách hàng</th>
                                     <th>Sản phẩm</th>
+                                    <!-- Cột Đơn vị cho Lịch sử -->
+                                    <th>Đơn vị</th>
                                     <th>SL</th>
                                     <th class="text-right">Đơn giá</th>
                                     <th class="text-right">Thành tiền</th>
@@ -645,8 +659,8 @@
                     o.items.forEach((item, i) => {
                         const trClass = (i === 0 && index !== 0) ? 'customer-divider' : '';
                         
-                        // SỬA LỖI Ở ĐÂY: Trích xuất trực tiếp số lượng + tên sp khuyến mãi vào cột
-                        let giftCellText = item.giftQty > 0 ? `<span style="color: var(--danger); font-weight:bold;">${item.giftQty} ${item.giftName}</span>` : '';
+                        // Ghép Số lượng + Đơn vị + Tên sản phẩm
+                        let giftCellText = item.giftQty > 0 ? `<span style="color: var(--danger); font-weight:bold;">${item.giftQty} ${item.giftUnit || 'gói'} ${item.giftName}</span>` : '';
                         
                         html += `<tr class="${trClass}">`;
                         
@@ -657,7 +671,8 @@
                         
                         let colorTxt = item.color ? `(${item.color})` : '';
                         html += `
-                            <td>${item.name} ${colorTxt} - ${item.typeName}</td>
+                            <td>${item.name} ${colorTxt}</td>
+                            <td>${item.typeName}</td>
                             <td>${item.qty}</td>
                             <td class="text-right">${formatMoney(item.price)}</td>
                             <td class="text-right" style="font-weight: bold;">${formatMoney(item.total)}</td>
@@ -677,7 +692,7 @@
 
                     html += `
                     <tr class="customer-total-row">
-                        <td colspan="4" class="text-right">Tổng đơn của ${o.customer}:</td>
+                        <td colspan="5" class="text-right">Tổng đơn của ${o.customer}:</td>
                         <td class="text-right">${formatMoney(o.total)}</td>
                         <td colspan="2"></td>
                     </tr>`;

@@ -41,26 +41,28 @@
 
         /* --- FORM & LƯỚI --- */
         .card-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        /* Chỉnh lưới form cân đối, 3 cột đều nhau */
-        .grid-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        
+        /* Cải tiến: Sử dụng auto-fit để các ô tự động có độ rộng phù hợp và không bị méo */
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 13px; font-weight: bold; color: var(--text-muted); }
-        input, select { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; width: 100%; box-sizing: border-box; }
-        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        input, select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; width: 100%; box-sizing: border-box; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
         
         /* --- BẢNG (TABLE) --- */
         .table-responsive { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #f8fafc; padding: 12px; font-size: 13px; color: var(--text-muted); text-align: left; border-bottom: 2px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8fafc; padding: 12px; font-size: 13px; color: var(--text-muted); text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; }
         td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         
-        /* Viền chia cách khách hàng trong bảng lịch sử */
         .customer-divider td { border-top: 3px solid var(--border); }
+        .customer-total-row td { background: #fffbeb; font-weight: bold; color: var(--danger); font-size: 15px; }
         
         .text-right { text-align: right; } .text-center { text-align: center; }
         .hidden { display: none !important; }
         .badge { padding: 4px 8px; border-radius: 20px; font-size: 12px; background: #e0e7ff; color: var(--primary); display: inline-block; }
-        .badge-gift { background: #fce7f3; color: #db2777; font-size: 12px; padding: 2px 6px; border-radius: 10px; }
+        .badge-gift { background: #fce7f3; color: #db2777; font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
 
         /* Hộp thoại thêm phân loại */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
@@ -106,7 +108,7 @@
                             <button class="btn btn-outline" onclick="openCatModal()">⚙️</button>
                         </div>
                     </div>
-                    <div class="form-group"> <label>Quy cách (SL hộp/Thùng)</label> <input type="number" id="pQuyCach" value="1" min="1"> </div>
+                    <div class="form-group"> <label>Quy cách (SL/Thùng)</label> <input type="number" id="pQuyCach" value="1" min="1"> </div>
                     <div class="form-group"> <label>Giá Bán Lẻ</label> <input type="number" id="pPriceL" value="0"> </div>
                     <div class="form-group"> <label>Giá Thùng</label> <input type="number" id="pPriceT" value="0"> </div>
                     
@@ -121,7 +123,7 @@
                         </select> 
                     </div>
                     
-                    <div class="form-group" style="grid-column: span 2;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
                         <label>Sản phẩm Khuyến mãi</label> 
                         <select id="pPromoItem"></select>
                     </div>
@@ -162,14 +164,22 @@
 
         <!-- ================= LÊN ĐƠN ================= -->
         <div id="page-lendon" class="page">
-            <h2 style="color: var(--primary);">🛒 Tạo Đơn Mới</h2>
-            <div class="card-container grid-form" style="grid-template-columns: repeat(4, 1fr);">
-                <div class="form-group" style="grid-column: span 4;">
+            <h2 style="color: var(--primary);" id="titleLendon">🛒 Tạo Đơn Mới</h2>
+            <input type="hidden" id="editingOrderId"> <!-- Biến ẩn để biết đang sửa đơn nào -->
+            
+            <div class="card-container grid-form">
+                <div class="form-group" style="grid-column: 1 / -1;">
                     <label>Khách Hàng</label>
                     <input type="text" id="orderCustomer" list="customerDatalist" placeholder="Chọn hoặc nhập tên...">
                     <datalist id="customerDatalist"></datalist>
                 </div>
-                <div class="form-group" style="grid-column: span 2;">
+                <!-- Bổ sung Ghi chú -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Ghi chú (Địa chỉ, SĐT, Giờ giao...)</label>
+                    <input type="text" id="orderNote" placeholder="Nhập ghi chú cho đơn hàng này...">
+                </div>
+                
+                <div class="form-group">
                     <label>Sản Phẩm</label> <select id="selProduct"></select>
                 </div>
                 <div class="form-group">
@@ -185,9 +195,12 @@
                     <tbody id="cartTable"></tbody>
                 </table>
             </div>
-            <div class="card-container" style="margin-top: 20px; text-align: right;">
+            <div class="card-container" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <h3>Tổng cộng: <span id="cartTotal" style="color: var(--danger); font-size: 24px;">0 đ</span></h3>
-                <button class="btn btn-primary" style="padding: 15px 30px;" onclick="saveOrder()">✅ LƯU ĐƠN HÀNG</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline hidden" id="btnCancelEdit" onclick="cancelEdit()">Hủy Sửa</button>
+                    <button class="btn btn-primary" style="padding: 15px 30px;" id="btnSaveOrder" onclick="saveOrder()">✅ LƯU ĐƠN HÀNG</button>
+                </div>
             </div>
         </div>
 
@@ -195,15 +208,14 @@
         <div id="page-lichsu" class="page">
             <h2 style="color: var(--primary);">📑 Lịch Sử Đơn Hàng</h2>
             
-            <!-- BỘ LỌC LỊCH SỬ CHUNG -->
-            <div class="card-container" style="display: flex; gap: 15px;">
+            <div class="card-container" style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <div class="form-group" style="width: 200px;">
                     <label>Chọn Ngày</label>
                     <input type="date" id="hisSearchDate" onchange="renderHistory()">
                 </div>
-                <div class="form-group" style="flex: 1;">
+                <div class="form-group" style="flex: 1; min-width: 250px;">
                     <label>Tìm Khách Hàng</label>
-                    <input type="text" id="hisSearchName" placeholder="Nhập thông tin khách..." onkeyup="renderHistory()">
+                    <input type="text" id="hisSearchName" placeholder="Nhập tên khách hàng..." onkeyup="renderHistory()">
                 </div>
                 <div class="form-group" style="justify-content: flex-end;">
                     <button class="btn btn-outline" onclick="document.getElementById('hisSearchDate').value=''; document.getElementById('hisSearchName').value=''; renderHistory();">Xóa Lọc</button>
@@ -232,13 +244,12 @@
         function formatMoney(num) { return Number(num).toLocaleString('vi-VN') + ' đ'; }
         function getSafeData(key, defaultVal) { try { return JSON.parse(localStorage.getItem(key)) || defaultVal; } catch(e) { return defaultVal; } }
 
-        let products = getSafeData('app_prods_v4', []);
-        let categories = getSafeData('app_cats_v4', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
-        let customers = getSafeData('app_custs_v4', []);
-        let orders = getSafeData('app_ords_v4', []);
+        let products = getSafeData('app_prods_v5', []);
+        let categories = getSafeData('app_cats_v5', ['Hàng thường', 'Hàng tết', 'Bánh mì']);
+        let customers = getSafeData('app_custs_v5', []);
+        let orders = getSafeData('app_ords_v5', []);
         let cart = [];
 
-        // Cộng thêm 1 ngày vào chuỗi ngày định dạng DD/MM/YYYY
         function getNextDayString(dateStr) {
             const parts = dateStr.split('/');
             if(parts.length !== 3) return dateStr;
@@ -261,7 +272,10 @@
 
             if(pageId === 'page-kho') { renderCatSelect(); renderPromoItemSelect(); renderInventory(); }
             if(pageId === 'page-khachhang') renderCustomers();
-            if(pageId === 'page-lendon') prepareOrderPage();
+            if(pageId === 'page-lendon') { 
+                prepareOrderPage(); 
+                if(!document.getElementById('editingOrderId').value) { cancelEdit(); } 
+            }
             if(pageId === 'page-lichsu') renderHistory();
         }
 
@@ -273,18 +287,14 @@
             const sel = document.getElementById('pCat'); sel.innerHTML = '';
             const filterSel = document.getElementById('filterKhoCat'); 
             filterSel.innerHTML = '<option value="">Tất cả phân loại</option>';
-            
-            categories.forEach(c => {
-                sel.innerHTML += `<option value="${c}">${c}</option>`;
-                filterSel.innerHTML += `<option value="${c}">${c}</option>`;
-            });
+            categories.forEach(c => { sel.innerHTML += `<option value="${c}">${c}</option>`; filterSel.innerHTML += `<option value="${c}">${c}</option>`; });
         }
         function renderCatList() {
             const list = document.getElementById('catList'); list.innerHTML = '';
             categories.forEach((c, i) => { list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">${c} <button class="btn btn-outline" style="padding:2px 8px; color:red;" onclick="delCategory(${i})">Xóa</button></li>`; });
         }
-        function addCategory() { const val = document.getElementById('newCatName').value.trim(); if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v4', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); } }
-        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v4', JSON.stringify(categories)); renderCatList(); }
+        function addCategory() { const val = document.getElementById('newCatName').value.trim(); if(val && !categories.includes(val)) { categories.push(val); localStorage.setItem('app_cats_v5', JSON.stringify(categories)); document.getElementById('newCatName').value = ''; renderCatList(); } }
+        function delCategory(i) { categories.splice(i,1); localStorage.setItem('app_cats_v5', JSON.stringify(categories)); renderCatList(); }
 
         // --- KHO SẢN PHẨM ---
         function renderPromoItemSelect() {
@@ -321,7 +331,7 @@
             const index = products.findIndex(x => x.id === id);
             if(index >= 0) products[index] = p; else products.push(p);
             
-            localStorage.setItem('app_prods_v4', JSON.stringify(products));
+            localStorage.setItem('app_prods_v5', JSON.stringify(products));
             resetForm(); renderPromoItemSelect(); renderInventory();
         }
 
@@ -342,18 +352,14 @@
             }
         }
 
-        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v4', JSON.stringify(products)); renderPromoItemSelect(); renderInventory(); } }
+        function delProduct(id) { if(confirm("Xóa sản phẩm này?")) { products = products.filter(x => x.id !== id); localStorage.setItem('app_prods_v5', JSON.stringify(products)); renderPromoItemSelect(); renderInventory(); } }
 
         function renderInventory() {
             const searchName = document.getElementById('searchKho').value.toLowerCase();
             const searchCat = document.getElementById('filterKhoCat').value;
             const tb = document.getElementById('inventoryTable'); tb.innerHTML = '';
             
-            products.filter(p => {
-                const matchName = p.name.toLowerCase().includes(searchName);
-                const matchCat = searchCat === "" || p.cat === searchCat;
-                return matchName && matchCat;
-            }).forEach(p => {
+            products.filter(p => p.name.toLowerCase().includes(searchName) && (searchCat === "" || p.cat === searchCat)).forEach(p => {
                 let promoTxt = '';
                 if(p.promoX > 0 && p.promoY > 0) promoTxt += `<span class="badge-gift">Mua ${p.promoX} tặng ${p.promoY} ${p.promoUnit} ${p.promoName}</span><br>`;
                 if(p.discount > 0) promoTxt += `<span class="badge">CK: ${p.discount}%</span>`;
@@ -365,7 +371,7 @@
                     <td>${promoTxt}</td>
                     <td class="text-center">
                         <button class="btn btn-warning" style="padding:4px 8px;" onclick="editProduct('${p.id}')">Sửa</button>
-                        <button class="btn btn-danger" style="padding:4px 8px;" onclick="delProduct('${p.id}')">X</button>
+                        <button class="btn btn-danger" style="padding:4px 8px;" onclick="delProduct('${p.id}')">Xóa</button>
                     </td>
                 </tr>`;
             });
@@ -374,10 +380,10 @@
         // --- KHÁCH HÀNG ---
         function renderCustomers() {
             const tb = document.getElementById('customerListTable'); tb.innerHTML = '';
-            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v4', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
+            customers.forEach((c, i) => { tb.innerHTML += `<tr><td>${c}</td><td class="text-center"><button class="btn btn-danger" onclick="customers.splice(${i},1); localStorage.setItem('app_custs_v5', JSON.stringify(customers)); renderCustomers()">Xóa</button></td></tr>`; });
         }
 
-        // --- LÊN ĐƠN ---
+        // --- LÊN ĐƠN & SỬA ĐƠN ---
         function prepareOrderPage() {
             const cList = document.getElementById('customerDatalist'); cList.innerHTML = '';
             customers.forEach(c => cList.innerHTML += `<option value="${c}">`);
@@ -418,7 +424,7 @@
                     <td>${c.qty}</td>
                     <td class="text-right">${formatMoney(c.price)}</td>
                     <td class="text-right"><strong>${formatMoney(c.total)}</strong></td>
-                    <td class="text-center"><button class="btn btn-danger" style="padding:4px 8px;" onclick="cart.splice(${i},1); renderCart()">X</button></td>
+                    <td class="text-center"><button class="btn btn-danger" style="padding:4px 8px;" onclick="cart.splice(${i},1); renderCart()">Xóa</button></td>
                 </tr>`;
             });
             document.getElementById('cartTotal').innerText = formatMoney(sum);
@@ -426,50 +432,107 @@
 
         function saveOrder() {
             if(cart.length === 0) return alert("Giỏ hàng trống!");
+            
             let cusName = document.getElementById('orderCustomer').value.trim() || 'Khách vãng lai';
-            if(cusName !== 'Khách vãng lai' && !customers.includes(cusName)) { customers.push(cusName); localStorage.setItem('app_custs_v4', JSON.stringify(customers)); }
+            let note = document.getElementById('orderNote').value.trim();
+            let editId = document.getElementById('editingOrderId').value;
 
-            orders.push({ id: Date.now().toString(), date: new Date().toLocaleDateString('vi-VN'), customer: cusName, items: [...cart], total: cart.reduce((s, i) => s + i.total, 0) });
-            localStorage.setItem('app_ords_v4', JSON.stringify(orders));
-            cart = []; document.getElementById('orderCustomer').value = ''; renderCart();
-            alert("Lưu đơn thành công!"); openPage('page-lichsu');
+            if(cusName !== 'Khách vãng lai' && !customers.includes(cusName)) { 
+                customers.push(cusName); 
+                localStorage.setItem('app_custs_v5', JSON.stringify(customers)); 
+            }
+
+            const totalAmount = cart.reduce((s, i) => s + i.total, 0);
+
+            if (editId) {
+                // Chế độ CẬP NHẬT đơn cũ
+                const index = orders.findIndex(o => o.id === editId);
+                if (index > -1) {
+                    orders[index].customer = cusName;
+                    orders[index].note = note;
+                    orders[index].items = [...cart];
+                    orders[index].total = totalAmount;
+                }
+                alert("Cập nhật đơn thành công!");
+            } else {
+                // Chế độ TẠO MỚI đơn
+                orders.push({ 
+                    id: Date.now().toString(), 
+                    date: new Date().toLocaleDateString('vi-VN'), 
+                    customer: cusName, 
+                    note: note,
+                    items: [...cart], 
+                    total: totalAmount 
+                });
+                alert("Lưu đơn thành công!");
+            }
+
+            localStorage.setItem('app_ords_v5', JSON.stringify(orders));
+            cancelEdit(); // Reset form
+            openPage('page-lichsu');
+        }
+
+        function editOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            
+            document.getElementById('editingOrderId').value = order.id;
+            document.getElementById('orderCustomer').value = order.customer;
+            document.getElementById('orderNote').value = order.note || '';
+            cart = [...order.items]; // Copy các sản phẩm vào giỏ hàng
+            
+            // Đổi giao diện để báo hiệu đang sửa
+            document.getElementById('titleLendon').innerText = `✏️ Đang Sửa Đơn của: ${order.customer}`;
+            document.getElementById('btnSaveOrder').innerHTML = '✅ CẬP NHẬT ĐƠN NÀY';
+            document.getElementById('btnCancelEdit').classList.remove('hidden');
+            
+            renderCart();
+            openPage('page-lendon');
+        }
+
+        function cancelEdit() {
+            document.getElementById('editingOrderId').value = '';
+            document.getElementById('orderCustomer').value = '';
+            document.getElementById('orderNote').value = '';
+            cart = [];
+            
+            document.getElementById('titleLendon').innerText = '🛒 Tạo Đơn Mới';
+            document.getElementById('btnSaveOrder').innerHTML = '✅ LƯU ĐƠN HÀNG';
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+            renderCart();
         }
 
         // --- LỊCH SỬ & XUẤT BẢNG ---
         function renderHistory() {
             const container = document.getElementById('historyContainer'); container.innerHTML = '';
             
-            // Lấy thông tin bộ lọc
             let sDate = document.getElementById('hisSearchDate').value; 
-            if(sDate) { const p = sDate.split('-'); sDate = `${p[2]}/${p[1]}/${p[0]}`; } // Chuyển YYYY-MM-DD sang DD/MM/YYYY
+            if(sDate) { const p = sDate.split('-'); sDate = `${p[2]}/${p[1]}/${p[0]}`; } 
             const sName = document.getElementById('hisSearchName').value.toLowerCase();
 
-            // Gom nhóm đơn hàng theo ngày
             const grouped = {};
             [...orders].reverse().forEach(o => { 
                 const matchDate = !sDate || o.date === sDate;
                 const matchName = !sName || o.customer.toLowerCase().includes(sName);
-                
                 if(matchDate && matchName) {
                     if(!grouped[o.date]) grouped[o.date] = []; 
                     grouped[o.date].push(o); 
                 }
             });
 
-            // Vẽ giao diện
             for (let dateKey in grouped) {
                 const list = grouped[dateKey];
                 const totalDay = list.reduce((sum, o) => sum + o.total, 0);
                 const blockId = 'print-date-' + dateKey.replace(/\//g, '');
-                const titleDate = getNextDayString(dateKey); // Đơn hàng + (ngày tạo đơn + 1)
+                const titleDate = getNextDayString(dateKey);
                 
                 let html = `
                 <div class="card-container" id="${blockId}">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h3 style="color: var(--primary); margin: 0;">Đơn hàng ${titleDate}</h3>
                         <div class="no-print">
-                            <span style="margin-right: 15px; font-weight: bold; color: var(--danger);">Tổng: ${formatMoney(totalDay)}</span>
-                            <button class="btn btn-success" onclick="exportPDF('${blockId}', '${titleDate}')">🖨️ In Bảng Ngày Này</button>
+                            <span style="margin-right: 15px; font-weight: bold; color: var(--danger);">Tổng ngày: ${formatMoney(totalDay)}</span>
+                            <button class="btn btn-success" onclick="exportPDF('${blockId}', '${titleDate}')">🖨️ In Bảng</button>
                         </div>
                     </div>
                     
@@ -478,6 +541,7 @@
                             <thead>
                                 <tr style="background: var(--secondary);">
                                     <th>Khách hàng</th>
+                                    <th>Ghi chú</th>
                                     <th>Sản phẩm</th>
                                     <th>SL</th>
                                     <th class="text-right">Đơn giá</th>
@@ -491,15 +555,16 @@
                 list.forEach((o, index) => {
                     const rowCount = o.items.length;
                     o.items.forEach((item, i) => {
-                        // Thêm viền trên đậm nếu là sản phẩm đầu tiên của một đơn hàng mới (ngăn cách các khách)
                         const trClass = (i === 0 && index !== 0) ? 'customer-divider' : '';
                         
-                        let gift = item.giftQty > 0 ? `<span style="color:#db2777; font-size:13px;">Tặng ${item.giftQty} ${item.giftUnit} ${item.giftName}</span>` : '';
+                        // Xử lý hiển thị khuyến mãi rõ ràng
+                        let gift = item.giftQty > 0 ? `<span class="badge-gift">Tặng ${item.giftQty} ${item.giftUnit} ${item.giftName}</span>` : '';
                         
                         html += `<tr class="${trClass}">`;
-                        // Nếu là dòng đầu tiên của đơn, in ra Cột Khách Hàng và Cột Thao tác gộp hàng (rowspan)
+                        
                         if(i === 0) {
-                            html += `<td rowspan="${rowCount}" style="font-weight: bold; vertical-align: top; background: #f8fafc;">${o.customer}</td>`;
+                            html += `<td rowspan="${rowCount}" style="font-weight: bold; background: #f8fafc; vertical-align: top;">${o.customer}</td>`;
+                            html += `<td rowspan="${rowCount}" style="color: var(--text-muted); font-size: 13px; vertical-align: top; max-width: 150px;">${o.note || ''}</td>`;
                         }
                         
                         html += `
@@ -512,11 +577,22 @@
                         
                         if(i === 0) {
                             html += `<td rowspan="${rowCount}" class="text-center no-print" style="vertical-align: top;">
-                                <button class="btn btn-danger" style="padding:4px 8px;" onclick="delOrder('${o.id}')">Xóa đơn</button>
+                                <div style="display: flex; flex-direction: column; gap: 5px;">
+                                    <button class="btn btn-warning" style="padding:4px 8px;" onclick="editOrder('${o.id}')">Sửa đơn</button>
+                                    <button class="btn btn-danger" style="padding:4px 8px;" onclick="delOrder('${o.id}')">Xóa đơn</button>
+                                </div>
                             </td>`;
                         }
                         html += `</tr>`;
                     });
+
+                    // Dòng tổng cộng cho từng khách hàng
+                    html += `
+                    <tr class="customer-total-row">
+                        <td colspan="5" class="text-right">Tổng đơn của ${o.customer}:</td>
+                        <td class="text-right">${formatMoney(o.total)}</td>
+                        <td colspan="2"></td>
+                    </tr>`;
                 });
 
                 html += `       </tbody>
@@ -527,27 +603,25 @@
             }
             
             if(Object.keys(grouped).length === 0) {
-                container.innerHTML = `<div class="card-container text-center" style="color: var(--text-muted);">Không tìm thấy đơn hàng nào phù hợp với bộ lọc.</div>`;
+                container.innerHTML = `<div class="card-container text-center" style="color: var(--text-muted);">Không tìm thấy đơn hàng.</div>`;
             }
         }
 
-        function delOrder(id) { if(confirm("Xóa toàn bộ đơn hàng của khách này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v4', JSON.stringify(orders)); renderHistory(); } }
+        function delOrder(id) { if(confirm("Xóa toàn bộ đơn hàng này?")) { orders = orders.filter(o => o.id !== id); localStorage.setItem('app_ords_v5', JSON.stringify(orders)); renderHistory(); } }
 
         function exportPDF(elementId, titleDate) {
             const element = document.getElementById(elementId);
-            element.classList.add('pdf-mode'); // Thêm class để CSS tự ẩn các nút "no-print"
+            element.classList.add('pdf-mode'); 
             
             const opt = {
                 margin: 0.5,
                 filename: `BangDonHang_${titleDate.replace(/\//g, '')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } // Dùng landscape (ngang) vì bảng nhiều cột
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } 
             };
             
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.classList.remove('pdf-mode'); // Gỡ class sau khi in xong
-            });
+            html2pdf().set(opt).from(element).save().then(() => { element.classList.remove('pdf-mode'); });
         }
     </script>
 </body>

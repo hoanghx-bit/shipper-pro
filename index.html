@@ -8,12 +8,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- jsPDF CDN để xuất hóa đơn PDF -->
+    <!-- jsPDF CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .object-fit-crop { object-fit: cover; object-position: center; }
+        .product-crop-frame {
+            position: relative;
+            overflow: hidden;
+        }
+        .product-crop-frame img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.3);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800" x-data="orderApp()">
@@ -73,10 +85,9 @@
                     <template x-for="product in filteredProducts" :key="product.code">
                         <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border flex flex-col justify-between">
                             <div>
-                                <div class="h-48 bg-gray-100 overflow-hidden relative">
-                                    <!-- Cắt và tập trung khung hình vào phần sản phẩm -->
-                                    <img :src="product.image" :alt="product.name" class="w-full h-full object-fit-crop scale-90">
-                                    <span class="absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 bg-red-600 text-white rounded-full shadow" x-text="product.category"></span>
+                                <div class="h-48 bg-gray-50 product-crop-frame relative border-b">
+                                    <img :src="product.image" :alt="product.name">
+                                    <span class="absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 bg-red-600 text-white rounded-full shadow z-10" x-text="product.category"></span>
                                 </div>
                                 <div class="p-5 space-y-2">
                                     <h3 class="font-bold text-gray-800 text-base leading-snug" x-text="product.name"></h3>
@@ -136,8 +147,8 @@
                         <template x-for="(product, index) in products" :key="product.code">
                             <tr>
                                 <td class="p-3">
-                                    <div class="w-12 h-12 rounded border overflow-hidden bg-gray-50">
-                                        <img :src="product.image" class="w-full h-full object-fit-crop scale-90">
+                                    <div class="w-12 h-12 rounded border overflow-hidden product-crop-frame bg-gray-50">
+                                        <img :src="product.image">
                                     </div>
                                 </td>
                                 <td class="p-3 font-mono text-xs text-gray-600" x-text="product.code"></td>
@@ -191,11 +202,15 @@
         <div x-show="currentTab === 'orders'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng & Xuất PDF</h2>
-                    <p class="text-xs text-gray-500">Quản lý đơn hàng gom nhóm theo ngày, có thể chỉnh sửa giá trực tiếp và xuất hóa đơn PDF.</p>
+                    <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng & Xuất PDF Theo Ngày</h2>
+                    <p class="text-xs text-gray-500">Quản lý đơn hàng gom nhóm, chỉnh sửa giá linh hoạt và xuất báo cáo PDF theo ngày.</p>
                 </div>
-                <div class="w-full md:w-72">
-                    <input type="text" x-model="orderSearchQuery" placeholder="Tìm kiếm theo tên khách, mã đơn..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <input type="text" x-model="orderSearchQuery" placeholder="Tìm kiếm theo tên khách, mã đơn..." class="w-full md:w-64 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500">
+                    <button @click="exportDailyPDF()" class="bg-gray-800 hover:bg-black text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow whitespace-nowrap flex items-center space-x-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Xuất PDF Cả Ngày</span>
+                    </button>
                 </div>
             </div>
 
@@ -214,36 +229,43 @@
                                 <h3 class="font-bold text-gray-800 text-base mt-1" x-text="order.customerName"></h3>
                                 <p class="text-xs text-gray-500" x-text="'SĐT: ' + order.phone + ' | Địa chỉ: ' + order.address"></p>
                             </div>
-                            <div class="flex items-center space-x-3">
-                                <div class="text-right">
-                                    <span class="text-xs text-gray-500 block" x-text="order.date"></span>
-                                    <span class="text-lg font-bold text-red-600" x-text="formatCurrency(calculateOrderTotal(order)) + ' đ'"></span>
-                                </div>
-                                <button @click="exportOrderPDF(order)" class="bg-gray-800 hover:bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow flex items-center space-x-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                    <span>Xuất PDF</span>
-                                </button>
+                            <div class="text-right">
+                                <span class="text-xs text-gray-500 block" x-text="order.date"></span>
+                                <span class="text-lg font-bold text-red-600" x-text="formatCurrency(calculateOrderTotal(order)) + ' đ'"></span>
                             </div>
                         </div>
 
                         <div>
-                            <h4 class="text-xs font-semibold text-gray-600 mb-2">Chi tiết sản phẩm (Có thể chỉnh sửa giá trực tiếp):</h4>
-                            <div class="space-y-2">
+                            <h4 class="text-xs font-semibold text-gray-600 mb-2">Chi tiết sản phẩm đặt:</h4>
+                            <div class="space-y-3">
                                 <template x-for="(item, itemIndex) in order.items" :key="item.code">
-                                    <div class="bg-white p-3 rounded border flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2">
-                                        <div class="flex items-center space-x-3">
-                                            <img :src="item.image" class="w-10 h-10 object-fit-crop rounded border">
+                                    <div class="bg-white p-3.5 rounded border space-y-2">
+                                        <!-- Phía trên: Thông tin sản phẩm -->
+                                        <div class="flex items-center space-x-3 border-b pb-2">
+                                            <div class="w-10 h-10 rounded border overflow-hidden product-crop-frame bg-gray-50 flex-shrink-0">
+                                                <img :src="item.image">
+                                            </div>
                                             <div>
-                                                <span class="font-bold text-gray-800 text-sm" x-text="item.name"></span>
-                                                <span class="text-gray-500 block" x-text="'Mã: ' + item.code + ' | SL: ' + item.quantity + ' thùng'"></span>
+                                                <h5 class="font-bold text-gray-800 text-sm" x-text="item.name"></h5>
+                                                <p class="text-xs text-gray-500" x-text="'Mã: ' + item.code + ' | Quy cách: ' + item.spec"></p>
                                             </div>
                                         </div>
-                                        <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
-                                            <div class="flex items-center space-x-1">
-                                                <span class="text-gray-500">Đơn giá:</span>
-                                                <input type="number" x-model.number="item.price" @change="saveOrders()" class="w-28 px-2 py-1 border rounded text-red-600 font-bold text-right">
+
+                                        <!-- Phía dưới: Số lượng, đơn giá, thành tiền và khuyến mãi -->
+                                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 pt-1">
+                                            <div class="flex items-center space-x-4">
+                                                <span class="font-semibold text-gray-700">SL: <span class="text-red-600 font-bold" x-text="item.quantity + ' thùng'"></span></span>
+                                                <template x-if="item.promo">
+                                                    <span class="bg-red-50 text-red-600 px-2 py-0.5 rounded font-medium" x-text="'KM: ' + item.promo"></span>
+                                                </template>
                                             </div>
-                                            <span class="font-bold text-gray-800 w-24 text-right" x-text="formatCurrency(item.price * item.quantity) + ' đ'"></span>
+                                            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+                                                <div class="flex items-center space-x-1">
+                                                    <span class="text-gray-500">Đơn giá:</span>
+                                                    <input type="number" x-model.number="item.price" @change="saveOrders()" class="w-28 px-2 py-1 border rounded text-red-600 font-bold text-right">
+                                                </div>
+                                                <span class="font-bold text-gray-800 w-28 text-right" x-text="formatCurrency(item.price * item.quantity) + ' đ'"></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
@@ -307,7 +329,7 @@
         </div>
     </div>
 
-    <!-- Checkout Modal with Customer Auto-suggestion & Warning -->
+    <!-- Checkout Modal -->
     <div x-show="checkoutOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="checkoutOpen = false"></div>
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative z-10 space-y-4">
@@ -317,11 +339,10 @@
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Họ và tên khách hàng / Đại lý</label>
                     <input type="text" x-model="customer.name" @input="onCustomerNameInput" required placeholder="Nhập tên khách hàng..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
                     
-                    <!-- Gợi ý khách hàng -->
                     <template x-if="customerSuggestions.length > 0">
                         <div class="absolute z-20 left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
                             <template x-for="c in customerSuggestions" :key="c.phone">
-                                <div @click="selectCustomer(c)" class="p-2 hover:bg-gray-150 cursor-pointer text-xs border-b">
+                                <div @click="selectCustomer(c)" class="p-2 hover:bg-gray-100 cursor-pointer text-xs border-b">
                                     <span class="font-bold text-gray-800" x-text="c.name"></span> - <span class="text-gray-500" x-text="c.phone"></span>
                                 </div>
                             </template>
@@ -349,7 +370,7 @@
         </div>
     </div>
 
-    <!-- Add Product Modal with Smart Cropping and Name Extraction -->
+    <!-- Add Product Modal with Top Name Extraction -->
     <div x-show="openAddProductModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="openAddProductModal = false"></div>
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative z-10 space-y-4">
@@ -362,15 +383,15 @@
 
                 <template x-if="newProd.image">
                     <div class="flex items-center space-x-3 bg-gray-50 p-2 rounded border">
-                        <div class="w-16 h-16 rounded overflow-hidden border bg-white">
-                            <img :src="newProd.image" class="w-full h-full object-fit-crop scale-90">
+                        <div class="w-16 h-16 rounded overflow-hidden border product-crop-frame bg-white">
+                            <img :src="newProd.image">
                         </div>
-                        <span class="text-xs text-green-600 font-semibold">✓ Đã cắt khung hình sản phẩm và nhận diện tên phía trên thành công!</span>
+                        <span class="text-xs text-green-600 font-semibold">✓ Đã trích xuất tên phía trên và cắt ảnh sản phẩm thành công!</span>
                     </div>
                 </template>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm (Nhận diện từ trên ảnh)</label>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm (Nhận diện từ phía trên ảnh)</label>
                     <input type="text" x-model="newProd.name" required class="w-full px-3 py-2 border rounded-lg text-sm font-bold text-gray-800">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
@@ -473,20 +494,9 @@
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
-                            const img = new Image();
-                            img.src = e.target.result;
-                            img.onload = () => {
-                                // Cắt phần phía trên ảnh để lấy tên sản phẩm & tập trung khung hình sản phẩm
-                                const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                                ctx.drawImage(img, 0, 0);
-                                
-                                this.newProd.image = canvas.toDataURL('image/jpeg', 0.9);
-                            };
-
-                            // Tự động nhận diện trích xuất tên sản phẩm từ tên file ở phần đầu
+                            this.newProd.image = e.target.result;
+                            
+                            // Lấy tên từ tên file (giả lập phần chữ nằm ở phía trên bức ảnh)
                             let cleanName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
                             cleanName = cleanName.replace(/[-_]/g, ' ').toUpperCase();
                             this.newProd.name = cleanName;
@@ -605,7 +615,6 @@
                 },
 
                 submitOrder() {
-                    // Kiểm tra xem khách hàng đã tồn tại trong danh sách chưa
                     let existingCust = this.customers.find(c => c.name.toLowerCase() === this.customer.name.toLowerCase());
                     if (!existingCust) {
                         if (confirm('Khách hàng "' + this.customer.name + '" chưa có trong danh sách. Bạn có muốn thêm vào danh sách khách hàng không?')) {
@@ -639,55 +648,61 @@
                     alert('Đơn hàng đã được đặt và lưu thành công!');
                 },
 
-                exportOrderPDF(order) {
+                exportDailyPDF() {
+                    if (this.orderHistory.length === 0) {
+                        alert('Chưa có đơn hàng nào để xuất báo cáo.');
+                        return;
+                    }
+
+                    // Gom nhóm đơn hàng theo ngày
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
 
                     doc.setFont("helvetica", "bold");
-                    doc.setFontSize(18);
-                    doc.text("HOA DON DAT HANG - HAIHACO", 14, 20);
+                    doc.setFontSize(16);
+                    doc.text("BAO CAO TONG HOP DON HANG TRONG NGAY - HAIHACO", 14, 20);
 
-                    doc.setFontSize(11);
-                    doc.setFont("helvetica", "normal");
-                    doc.text("Ma don hang: " + order.id, 14, 30);
-                    doc.text("Ngay dat: " + order.dateTime, 14, 37);
-                    doc.text("Khach hang: " + order.customerName, 14, 44);
-                    doc.text("So dien thoại: " + order.phone, 14, 51);
-                    doc.text("Dia chi: " + order.address, 14, 58);
-
-                    let y = 70;
-                    doc.setFont("helvetica", "bold");
-                    doc.text("STT", 14, y);
-                    doc.text("Ten San Pham", 30, y);
-                    doc.text("So Luong", 120, y);
-                    doc.text("Thanh Tien", 160, y);
-
-                    y += 5;
-                    doc.line(14, y, 196, y);
-
-                    y += 8;
-                    doc.setFont("helvetica", "normal");
-                    order.items.forEach((item, idx) => {
-                        doc.text((idx + 1).toString(), 14, y);
-                        doc.text(item.name.substring(0, 35), 30, y);
-                        doc.text(item.quantity + " thung", 120, y);
-                        doc.text(this.formatCurrency(item.price * item.quantity) + " d", 160, y);
-                        y += 8;
+                    let y = 30;
+                    
+                    // Gom nhóm theo ngày
+                    let grouped = {};
+                    this.orderHistory.forEach(ord => {
+                        let dKey = ord.date;
+                        if (!grouped[dKey]) grouped[dKey] = [];
+                        grouped[dKey].push(ord);
                     });
 
-                    y += 5;
-                    doc.line(14, y, 196, y);
+                    Object.keys(grouped).forEach(dateStr => {
+                        doc.setFontSize(13);
+                        doc.setTextColor(180, 0, 0);
+                        doc.text("Ngay: " + dateStr, 14, y);
+                        y += 8;
 
-                    y += 10;
-                    doc.setFont("helvetica", "bold");
-                    doc.text("Tong cong: " + this.formatCurrency(this.calculateOrderTotal(order)) + " VND", 130, y);
+                        doc.setTextColor(0, 0, 0);
+                        grouped[dateStr].forEach(ord => {
+                            doc.setFontSize(11);
+                            doc.setFont("helvetica", "bold");
+                            doc.text("- Don hang: " + ord.id + " | Khach: " + ord.customerName + " (SĐT: " + ord.phone + ")", 18, y);
+                            y += 6;
 
-                    if (order.note) {
-                        y += 10;
-                        doc.text("Ghi chu: " + order.note, 14, y);
-                    }
+                            doc.setFont("helvetica", "normal");
+                            doc.setFontSize(10);
+                            ord.items.forEach(it => {
+                                let lineText = `   + ${it.name} (Ma: ${it.code}) - SL: ${it.quantity} thung - Don gia: ${this.formatCurrency(it.price)}d - Thanh tien: ${this.formatCurrency(it.price * it.quantity)}d`;
+                                if(it.promo) lineText += ` [KM: ${it.promo}]`;
+                                doc.text(lineText, 18, y);
+                                y += 6;
+                                if (y > 270) { doc.addPage(); y = 20; }
+                            });
 
-                    doc.save("DonHang_" + order.id + ".pdf");
+                            doc.text(`   Tong tien don: ${this.formatCurrency(this.calculateOrderTotal(ord))} VND`, 18, y);
+                            y += 8;
+                            if (y > 270) { doc.addPage(); y = 20; }
+                        });
+                        y += 5;
+                    });
+
+                    doc.save("BaoCaoDonHang_TongHop.pdf");
                 }
             }
         }

@@ -16,15 +16,16 @@
         .product-crop-frame {
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
         }
         .product-crop-frame img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1.3);
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            padding: 4px;
         }
     </style>
 </head>
@@ -38,7 +39,7 @@
                 <p class="text-xs text-red-100">Hệ thống đặt hàng, kho & khách hàng chuyên nghiệp</p>
             </div>
             
-            <!-- 5 Nút điều hướng đầu trang bằng nhau -->
+            <!-- 5 Nút điều hướng đầu trang -->
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full md:w-auto">
                 <button @click="currentTab = 'shop'" :class="currentTab === 'shop' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="py-2 px-3 rounded-lg text-xs font-bold uppercase transition text-center truncate">Đặt Hàng</button>
                 <button @click="currentTab = 'inventory'" :class="currentTab === 'inventory' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="py-2 px-3 rounded-lg text-xs font-bold uppercase transition text-center truncate">Kho Hàng</button>
@@ -123,7 +124,7 @@
             <div class="flex justify-between items-center border-b pb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho Hàng & Khuyến Mãi</h2>
-                    <p class="text-xs text-gray-500">Cập nhật sản phẩm, giá bán và chương trình khuyến mãi (theo số lượng hoặc chiết khấu %).</p>
+                    <p class="text-xs text-gray-500">Cập nhật sản phẩm, giá bán và chương trình khuyến mãi (VD: 1 hộp, 2 gói...).</p>
                 </div>
                 <button @click="openAddProductModal = true" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow">
                     + Thêm sản phẩm mới từ ảnh
@@ -138,7 +139,7 @@
                             <th class="p-3">Mã Code</th>
                             <th class="p-3">Tên sản phẩm</th>
                             <th class="p-3">Quy cách</th>
-                            <th class="p-3">Khuyến mãi</th>
+                            <th class="p-3">Khuyến mãi (1 thùng tặng...)</th>
                             <th class="p-3">Đơn giá (VNĐ)</th>
                             <th class="p-3 text-center">Hành động</th>
                         </tr>
@@ -155,7 +156,7 @@
                                 <td class="p-3 font-semibold text-gray-800" x-text="product.name"></td>
                                 <td class="p-3 text-gray-600" x-text="product.spec"></td>
                                 <td class="p-3">
-                                    <input type="text" x-model="product.promo" @change="saveData()" placeholder="VD: 4 gói hoặc 5%" class="w-28 px-2 py-1 border rounded text-xs text-red-600 font-medium">
+                                    <input type="text" x-model="product.promo" @change="saveData()" placeholder="VD: 1 hộp hoặc 2 gói" class="w-36 px-2 py-1 border rounded text-xs text-red-600 font-medium">
                                 </td>
                                 <td class="p-3">
                                     <input type="number" x-model.number="product.price" @change="saveData()" class="w-32 px-2 py-1 border rounded text-red-600 font-bold focus:ring-2 focus:ring-red-500 focus:outline-none">
@@ -251,12 +252,12 @@
                                             </div>
                                         </div>
 
-                                        <!-- Phía dưới: Số lượng, đơn giá, thành tiền và khuyến mãi -->
+                                        <!-- Phía dưới: Số lượng, đơn giá, thành tiền và khuyến mãi nhân theo số lượng -->
                                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 pt-1">
                                             <div class="flex items-center space-x-4">
                                                 <span class="font-semibold text-gray-700">SL: <span class="text-red-600 font-bold" x-text="item.quantity + ' thùng'"></span></span>
                                                 <template x-if="item.promo">
-                                                    <span class="bg-red-50 text-red-600 px-2 py-0.5 rounded font-medium" x-text="'KM: ' + item.promo"></span>
+                                                    <span class="bg-red-50 text-red-600 px-2 py-0.5 rounded font-medium" x-text="'KM: ' + calculateScaledPromo(item.promo, item.quantity)"></span>
                                                 </template>
                                             </div>
                                             <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
@@ -301,17 +302,30 @@
                         </div>
                     </template>
                     <template x-for="(item, index) in cart" :key="item.code">
-                        <div class="flex justify-between items-center border-b pb-4">
-                            <div class="space-y-1 flex-1 pr-4">
-                                <h4 class="text-sm font-semibold text-gray-800" x-text="item.name"></h4>
-                                <p class="text-xs text-gray-500" x-text="'Mã: ' + item.code"></p>
-                                <p class="text-xs font-medium text-red-600" x-text="formatCurrency(item.price) + ' đ/thùng'"></p>
+                        <div class="border-b pb-4 space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-10 h-10 rounded border overflow-hidden product-crop-frame bg-gray-50 flex-shrink-0">
+                                        <img :src="item.image">
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-gray-800" x-text="item.name"></h4>
+                                        <p class="text-xs text-gray-500" x-text="'Mã: ' + item.code"></p>
+                                    </div>
+                                </div>
+                                <button @click="cart.splice(index, 1)" class="text-red-500 hover:text-red-700 text-xs font-bold">Xóa</button>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <button @click="updateQty(index, -1)" class="w-7 h-7 bg-gray-100 rounded flex items-center justify-center font-bold hover:bg-gray-200">-</button>
-                                <span class="text-sm font-semibold w-6 text-center" x-text="item.quantity"></span>
-                                <button @click="updateQty(index, 1)" class="w-7 h-7 bg-gray-100 rounded flex items-center justify-center font-bold hover:bg-gray-200">+</button>
+                            <div class="flex justify-between items-center text-xs pt-1">
+                                <span class="font-medium text-red-600" x-text="formatCurrency(item.price) + ' đ/thùng'"></span>
+                                <div class="flex items-center space-x-2">
+                                    <button @click="updateQty(index, -1)" class="w-7 h-7 bg-gray-100 rounded flex items-center justify-center font-bold hover:bg-gray-200">-</button>
+                                    <span class="text-sm font-semibold w-6 text-center" x-text="item.quantity"></span>
+                                    <button @click="updateQty(index, 1)" class="w-7 h-7 bg-gray-100 rounded flex items-center justify-center font-bold hover:bg-gray-200">+</button>
+                                </div>
                             </div>
+                            <template x-if="item.promo">
+                                <p class="text-xs text-red-600 font-medium bg-red-50 p-1.5 rounded" x-text="'Khuyến mãi: ' + calculateScaledPromo(item.promo, item.quantity)"></p>
+                            </template>
                         </div>
                     </template>
                 </div>
@@ -370,7 +384,7 @@
         </div>
     </div>
 
-    <!-- Add Product Modal with Top Name Extraction -->
+    <!-- Add Product Modal with Correct Cropping & Header Name Extraction -->
     <div x-show="openAddProductModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="openAddProductModal = false"></div>
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative z-10 space-y-4">
@@ -383,15 +397,15 @@
 
                 <template x-if="newProd.image">
                     <div class="flex items-center space-x-3 bg-gray-50 p-2 rounded border">
-                        <div class="w-16 h-16 rounded overflow-hidden border product-crop-frame bg-white">
+                        <div class="w-16 h-16 rounded overflow-hidden border product-crop-frame bg-white flex-shrink-0">
                             <img :src="newProd.image">
                         </div>
-                        <span class="text-xs text-green-600 font-semibold">✓ Đã trích xuất tên phía trên và cắt ảnh sản phẩm thành công!</span>
+                        <span class="text-xs text-green-600 font-semibold">✓ Đã cắt đúng vùng sản phẩm và trích xuất tên thành công!</span>
                     </div>
                 </template>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm (Nhận diện từ phía trên ảnh)</label>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm (Trích xuất phía trên ảnh)</label>
                     <input type="text" x-model="newProd.name" required class="w-full px-3 py-2 border rounded-lg text-sm font-bold text-gray-800">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
@@ -419,8 +433,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Khuyến mãi</label>
-                    <input type="text" x-model="newProd.promo" placeholder="Ví dụ: 4 gói hoặc 5%" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Khuyến mãi (VD: 1 hộp hoặc 2 gói)</label>
+                    <input type="text" x-model="newProd.promo" placeholder="Ví dụ: 1 hộp" class="w-full px-3 py-2 border rounded-lg text-sm">
                 </div>
                 <div class="flex space-x-3 pt-3">
                     <button type="button" @click="openAddProductModal = false" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm">Hủy</button>
@@ -474,11 +488,11 @@
                 customerSuggestions: [],
                 newCust: { name: '', phone: '', address: '' },
                 
-                newProd: { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', promo: '', image: '', subName: 'Sản phẩm mới' },
+                newProd: { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', promo: '1 hộp', image: '', subName: 'Sản phẩm mới' },
 
                 products: JSON.parse(localStorage.getItem('haihaco_products')) || [
-                    { name: 'LongPie Luxury Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '468g x 8 hộp', code: 'S95054525B', price: 240000, promo: '4 gói', image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80' },
-                    { name: 'LongPie Standard Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '252g x 12 hộp', code: 'S95052033', price: 150000, promo: '5%', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'LongPie Luxury Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '468g x 8 hộp', code: 'S95054525B', price: 240000, promo: '1 hộp', image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'LongPie Standard Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '252g x 12 hộp', code: 'S95052033', price: 150000, promo: '2 gói', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
                     { name: 'Mercury Custard Cream Cake', subName: 'Bánh nhân kem trứng', category: 'Mercury', spec: '252g x 10 hộp', code: 'S95055867', price: 135000, promo: '', image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=500&q=80' }
                 ],
 
@@ -494,9 +508,24 @@
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
-                            this.newProd.image = e.target.result;
-                            
-                            // Lấy tên từ tên file (giả lập phần chữ nằm ở phía trên bức ảnh)
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = () => {
+                                // Tự động cắt khung hình ảnh sản phẩm (lấy phần trung tâm bức ảnh để bỏ viền rác)
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                const size = Math.min(img.width, img.height);
+                                canvas.width = 400;
+                                canvas.height = 400;
+                                
+                                const offsetX = (img.width - size) / 2;
+                                const offsetY = (img.height - size) / 2;
+                                ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, 400, 400);
+                                
+                                this.newProd.image = canvas.toDataURL('image/jpeg', 0.9);
+                            };
+
+                            // Trích xuất tên sản phẩm từ tên file upload (giả lập phần thông tin phía trên ảnh)
                             let cleanName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
                             cleanName = cleanName.replace(/[-_]/g, ' ').toUpperCase();
                             this.newProd.name = cleanName;
@@ -504,6 +533,20 @@
                         };
                         reader.readAsDataURL(file);
                     }
+                },
+
+                // Hàm tính toán khuyến mãi tự động nhân theo số lượng thùng (VD: 1 thùng tặng 1 hộp -> 2 thùng tặng 2 hộp)
+                calculateScaledPromo(promoStr, quantity) {
+                    if (!promoStr) return '';
+                    // Kiểm tra xem chuỗi khuyến mãi có chứa số ở đầu không (Ví dụ: "1 hộp", "2 gói", "1 hộp bánh")
+                    const match = promoStr.match(/^(\d+)(.*)$/);
+                    if (match) {
+                        const baseNum = parseInt(match[1]);
+                        const unitAndText = match[2];
+                        const scaledNum = baseNum * quantity;
+                        return scaledNum + unitAndText;
+                    }
+                    return promoStr;
                 },
 
                 saveData() {
@@ -522,7 +565,7 @@
                     this.products.push({ ...this.newProd });
                     this.saveData();
                     this.openAddProductModal = false;
-                    this.newProd = { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', promo: '', image: '', subName: 'Sản phẩm mới' };
+                    this.newProd = { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', promo: '1 hộp', image: '', subName: 'Sản phẩm mới' };
                 },
 
                 deleteProduct(index) {
@@ -654,7 +697,6 @@
                         return;
                     }
 
-                    // Gom nhóm đơn hàng theo ngày
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
 
@@ -663,8 +705,6 @@
                     doc.text("BAO CAO TONG HOP DON HANG TRONG NGAY - HAIHACO", 14, 20);
 
                     let y = 30;
-                    
-                    // Gom nhóm theo ngày
                     let grouped = {};
                     this.orderHistory.forEach(ord => {
                         let dKey = ord.date;
@@ -688,8 +728,8 @@
                             doc.setFont("helvetica", "normal");
                             doc.setFontSize(10);
                             ord.items.forEach(it => {
-                                let lineText = `   + ${it.name} (Ma: ${it.code}) - SL: ${it.quantity} thung - Don gia: ${this.formatCurrency(it.price)}d - Thanh tien: ${this.formatCurrency(it.price * it.quantity)}d`;
-                                if(it.promo) lineText += ` [KM: ${it.promo}]`;
+                                let scaledPromoText = it.promo ? ` [KM: ${this.calculateScaledPromo(it.promo, it.quantity)}]` : '';
+                                let lineText = `   + ${it.name} (Ma: ${it.code}) - SL: ${it.quantity} thung - Don gia: ${this.formatCurrency(it.price)}d - Thanh tien: ${this.formatCurrency(it.price * it.quantity)}d${scaledPromoText}`;
                                 doc.text(lineText, 18, y);
                                 y += 6;
                                 if (y > 270) { doc.addPage(); y = 20; }

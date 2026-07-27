@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt Hàng Bánh Kẹo Hải Hà - Haihaco Catalog</title>
+    <title>Hệ Thống Đặt Hàng & Quản Lý Kho - Hải Hà</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js CDN -->
@@ -19,75 +19,189 @@
     <header class="bg-red-600 text-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold tracking-wide">HAIHACO ORDERING</h1>
-                <p class="text-xs text-red-100">Hệ thống đặt hàng sản phẩm chính hãng Hải Hà</p>
+                <h1 class="text-2xl font-bold tracking-wide">HAIHACO ORDERING & STOCK</h1>
+                <p class="text-xs text-red-100">Hệ thống đặt hàng & Quản lý kho hàng thông minh</p>
             </div>
-            <div class="flex items-center space-x-4">
-                <button @click="cartOpen = true" class="relative bg-red-700 hover:bg-red-800 px-4 py-2 rounded-lg flex items-center space-x-2 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="flex items-center space-x-3">
+                <button @click="currentTab = 'shop'" :class="currentTab === 'shop' ? 'bg-red-800' : 'bg-red-700 hover:bg-red-800'" class="px-4 py-2 rounded-lg text-sm font-semibold transition">Trang Đặt Hàng</button>
+                <button @click="currentTab = 'inventory'" :class="currentTab === 'inventory' ? 'bg-red-800' : 'bg-red-700 hover:bg-red-800'" class="px-4 py-2 rounded-lg text-sm font-semibold transition">Quản Lý Kho & Giá</button>
+                <button @click="currentTab = 'orders'" :class="currentTab === 'orders' ? 'bg-red-800' : 'bg-red-700 hover:bg-red-800'" class="px-4 py-2 rounded-lg text-sm font-semibold transition">Lịch Sử Đơn Hàng (<span x-text="orderHistory.length"></span>)</button>
+                
+                <button @click="cartOpen = true" class="relative bg-white text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg flex items-center space-x-2 transition font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span class="font-semibold">Giỏ hàng</span>
-                    <span class="bg-white text-red-600 rounded-full px-2 py-0.5 text-xs font-bold" x-text="totalItems">0</span>
+                    <span>Giỏ hàng</span>
+                    <span class="bg-red-600 text-white rounded-full px-2 py-0.5 text-xs font-bold" x-text="totalItems">0</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-8">
         
-        <!-- Sidebar Filter / Search -->
-        <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm h-fit space-y-6">
-            <h2 class="text-lg font-semibold border-b pb-2">Danh mục sản phẩm</h2>
-            <div class="space-y-2">
-                <button @click="selectedCategory = 'All'" :class="selectedCategory === 'All' ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition">Tất cả sản phẩm</button>
-                <template x-for="category in categories" :key="category">
-                    <button @click="selectedCategory = category" :class="selectedCategory === category ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition" x-text="category"></button>
-                </template>
+        <!-- TAB 1: SHOPPING -->
+        <div x-show="currentTab === 'shop'" class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar Filter -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm h-fit space-y-6">
+                <h2 class="text-lg font-semibold border-b pb-2">Danh mục sản phẩm</h2>
+                <div class="space-y-2">
+                    <button @click="selectedCategory = 'All'" :class="selectedCategory === 'All' ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition">Tất cả sản phẩm</button>
+                    <template x-for="category in categories" :key="category">
+                        <button @click="selectedCategory = category" :class="selectedCategory === category ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition" x-text="category"></button>
+                    </template>
+                </div>
+
+                <div class="space-y-2 pt-4 border-t">
+                    <label class="text-sm font-semibold text-gray-600">Tìm kiếm sản phẩm</label>
+                    <input type="text" x-model="searchQuery" placeholder="Nhập tên hoặc mã code..." class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
             </div>
 
-            <div class="space-y-2 pt-4 border-t">
-                <label class="text-sm font-semibold text-gray-600">Tìm kiếm sản phẩm</label>
-                <input type="text" x-model="searchQuery" placeholder="Nhập tên hoặc mã code..." class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <!-- Product Grid -->
+            <div class="lg:col-span-3 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800" x-text="selectedCategory === 'All' ? 'Tất cả sản phẩm' : selectedCategory"></h2>
+                    <span class="text-sm text-gray-500" x-text="filteredProducts.length + ' sản phẩm'"></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <template x-for="product in filteredProducts" :key="product.code">
+                        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border flex flex-col justify-between">
+                            <div>
+                                <div class="h-48 bg-gray-100 overflow-hidden relative">
+                                    <img :src="product.image" :alt="product.name" class="w-full h-full object-cover">
+                                    <span class="absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 bg-red-600 text-white rounded-full shadow" x-text="product.category"></span>
+                                </div>
+                                <div class="p-5 space-y-2">
+                                    <h3 class="font-bold text-gray-800 text-base leading-snug" x-text="product.name"></h3>
+                                    <p class="text-xs text-gray-500" x-text="product.subName"></p>
+                                    
+                                    <div class="text-xs text-gray-600 space-y-1 pt-2 border-t">
+                                        <p><span class="font-medium">Quy cách:</span> <span x-text="product.spec"></span></p>
+                                        <p><span class="font-medium">Mã code:</span> <span x-text="product.code"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-5 bg-gray-50 border-t flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs text-gray-500 block">Đơn giá/thùng</span>
+                                    <span class="text-red-600 font-bold" x-text="formatCurrency(product.price) + ' đ'"></span>
+                                </div>
+                                <button @click="addToCart(product)" class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm">
+                                    Thêm vào giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 
-        <!-- Product Grid -->
-        <div class="lg:col-span-3 space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800" x-text="selectedCategory === 'All' ? 'Tất cả sản phẩm' : selectedCategory"></h2>
-                <span class="text-sm text-gray-500" x-text="filteredProducts.length + ' sản phẩm'"></span>
+        <!-- TAB 2: INVENTORY & PRICING MANAGEMENT -->
+        <div x-show="currentTab === 'inventory'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
+            <div class="flex justify-between items-center border-b pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho & Giá Sản Phẩm</h2>
+                    <p class="text-xs text-gray-500">Chỉnh sửa giá tiền trực tiếp, cập nhật quy cách hoặc thêm mới sản phẩm vào hệ thống.</p>
+                </div>
+                <button @click="openAddProductModal = true" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow">
+                    + Thêm sản phẩm mới
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <template x-for="product in filteredProducts" :key="product.code">
-                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border flex flex-col justify-between">
-                        <div class="p-5 space-y-3">
-                            <span class="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-600 rounded-full" x-text="product.category"></span>
-                            <h3 class="font-bold text-gray-800 text-base leading-snug" x-text="product.name"></h3>
-                            <p class="text-xs text-gray-500" x-text="product.subName"></p>
-                            
-                            <div class="text-xs text-gray-600 space-y-1 pt-2 border-t">
-                                <p><span class="font-medium">Quy cách thùng:</span> <span x-text="product.spec"></span></p>
-                                <p><span class="font-medium">Mã code:</span> <span x-text="product.code"></span></p>
-                                <p><span class="font-medium">Kích thước:</span> <span x-text="product.dimension"></span></p>
-                            </div>
-                        </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-xs font-semibold text-gray-600 uppercase">
+                            <th class="p-3">Hình ảnh</th>
+                            <th class="p-3">Mã Code</th>
+                            <th class="p-3">Tên sản phẩm</th>
+                            <th class="p-3">Danh mục</th>
+                            <th class="p-3">Quy cách</th>
+                            <th class="p-3">Đơn giá (VNĐ)</th>
+                            <th class="p-3 text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y text-sm">
+                        <template x-for="(product, index) in products" :key="product.code">
+                            <tr>
+                                <td class="p-3">
+                                    <img :src="product.image" class="w-12 h-12 object-cover rounded border">
+                                </td>
+                                <td class="p-3 font-mono text-xs text-gray-600" x-text="product.code"></td>
+                                <td class="p-3 font-semibold text-gray-800" x-text="product.name"></td>
+                                <td class="p-3">
+                                    <span class="px-2 py-1 bg-red-50 text-red-600 rounded-full text-xs font-medium" x-text="product.category"></span>
+                                </td>
+                                <td class="p-3 text-gray-600" x-text="product.spec"></td>
+                                <td class="p-3">
+                                    <input type="number" x-model.number="product.price" @change="saveData()" class="w-32 px-2 py-1 border rounded text-red-600 font-bold focus:ring-2 focus:ring-red-500 focus:outline-none">
+                                </td>
+                                <td class="p-3 text-center">
+                                    <button @click="deleteProduct(index)" class="text-red-600 hover:text-red-800 text-xs font-semibold px-3 py-1 bg-red-50 rounded transition">Xóa</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                        <div class="p-5 bg-gray-50 border-t flex items-center justify-between">
+        <!-- TAB 3: ORDER HISTORY -->
+        <div x-show="currentTab === 'orders'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
+            <div class="border-b pb-4">
+                <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng Đã Đặt</h2>
+                <p class="text-xs text-gray-500">Các đơn hàng bạn đã lập sẽ được lưu giữ cố định tại đây để tra cứu bất cứ lúc nào.</p>
+            </div>
+
+            <template x-if="orderHistory.length === 0">
+                <div class="text-center py-12 text-gray-500">
+                    <p>Chưa có đơn hàng nào được tạo.</p>
+                </div>
+            </template>
+
+            <div class="space-y-4">
+                <template x-for="order in orderHistory" :key="order.id">
+                    <div class="border rounded-xl p-5 space-y-3 bg-gray-50">
+                        <div class="flex justify-between items-start border-b pb-3">
                             <div>
-                                <span class="text-xs text-gray-500 block">Giá ước tính</span>
-                                <span class="text-red-600 font-bold" x-text="formatCurrency(product.price) + ' đ'"></span>
+                                <span class="text-xs font-bold text-red-600 uppercase" x-text="order.id"></span>
+                                <h3 class="font-bold text-gray-800 text-base" x-text="order.customerName"></h3>
+                                <p class="text-xs text-gray-500" x-text="'SĐT: ' + order.phone + ' | Địa chỉ: ' + order.address"></p>
                             </div>
-                            <button @click="addToCart(product)" class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm">
-                                Thêm vào giỏ
-                            </button>
+                            <div class="text-right">
+                                <span class="text-xs text-gray-500 block" x-text="order.date"></span>
+                                <span class="text-lg font-bold text-red-600" x-text="formatCurrency(order.totalAmount) + ' đ'"></span>
+                            </div>
                         </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-600 mb-2">Chi tiết sản phẩm đặt:</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <template x-for="item in order.items">
+                                    <div class="bg-white p-2.5 rounded border flex justify-between text-xs">
+                                        <div>
+                                            <span class="font-semibold text-gray-800" x-text="item.name"></span>
+                                            <span class="text-gray-500 block" x-text="'Mã: ' + item.code"></span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="font-medium text-red-600" x-text="item.quantity + ' thùng'"></span>
+                                            <span class="text-gray-500 block" x-text="formatCurrency(item.price * item.quantity) + ' đ'"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <template x-if="order.note">
+                            <p class="text-xs text-gray-600 italic pt-2 border-t"><span class="font-semibold">Ghi chú:</span> <span x-text="order.note"></span></p>
+                        </template>
                     </div>
                 </template>
             </div>
         </div>
+
     </main>
 
     <!-- Cart Slide-over Modal -->
@@ -167,14 +281,49 @@
         </div>
     </div>
 
-    <!-- Success Order Modal -->
-    <div x-show="successModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative z-10 text-center space-y-4">
-            <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">✓</div>
-            <h3 class="text-xl font-bold text-gray-800">Đặt hàng thành công!</h3>
-            <p class="text-sm text-gray-600">Cảm ơn bạn đã đặt sản phẩm của Hải Hà. Đơn hàng của bạn đã được ghi nhận và gửi đến bộ phận kinh doanh.</p>
-            <button @click="successModal = false; cart = []" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm transition">Trở về trang chủ</button>
+    <!-- Add Product Modal -->
+    <div x-show="openAddProductModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black bg-opacity-50" @click="openAddProductModal = false"></div>
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative z-10 space-y-4">
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Thêm Sản Phẩm Mới Vào Kho</h3>
+            <form @submit.prevent="addNewProduct" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm</label>
+                    <input type="text" x-model="newProd.name" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Mã Code</label>
+                        <input type="text" x-model="newProd.code" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Danh mục</label>
+                        <select x-model="newProd.category" class="w-full px-3 py-2 border rounded-lg text-sm">
+                            <template x-for="cat in categories" :key="cat">
+                                <option :value="cat" x-text="cat"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Đơn giá (VNĐ)</label>
+                        <input type="number" x-model.number="newProd.price" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Quy cách</label>
+                        <input type="text" x-model="newProd.spec" placeholder="Ví dụ: 350g x 8 hộp" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Link hình ảnh</label>
+                    <input type="url" x-model="newProd.image" placeholder="https://..." required class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <div class="flex space-x-3 pt-3">
+                    <button type="button" @click="openAddProductModal = false" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm">Hủy</button>
+                    <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm shadow">Thêm sản phẩm</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -182,34 +331,47 @@
     <script>
         function orderApp() {
             return {
+                currentTab: 'shop',
                 cartOpen: false,
                 checkoutOpen: false,
-                successModal: false,
+                openAddProductModal: false,
                 selectedCategory: 'All',
                 searchQuery: '',
                 categories: ['LongPie', 'Mercury', 'Crackers', 'Wafer', 'Biscuits & Cookies', 'Candies & Jelly', 'Chocolate & Soft Candies'],
                 cart: [],
                 customer: { name: '', phone: '', address: '', note: '' },
                 
-                // Dữ liệu sản phẩm mẫu tiêu biểu trích xuất từ catalog Hải Hà
-                products: [
-                    { name: 'LongPie Luxury Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '468g x 8 hộp', code: 'S95054525B', dimension: '553x343x388 mm', price: 240000 },
-                    { name: 'LongPie Standard Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '252g x 12 hộp', code: 'S95052033', dimension: '633x273x298 mm', price: 150000 },
-                    { name: 'LongPie Pandan Flavour', subName: 'Bánh kem Marshmallow phủ sô cô la hương cốm', category: 'LongPie', spec: '288g x 10 hộp', code: 'S95054730', dimension: '553x293x358 mm', price: 180000 },
-                    { name: 'Mercury Custard Cream Cake', subName: 'Bánh nhân kem trứng (Vị Trứng Sữa)', category: 'Mercury', spec: '252g x 10 hộp', code: 'S95055867', dimension: '473x313x393 mm', price: 135000 },
-                    { name: 'Mercury Custard Cake Strawberry', subName: 'Bánh nhân kem trứng vị Dâu', category: 'Mercury', spec: '252g x 10 hộp', code: 'S95057717', dimension: '473x313x393 mm', price: 135000 },
-                    { name: 'Kami Seaweed Crackers', subName: 'Bánh Crackers tảo biển hộp cao cấp', category: 'Crackers', spec: '380g x 8 hộp', code: 'S95056727', dimension: '468x333x378 mm', price: 190000 },
-                    { name: 'Coolte Sesame & Coconut Crackers', subName: 'Bánh mặn vừng dừa', category: 'Crackers', spec: '350g x 8 hộp', code: 'S95055997', dimension: '468x343x353 mm', price: 175000 },
-                    { name: 'GaBi Rice Crackers (Sweet)', subName: 'Bánh gạo vị ngọt', category: 'Crackers', spec: '130g x 20 túi', code: 'S95054501', dimension: '439x299x334 mm', price: 210000 },
-                    { name: 'Eliza Cream Wafer (Assorted)', subName: 'Bánh kem xốp hương trái cây tổng hợp', category: 'Wafer', spec: '145g x 40 túi', code: 'S95050749', dimension: '459x339x284 mm', price: 260000 },
-                    { name: 'Miniwaf Cream Roll Wafer', subName: 'Bánh xốp ống Miniwaf nhân kem sôcôla', category: 'Wafer', spec: '300g x 15 túi', code: 'S95051173A', dimension: '633x308x208 mm', price: 225000 },
-                    { name: 'Okie Vanilla Cream Biscuits', subName: 'Bánh biscuits kẹp kem vị vani', category: 'Biscuits & Cookies', spec: '366g x 8 hộp', code: 'S95057601', dimension: '468x303x348 mm', price: 195000 },
-                    { name: 'SoZoll Egg & Milk Cookies', subName: 'Bánh cookies trứng sữa', category: 'Biscuits & Cookies', spec: '350g x 8 hộp', code: 'S95055768', dimension: '468x343x353 mm', price: 210000 },
-                    { name: 'Pooz Fruit Jelly Candy', subName: 'Kẹo Jelly trái cây tổng hợp', category: 'Candies & Jelly', spec: '1000g x 6 túi', code: 'S95020254A', dimension: '383x363x173 mm', price: 300000 },
-                    { name: 'Chip Chip Fruit Jelly Candy', subName: 'Kẹo jelly Chip Chip 2 lớp', category: 'Candies & Jelly', spec: '500g x 20 túi', code: 'S95020223', dimension: '413x263x208 mm', price: 450000 },
-                    { name: 'Sokiss Milk Chocolate Bar', subName: 'Kẹo sô cô la thanh sữa', category: 'Chocolate & Soft Candies', spec: '100g x 30 thanh', code: 'S95021640', dimension: '268x193x128 mm', price: 330000 },
-                    { name: 'Sofee Chocolate Covered Toffee', subName: 'Kẹo toffee phủ sô cô la', category: 'Chocolate & Soft Candies', spec: '250g x 20 túi', code: 'S95062278', dimension: '513x253x233 mm', price: 280000 }
+                newProd: { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', image: '' },
+
+                // Dữ liệu ban đầu, sẽ tự động lưu và đọc từ localStorage
+                products: JSON.parse(localStorage.getItem('haihaco_products')) || [
+                    { name: 'LongPie Luxury Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '468g x 8 hộp', code: 'S95054525B', price: 240000, image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'LongPie Standard Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '252g x 12 hộp', code: 'S95052033', price: 150000, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'LongPie Pandan Flavour', subName: 'Bánh kem Marshmallow phủ sô cô la hương cốm', category: 'LongPie', spec: '288g x 10 hộp', code: 'S95054730', price: 180000, image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'Mercury Custard Cream Cake', subName: 'Bánh nhân kem trứng (Vị Trứng Sữa)', category: 'Mercury', spec: '252g x 10 hộp', code: 'S95055867', price: 135000, image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'Kami Seaweed Crackers', subName: 'Bánh Crackers tảo biển hộp cao cấp', category: 'Crackers', spec: '380g x 8 hộp', code: 'S95056727', price: 190000, image: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'Eliza Cream Wafer (Assorted)', subName: 'Bánh kem xốp hương trái cây tổng hợp', category: 'Wafer', spec: '145g x 40 túi', code: 'S95050749', price: 260000, image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=500&q=80' }
                 ],
+
+                orderHistory: JSON.parse(localStorage.getItem('haihaco_orders')) || [],
+
+                saveData() {
+                    localStorage.setItem('haihaco_products', JSON.stringify(this.products));
+                },
+
+                addNewProduct() {
+                    this.products.push({ ...this.newProd });
+                    this.saveData();
+                    this.openAddProductModal = false;
+                    this.newProd = { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', image: '' };
+                },
+
+                deleteProduct(index) {
+                    if(confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi kho?')) {
+                        this.products.splice(index, 1);
+                        this.saveData();
+                    }
+                },
 
                 get filteredProducts() {
                     return this.products.filter(p => {
@@ -249,8 +411,25 @@
                 },
 
                 submitOrder() {
+                    const newOrder = {
+                        id: 'DH' + Math.floor(1000 + Math.random() * 9000),
+                        date: new Date().toLocaleString('vi-VN'),
+                        customerName: this.customer.name,
+                        phone: this.customer.phone,
+                        address: this.customer.address,
+                        note: this.customer.note,
+                        items: [...this.cart],
+                        totalAmount: this.totalAmount
+                    };
+
+                    this.orderHistory.unshift(newOrder);
+                    localStorage.setItem('haihaco_orders', JSON.stringify(this.orderHistory));
+
+                    this.cart = [];
+                    this.customer = { name: '', phone: '', address: '', note: '' };
                     this.checkoutOpen = false;
-                    this.successModal = true;
+                    this.currentTab = 'orders';
+                    alert('Đơn hàng đã được đặt và lưu thành công vào Lịch Sử Đơn Hàng!');
                 }
             }
         }

@@ -8,9 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- jsPDF CDN để xuất hóa đơn PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .object-fit-crop { object-fit: cover; object-position: center; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800" x-data="orderApp()">
@@ -19,19 +22,18 @@
     <header class="bg-red-600 text-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-xl md:text-2xl font-bold tracking-wide">HAIHACO ORDERING & STOCK</h1>
-                <p class="text-xs text-red-100">Hệ thống đặt hàng & Quản lý kho hàng thông minh</p>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">HAIHACO MANAGEMENT</h1>
+                <p class="text-xs text-red-100">Hệ thống đặt hàng, kho & khách hàng chuyên nghiệp</p>
             </div>
             
-            <!-- 3 Nút đầu trang bằng nhau và Giỏ hàng -->
-            <div class="flex flex-wrap items-center gap-2">
-                <button @click="currentTab = 'shop'" :class="currentTab === 'shop' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="w-36 py-2.5 rounded-lg text-xs font-bold uppercase transition text-center">Trang Đặt Hàng</button>
-                <button @click="currentTab = 'inventory'" :class="currentTab === 'inventory' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="w-36 py-2.5 rounded-lg text-xs font-bold uppercase transition text-center">Quản Lý Kho</button>
-                <button @click="currentTab = 'orders'" :class="currentTab === 'orders' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="w-36 py-2.5 rounded-lg text-xs font-bold uppercase transition text-center relative">
-                    Lịch Sử (<span x-text="orderHistory.length"></span>)
-                </button>
+            <!-- 5 Nút điều hướng đầu trang bằng nhau -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full md:w-auto">
+                <button @click="currentTab = 'shop'" :class="currentTab === 'shop' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="py-2 px-3 rounded-lg text-xs font-bold uppercase transition text-center truncate">Đặt Hàng</button>
+                <button @click="currentTab = 'inventory'" :class="currentTab === 'inventory' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="py-2 px-3 rounded-lg text-xs font-bold uppercase transition text-center truncate">Kho Hàng</button>
+                <button @click="currentTab = 'customers'" :class="currentTab === 'customers' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="py-2 px-3 rounded-lg text-xs font-bold uppercase transition text-center truncate">Khách Hàng</button>
+                <button @click="currentTab = 'orders'" :class="currentTab === 'orders' ? 'bg-red-900 shadow-inner' : 'bg-red-700 hover:bg-red-800'" class="py-2 px-3 rounded-lg text-xs font-bold uppercase transition text-center truncate">Lịch Sử (<span x-text="orderHistory.length"></span>)</button>
                 
-                <button @click="cartOpen = true" class="bg-white text-red-600 hover:bg-red-50 px-4 py-2.5 rounded-lg flex items-center space-x-2 transition font-bold text-xs uppercase shadow">
+                <button @click="cartOpen = true" class="bg-white text-red-600 hover:bg-red-50 py-2 px-3 rounded-lg flex items-center justify-center space-x-1 transition font-bold text-xs uppercase shadow col-span-2 sm:col-span-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
@@ -72,7 +74,8 @@
                         <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border flex flex-col justify-between">
                             <div>
                                 <div class="h-48 bg-gray-100 overflow-hidden relative">
-                                    <img :src="product.image" :alt="product.name" class="w-full h-full object-cover">
+                                    <!-- Cắt và tập trung khung hình vào phần sản phẩm -->
+                                    <img :src="product.image" :alt="product.name" class="w-full h-full object-fit-crop scale-90">
                                     <span class="absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 bg-red-600 text-white rounded-full shadow" x-text="product.category"></span>
                                 </div>
                                 <div class="p-5 space-y-2">
@@ -82,6 +85,9 @@
                                     <div class="text-xs text-gray-600 space-y-1 pt-2 border-t">
                                         <p><span class="font-medium">Quy cách:</span> <span x-text="product.spec"></span></p>
                                         <p><span class="font-medium">Mã code:</span> <span x-text="product.code"></span></p>
+                                        <template x-if="product.promo">
+                                            <p class="text-red-600 font-semibold"><span class="font-medium text-gray-600">KM:</span> <span x-text="product.promo"></span></p>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -101,15 +107,15 @@
             </div>
         </div>
 
-        <!-- TAB 2: INVENTORY & PRICING MANAGEMENT -->
+        <!-- TAB 2: INVENTORY MANAGEMENT -->
         <div x-show="currentTab === 'inventory'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
             <div class="flex justify-between items-center border-b pb-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho & Giá Sản Phẩm</h2>
-                    <p class="text-xs text-gray-500">Tải lên ảnh sản phẩm để hệ thống tự động nhận diện thông tin và điền vào kho.</p>
+                    <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho Hàng & Khuyến Mãi</h2>
+                    <p class="text-xs text-gray-500">Cập nhật sản phẩm, giá bán và chương trình khuyến mãi (theo số lượng hoặc chiết khấu %).</p>
                 </div>
                 <button @click="openAddProductModal = true" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow">
-                    + Thêm sản phẩm mới
+                    + Thêm sản phẩm mới từ ảnh
                 </button>
             </div>
 
@@ -120,8 +126,8 @@
                             <th class="p-3">Hình ảnh</th>
                             <th class="p-3">Mã Code</th>
                             <th class="p-3">Tên sản phẩm</th>
-                            <th class="p-3">Danh mục</th>
                             <th class="p-3">Quy cách</th>
+                            <th class="p-3">Khuyến mãi</th>
                             <th class="p-3">Đơn giá (VNĐ)</th>
                             <th class="p-3 text-center">Hành động</th>
                         </tr>
@@ -130,14 +136,16 @@
                         <template x-for="(product, index) in products" :key="product.code">
                             <tr>
                                 <td class="p-3">
-                                    <img :src="product.image" class="w-12 h-12 object-cover rounded border">
+                                    <div class="w-12 h-12 rounded border overflow-hidden bg-gray-50">
+                                        <img :src="product.image" class="w-full h-full object-fit-crop scale-90">
+                                    </div>
                                 </td>
                                 <td class="p-3 font-mono text-xs text-gray-600" x-text="product.code"></td>
                                 <td class="p-3 font-semibold text-gray-800" x-text="product.name"></td>
-                                <td class="p-3">
-                                    <span class="px-2 py-1 bg-red-50 text-red-600 rounded-full text-xs font-medium" x-text="product.category"></span>
-                                </td>
                                 <td class="p-3 text-gray-600" x-text="product.spec"></td>
+                                <td class="p-3">
+                                    <input type="text" x-model="product.promo" @change="saveData()" placeholder="VD: 4 gói hoặc 5%" class="w-28 px-2 py-1 border rounded text-xs text-red-600 font-medium">
+                                </td>
                                 <td class="p-3">
                                     <input type="number" x-model.number="product.price" @change="saveData()" class="w-32 px-2 py-1 border rounded text-red-600 font-bold focus:ring-2 focus:ring-red-500 focus:outline-none">
                                 </td>
@@ -151,53 +159,97 @@
             </div>
         </div>
 
-        <!-- TAB 3: ORDER HISTORY -->
-        <div x-show="currentTab === 'orders'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
-            <div class="border-b pb-4">
-                <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng Đã Đặt</h2>
-                <p class="text-xs text-gray-500">Toàn bộ đơn hàng được lưu giữ vĩnh viễn tại đây, không bị mất đi.</p>
+        <!-- TAB 3: CUSTOMER MANAGEMENT -->
+        <div x-show="currentTab === 'customers'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
+            <div class="flex justify-between items-center border-b pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Quản Lý Danh Sách Khách Hàng</h2>
+                    <p class="text-xs text-gray-500">Lưu trữ thông tin khách hàng và đại lý để gợi ý nhanh khi đặt đơn.</p>
+                </div>
+                <button @click="openAddCustModal = true" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow">
+                    + Thêm khách hàng mới
+                </button>
             </div>
 
-            <template x-if="orderHistory.length === 0">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <template x-for="(cust, index) in customers" :key="cust.phone">
+                    <div class="border rounded-xl p-4 bg-gray-50 space-y-2 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-gray-800 text-base" x-text="cust.name"></h3>
+                            <p class="text-xs text-gray-600"><span class="font-semibold">SĐT:</span> <span x-text="cust.phone"></span></p>
+                            <p class="text-xs text-gray-600"><span class="font-semibold">Địa chỉ:</span> <span x-text="cust.address"></span></p>
+                        </div>
+                        <div class="pt-2 border-t flex justify-end">
+                            <button @click="deleteCustomer(index)" class="text-red-600 hover:text-red-800 text-xs font-semibold px-3 py-1 bg-white border rounded">Xóa</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- TAB 4: ORDER HISTORY -->
+        <div x-show="currentTab === 'orders'" class="bg-white rounded-xl shadow-sm p-6 space-y-6" style="display: none;">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng & Xuất PDF</h2>
+                    <p class="text-xs text-gray-500">Quản lý đơn hàng gom nhóm theo ngày, có thể chỉnh sửa giá trực tiếp và xuất hóa đơn PDF.</p>
+                </div>
+                <div class="w-full md:w-72">
+                    <input type="text" x-model="orderSearchQuery" placeholder="Tìm kiếm theo tên khách, mã đơn..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500">
+                </div>
+            </div>
+
+            <template x-if="filteredOrders.length === 0">
                 <div class="text-center py-12 text-gray-500">
-                    <p>Chưa có đơn hàng nào được tạo.</p>
+                    <p>Không tìm thấy đơn hàng phù hợp.</p>
                 </div>
             </template>
 
-            <div class="space-y-4">
-                <template x-for="order in orderHistory" :key="order.id">
-                    <div class="border rounded-xl p-5 space-y-3 bg-gray-50">
-                        <div class="flex justify-between items-start border-b pb-3">
+            <div class="space-y-6">
+                <template x-for="order in filteredOrders" :key="order.id">
+                    <div class="border rounded-xl p-5 space-y-4 bg-gray-50 shadow-sm">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-2">
                             <div>
-                                <span class="text-xs font-bold text-red-600 uppercase" x-text="order.id"></span>
-                                <h3 class="font-bold text-gray-800 text-base" x-text="order.customerName"></h3>
+                                <span class="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded uppercase" x-text="order.id"></span>
+                                <h3 class="font-bold text-gray-800 text-base mt-1" x-text="order.customerName"></h3>
                                 <p class="text-xs text-gray-500" x-text="'SĐT: ' + order.phone + ' | Địa chỉ: ' + order.address"></p>
                             </div>
-                            <div class="text-right">
-                                <span class="text-xs text-gray-500 block" x-text="order.date"></span>
-                                <span class="text-lg font-bold text-red-600" x-text="formatCurrency(order.totalAmount) + ' đ'"></span>
+                            <div class="flex items-center space-x-3">
+                                <div class="text-right">
+                                    <span class="text-xs text-gray-500 block" x-text="order.date"></span>
+                                    <span class="text-lg font-bold text-red-600" x-text="formatCurrency(calculateOrderTotal(order)) + ' đ'"></span>
+                                </div>
+                                <button @click="exportOrderPDF(order)" class="bg-gray-800 hover:bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow flex items-center space-x-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span>Xuất PDF</span>
+                                </button>
                             </div>
                         </div>
+
                         <div>
-                            <h4 class="text-xs font-semibold text-gray-600 mb-2">Chi tiết sản phẩm đặt:</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                <template x-for="item in order.items">
-                                    <div class="bg-white p-2.5 rounded border flex justify-between text-xs items-center">
-                                        <div class="flex items-center space-x-2">
-                                            <img :src="item.image" class="w-8 h-8 object-cover rounded">
+                            <h4 class="text-xs font-semibold text-gray-600 mb-2">Chi tiết sản phẩm (Có thể chỉnh sửa giá trực tiếp):</h4>
+                            <div class="space-y-2">
+                                <template x-for="(item, itemIndex) in order.items" :key="item.code">
+                                    <div class="bg-white p-3 rounded border flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2">
+                                        <div class="flex items-center space-x-3">
+                                            <img :src="item.image" class="w-10 h-10 object-fit-crop rounded border">
                                             <div>
-                                                <span class="font-semibold text-gray-800" x-text="item.name"></span>
-                                                <span class="text-gray-500 block" x-text="'Mã: ' + item.code"></span>
+                                                <span class="font-bold text-gray-800 text-sm" x-text="item.name"></span>
+                                                <span class="text-gray-500 block" x-text="'Mã: ' + item.code + ' | SL: ' + item.quantity + ' thùng'"></span>
                                             </div>
                                         </div>
-                                        <div class="text-right">
-                                            <span class="font-medium text-red-600" x-text="item.quantity + ' thùng'"></span>
-                                            <span class="text-gray-500 block" x-text="formatCurrency(item.price * item.quantity) + ' đ'"></span>
+                                        <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+                                            <div class="flex items-center space-x-1">
+                                                <span class="text-gray-500">Đơn giá:</span>
+                                                <input type="number" x-model.number="item.price" @change="saveOrders()" class="w-28 px-2 py-1 border rounded text-red-600 font-bold text-right">
+                                            </div>
+                                            <span class="font-bold text-gray-800 w-24 text-right" x-text="formatCurrency(item.price * item.quantity) + ' đ'"></span>
                                         </div>
                                     </div>
                                 </template>
                             </div>
                         </div>
+
                         <template x-if="order.note">
                             <p class="text-xs text-gray-600 italic pt-2 border-t"><span class="font-semibold">Ghi chú:</span> <span x-text="order.note"></span></p>
                         </template>
@@ -247,7 +299,7 @@
                         <span>Tổng tiền ước tính:</span>
                         <span class="text-red-600" x-text="formatCurrency(totalAmount) + ' đ'"></span>
                     </div>
-                    <button @click="checkoutOpen = true; cartOpen = false" :disabled="cart.length === 0" class="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg transition shadow">
+                    <button @click="openCheckoutModal()" :disabled="cart.length === 0" class="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg transition shadow">
                         Tiến Hành Đặt Hàng
                     </button>
                 </div>
@@ -255,16 +307,28 @@
         </div>
     </div>
 
-    <!-- Checkout Modal -->
+    <!-- Checkout Modal with Customer Auto-suggestion & Warning -->
     <div x-show="checkoutOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="checkoutOpen = false"></div>
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative z-10 space-y-4">
             <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Thông Tin Giao Hàng</h3>
             <form @submit.prevent="submitOrder" class="space-y-4">
-                <div>
+                <div class="relative">
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Họ và tên khách hàng / Đại lý</label>
-                    <input type="text" x-model="customer.name" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                    <input type="text" x-model="customer.name" @input="onCustomerNameInput" required placeholder="Nhập tên khách hàng..." class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                    
+                    <!-- Gợi ý khách hàng -->
+                    <template x-if="customerSuggestions.length > 0">
+                        <div class="absolute z-20 left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto">
+                            <template x-for="c in customerSuggestions" :key="c.phone">
+                                <div @click="selectCustomer(c)" class="p-2 hover:bg-gray-150 cursor-pointer text-xs border-b">
+                                    <span class="font-bold text-gray-800" x-text="c.name"></span> - <span class="text-gray-500" x-text="c.phone"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                 </div>
+
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Số điện thoại liên hệ</label>
                     <input type="tel" x-model="customer.phone" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
@@ -285,7 +349,7 @@
         </div>
     </div>
 
-    <!-- Add Product Modal with Auto-detection simulation on image upload -->
+    <!-- Add Product Modal with Smart Cropping and Name Extraction -->
     <div x-show="openAddProductModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="openAddProductModal = false"></div>
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative z-10 space-y-4">
@@ -298,14 +362,16 @@
 
                 <template x-if="newProd.image">
                     <div class="flex items-center space-x-3 bg-gray-50 p-2 rounded border">
-                        <img :src="newProd.image" class="w-16 h-16 object-cover rounded">
-                        <span class="text-xs text-green-600 font-semibold">✓ Đã nhận diện và trích xuất thông tin từ ảnh thành công!</span>
+                        <div class="w-16 h-16 rounded overflow-hidden border bg-white">
+                            <img :src="newProd.image" class="w-full h-full object-fit-crop scale-90">
+                        </div>
+                        <span class="text-xs text-green-600 font-semibold">✓ Đã cắt khung hình sản phẩm và nhận diện tên phía trên thành công!</span>
                     </div>
                 </template>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm</label>
-                    <input type="text" x-model="newProd.name" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên sản phẩm (Nhận diện từ trên ảnh)</label>
+                    <input type="text" x-model="newProd.name" required class="w-full px-3 py-2 border rounded-lg text-sm font-bold text-gray-800">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -331,9 +397,39 @@
                         <input type="text" x-model="newProd.spec" placeholder="Ví dụ: 350g x 8 hộp" required class="w-full px-3 py-2 border rounded-lg text-sm">
                     </div>
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Khuyến mãi</label>
+                    <input type="text" x-model="newProd.promo" placeholder="Ví dụ: 4 gói hoặc 5%" class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
                 <div class="flex space-x-3 pt-3">
                     <button type="button" @click="openAddProductModal = false" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm">Hủy</button>
                     <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm shadow">Lưu vào kho</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div x-show="openAddCustModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black bg-opacity-50" @click="openAddCustModal = false"></div>
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative z-10 space-y-4">
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Thêm Khách Hàng Mới</h3>
+            <form @submit.prevent="addNewCustomer" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tên khách hàng / Đại lý</label>
+                    <input type="text" x-model="newCust.name" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Số điện thoại</label>
+                    <input type="tel" x-model="newCust.phone" required class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Địa chỉ giao hàng</label>
+                    <textarea x-model="newCust.address" required rows="2" class="w-full px-3 py-2 border rounded-lg text-sm"></textarea>
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" @click="openAddCustModal = false" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm">Hủy</button>
+                    <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm shadow">Thêm</button>
                 </div>
             </form>
         </div>
@@ -347,18 +443,27 @@
                 cartOpen: false,
                 checkoutOpen: false,
                 openAddProductModal: false,
+                openAddCustModal: false,
                 selectedCategory: 'All',
                 searchQuery: '',
+                orderSearchQuery: '',
                 categories: ['LongPie', 'Mercury', 'Crackers', 'Wafer', 'Biscuits & Cookies', 'Candies & Jelly', 'Chocolate & Soft Candies'],
                 cart: [],
                 customer: { name: '', phone: '', address: '', note: '' },
+                customerSuggestions: [],
+                newCust: { name: '', phone: '', address: '' },
                 
-                newProd: { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', image: '', subName: 'Sản phẩm mới cập nhật' },
+                newProd: { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', promo: '', image: '', subName: 'Sản phẩm mới' },
 
                 products: JSON.parse(localStorage.getItem('haihaco_products')) || [
-                    { name: 'LongPie Luxury Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '468g x 8 hộp', code: 'S95054525B', price: 240000, image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80' },
-                    { name: 'LongPie Standard Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '252g x 12 hộp', code: 'S95052033', price: 150000, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
-                    { name: 'Mercury Custard Cream Cake', subName: 'Bánh nhân kem trứng (Vị Trứng Sữa)', category: 'Mercury', spec: '252g x 10 hộp', code: 'S95055867', price: 135000, image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=500&q=80' }
+                    { name: 'LongPie Luxury Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '468g x 8 hộp', code: 'S95054525B', price: 240000, promo: '4 gói', image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'LongPie Standard Chocolate Pie', subName: 'Bánh kem Marshmallow phủ sô cô la', category: 'LongPie', spec: '252g x 12 hộp', code: 'S95052033', price: 150000, promo: '5%', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+                    { name: 'Mercury Custard Cream Cake', subName: 'Bánh nhân kem trứng', category: 'Mercury', spec: '252g x 10 hộp', code: 'S95055867', price: 135000, promo: '', image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=500&q=80' }
+                ],
+
+                customers: JSON.parse(localStorage.getItem('haihaco_customers')) || [
+                    { name: 'Chị Nậm', phone: '0905123456', address: 'Chợ Cam Lộ, Quảng Trị' },
+                    { name: 'Anh Hoàng', phone: '0914987654', address: 'Đông Hà, Quảng Trị' }
                 ],
 
                 orderHistory: JSON.parse(localStorage.getItem('haihaco_orders')) || [],
@@ -368,11 +473,23 @@
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
-                            this.newProd.image = e.target.result;
-                            // Tự động mô phỏng trích xuất tên thông minh từ tên file ảnh
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = () => {
+                                // Cắt phần phía trên ảnh để lấy tên sản phẩm & tập trung khung hình sản phẩm
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                ctx.drawImage(img, 0, 0);
+                                
+                                this.newProd.image = canvas.toDataURL('image/jpeg', 0.9);
+                            };
+
+                            // Tự động nhận diện trích xuất tên sản phẩm từ tên file ở phần đầu
                             let cleanName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-                            cleanName = cleanName.replace(/[-_]/g, ' ');
-                            this.newProd.name = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                            cleanName = cleanName.replace(/[-_]/g, ' ').toUpperCase();
+                            this.newProd.name = cleanName;
                             this.newProd.code = 'HH' + Math.floor(10000 + Math.random() * 90000);
                         };
                         reader.readAsDataURL(file);
@@ -383,18 +500,61 @@
                     localStorage.setItem('haihaco_products', JSON.stringify(this.products));
                 },
 
+                saveCustomers() {
+                    localStorage.setItem('haihaco_customers', JSON.stringify(this.customers));
+                },
+
+                saveOrders() {
+                    localStorage.setItem('haihaco_orders', JSON.stringify(this.orderHistory));
+                },
+
                 addNewProduct() {
                     this.products.push({ ...this.newProd });
                     this.saveData();
                     this.openAddProductModal = false;
-                    this.newProd = { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', image: '', subName: 'Sản phẩm mới cập nhật' };
+                    this.newProd = { name: '', code: '', category: 'LongPie', price: 150000, spec: '350g x 8 hộp', promo: '', image: '', subName: 'Sản phẩm mới' };
                 },
 
                 deleteProduct(index) {
-                    if(confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi kho?')) {
+                    if(confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
                         this.products.splice(index, 1);
                         this.saveData();
                     }
+                },
+
+                addNewCustomer() {
+                    this.customers.push({ ...this.newCust });
+                    this.saveCustomers();
+                    this.openAddCustModal = false;
+                    this.newCust = { name: '', phone: '', address: '' };
+                },
+
+                deleteCustomer(index) {
+                    if(confirm('Xóa khách hàng này khỏi danh sách?')) {
+                        this.customers.splice(index, 1);
+                        this.saveCustomers();
+                    }
+                },
+
+                onCustomerNameInput() {
+                    if (this.customer.name.trim() === '') {
+                        this.customerSuggestions = [];
+                        return;
+                    }
+                    let query = this.customer.name.toLowerCase();
+                    this.customerSuggestions = this.customers.filter(c => c.name.toLowerCase().includes(query));
+                },
+
+                selectCustomer(c) {
+                    this.customer.name = c.name;
+                    this.customer.phone = c.phone;
+                    this.customer.address = c.address;
+                    this.customerSuggestions = [];
+                },
+
+                openCheckoutModal() {
+                    this.cartOpen = false;
+                    this.checkoutOpen = true;
                 },
 
                 get filteredProducts() {
@@ -403,6 +563,12 @@
                         let matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || p.code.toLowerCase().includes(this.searchQuery.toLowerCase());
                         return matchesCategory && matchesSearch;
                     });
+                },
+
+                get filteredOrders() {
+                    if (!this.orderSearchQuery.trim()) return this.orderHistory;
+                    let q = this.orderSearchQuery.toLowerCase();
+                    return this.orderHistory.filter(o => o.customerName.toLowerCase().includes(q) || o.id.toLowerCase().includes(q) || o.date.toLowerCase().includes(q));
                 },
 
                 addToCart(product) {
@@ -430,30 +596,98 @@
                     return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 },
 
+                calculateOrderTotal(order) {
+                    return order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                },
+
                 formatCurrency(value) {
                     return new Intl.NumberFormat('vi-VN').format(value);
                 },
 
                 submitOrder() {
+                    // Kiểm tra xem khách hàng đã tồn tại trong danh sách chưa
+                    let existingCust = this.customers.find(c => c.name.toLowerCase() === this.customer.name.toLowerCase());
+                    if (!existingCust) {
+                        if (confirm('Khách hàng "' + this.customer.name + '" chưa có trong danh sách. Bạn có muốn thêm vào danh sách khách hàng không?')) {
+                            this.customers.push({
+                                name: this.customer.name,
+                                phone: this.customer.phone,
+                                address: this.customer.address
+                            });
+                            this.saveCustomers();
+                        }
+                    }
+
                     const newOrder = {
                         id: 'DH' + Math.floor(1000 + Math.random() * 9000),
-                        date: new Date().toLocaleString('vi-VN'),
+                        date: new Date().toLocaleDateString('vi-VN'),
+                        dateTime: new Date().toLocaleString('vi-VN'),
                         customerName: this.customer.name,
                         phone: this.customer.phone,
                         address: this.customer.address,
                         note: this.customer.note,
-                        items: [...this.cart],
-                        totalAmount: this.totalAmount
+                        items: JSON.parse(JSON.stringify(this.cart))
                     };
 
                     this.orderHistory.unshift(newOrder);
-                    localStorage.setItem('haihaco_orders', JSON.stringify(this.orderHistory));
+                    this.saveOrders();
 
                     this.cart = [];
                     this.customer = { name: '', phone: '', address: '', note: '' };
                     this.checkoutOpen = false;
                     this.currentTab = 'orders';
-                    alert('Đơn hàng đã được đặt và lưu thành công vào Lịch Sử Đơn Hàng!');
+                    alert('Đơn hàng đã được đặt và lưu thành công!');
+                },
+
+                exportOrderPDF(order) {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(18);
+                    doc.text("HOA DON DAT HANG - HAIHACO", 14, 20);
+
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "normal");
+                    doc.text("Ma don hang: " + order.id, 14, 30);
+                    doc.text("Ngay dat: " + order.dateTime, 14, 37);
+                    doc.text("Khach hang: " + order.customerName, 14, 44);
+                    doc.text("So dien thoại: " + order.phone, 14, 51);
+                    doc.text("Dia chi: " + order.address, 14, 58);
+
+                    let y = 70;
+                    doc.setFont("helvetica", "bold");
+                    doc.text("STT", 14, y);
+                    doc.text("Ten San Pham", 30, y);
+                    doc.text("So Luong", 120, y);
+                    doc.text("Thanh Tien", 160, y);
+
+                    y += 5;
+                    doc.line(14, y, 196, y);
+
+                    y += 8;
+                    doc.setFont("helvetica", "normal");
+                    order.items.forEach((item, idx) => {
+                        doc.text((idx + 1).toString(), 14, y);
+                        doc.text(item.name.substring(0, 35), 30, y);
+                        doc.text(item.quantity + " thung", 120, y);
+                        doc.text(this.formatCurrency(item.price * item.quantity) + " d", 160, y);
+                        y += 8;
+                    });
+
+                    y += 5;
+                    doc.line(14, y, 196, y);
+
+                    y += 10;
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Tong cong: " + this.formatCurrency(this.calculateOrderTotal(order)) + " VND", 130, y);
+
+                    if (order.note) {
+                        y += 10;
+                        doc.text("Ghi chu: " + order.note, 14, y);
+                    }
+
+                    doc.save("DonHang_" + order.id + ".pdf");
                 }
             }
         }

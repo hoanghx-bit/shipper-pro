@@ -2,300 +2,293 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Bán Hàng & Kho</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        .tab-btn.active {
-            background-color: #ffffff;
-            color: #4338ca;
-            font-weight: 700;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ứng Dụng Quản Lý Đơn Hàng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body class="bg-slate-100 font-sans min-h-screen text-slate-800">
-
-    <div class="max-w-6xl mx-auto p-4 md:p-6">
-        <!-- Header & Tabs -->
-        <header class="bg-indigo-600 text-white rounded-xl p-5 mb-6 shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold">Hệ Thống Bán Hàng & Quản Lý Kho</h1>
-                <p class="text-indigo-200 text-sm">Tạo đơn, chọn ĐVT (thùng/hộp/gói), tự động trừ kho, xuất PDF/Excel & Thống kê</p>
-            </div>
-            <!-- Navigation Tabs -->
-            <div class="flex flex-wrap gap-2 bg-indigo-700/60 p-1.5 rounded-lg border border-indigo-500/30">
-                <button onclick="switchTab('orderTab')" id="btn-orderTab" class="tab-btn active px-4 py-2 rounded-md font-medium text-sm transition-all duration-200">Lên Đơn Mới</button>
-                <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 hover:bg-indigo-600/50">Kho Hàng</button>
-                <button onclick="switchTab('historyTab')" id="btn-historyTab" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 hover:bg-indigo-600/50">Lịch Sử Đơn</button>
-                <button onclick="switchTab('statsTab')" id="btn-statsTab" class="tab-btn px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 hover:bg-indigo-600/50">Thống Kê Ngày</button>
-            </div>
-        </header>
-
-        <!-- TAB 1: LÊN ĐƠN MỚI -->
-        <div id="orderTab" class="tab-content">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Form Nhập Đơn -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <h2 class="text-lg font-bold border-b pb-2 text-slate-700">1. Thông tin đơn hàng</h2>
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-slate-700">Tên khách hàng *</label>
-                        <input type="text" id="custName" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nhập tên khách hàng">
-                    </div>
-
-                    <div class="border-t pt-4">
-                        <h3 class="text-sm font-bold mb-3 text-slate-700">Thêm sản phẩm mua</h3>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Chọn nhanh từ kho hàng</label>
-                                <select id="pSelect" onchange="onSelectProduct()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50">
-                                    <option value="">-- Chọn sản phẩm từ kho --</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Tên sản phẩm</label>
-                                <input type="text" id="pName" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ví dụ: Bánh mì, Cà phê...">
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1">Đơn vị tính (ĐVT)</label>
-                                    <select id="pUnit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                        <option value="Thùng">Thùng</option>
-                                        <option value="Hộp">Hộp</option>
-                                        <option value="Gói">Gói</option>
-                                        <option value="Cái">Cái</option>
-                                        <option value="Chai">Chai</option>
-                                        <option value="Lon">Lon</option>
-                                        <option value="Kg">Kg</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1">Số lượng mua</label>
-                                    <input type="number" id="pQty" value="1" min="1" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-500 mb-1">Đơn giá bán (đ)</label>
-                                <input type="number" id="pPrice" value="0" min="0" step="1000" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                            <button onclick="addItem()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium transition shadow">+ Thêm vào danh sách</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chi Tiết Hóa Đơn Xem Trước / Xuất PDF -->
-                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-center border-b pb-2 mb-4">
-                            <h2 class="text-lg font-bold text-slate-700">Chi tiết hóa đơn chốt mua</h2>
-                            <span id="currentDateStr" class="text-xs text-slate-500"></span>
-                        </div>
-
-                        <div id="invoicePreview" class="p-4 bg-white rounded-lg border border-slate-100">
-                            <div class="mb-4">
-                                <p class="text-sm"><strong>Khách hàng:</strong> <span id="lblCustName" class="text-indigo-600 font-semibold">Chưa nhập</span></p>
-                            </div>
-
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr class="border-b bg-slate-50 text-xs font-semibold text-slate-600 uppercase">
-                                            <th class="p-2">STT</th>
-                                            <th class="p-2">Sản phẩm</th>
-                                            <th class="p-2 text-center">ĐVT</th>
-                                            <th class="p-2 text-center">SL</th>
-                                            <th class="p-2 text-right">Đơn giá</th>
-                                            <th class="p-2 text-right">Thành tiền</th>
-                                            <th class="p-2 text-center no-pdf">Xóa</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="currentItemsTable" class="text-sm divide-y">
-                                        <tr><td colspan="7" class="p-4 text-center text-slate-400">Chưa có sản phẩm nào</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="mt-4 border-t pt-3 flex justify-between items-center">
-                                <span class="font-bold text-slate-700">Tổng Tiền Đơn Hàng:</span>
-                                <span id="lblGrandTotal" class="text-2xl font-extrabold text-indigo-600">0 đ</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-3 mt-6 border-t pt-4">
-                        <button onclick="saveAndCheckout()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold transition text-center shadow">Chốt & Lưu Đơn Hàng</button>
-                        <button onclick="exportCurrentPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition shadow">Xuất File PDF</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: QUẢN LÝ KHO HÀNG -->
-        <div id="inventoryTab" class="tab-content hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Form Nhập Kho -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <h2 class="text-lg font-bold border-b pb-2 text-slate-700">Nhập Kho / Thêm Sản Phẩm</h2>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Phân loại sản phẩm</label>
-                        <select id="invCategory" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <option value="Hàng thường">Hàng thường</option>
-                            <option value="Hàng Tết">Hàng Tết</option>
-                            <option value="Bánh mì">Bánh mì</option>
-                            <option value="Nước giải khát">Nước giải khát</option>
-                            <option value="Khác">Khác</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Tên sản phẩm *</label>
-                        <input type="text" id="invName" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ví dụ: Bánh mứt Tết, Cà phê...">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Đơn vị tính (ĐVT)</label>
-                            <select id="invUnit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <option value="Thùng">Thùng</option>
-                                <option value="Hộp">Hộp</option>
-                                <option value="Gói">Gói</option>
-                                <option value="Cái">Cái</option>
-                                <option value="Chai">Chai</option>
-                                <option value="Lon">Lon</option>
-                                <option value="Kg">Kg</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1">Số lượng nhập kho</label>
-                            <input type="number" id="invStock" value="10" min="0" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Đơn giá bán chuẩn (đ)</label>
-                        <input type="number" id="invPrice" value="0" step="1000" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <button onclick="saveInventoryItem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium transition text-sm shadow">+ Lưu Vào Kho Hàng</button>
-                </div>
-
-                <!-- Bảng Danh Mục Kho -->
-                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-2">
-                        <h2 class="text-lg font-bold text-slate-700">Danh Mục Tồn Kho</h2>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-500">Lọc phân loại:</span>
-                            <select id="invFilterCategory" onchange="renderInventory()" class="border border-slate-300 rounded-md p-1 text-xs outline-none">
-                                <option value="Tất cả">Tất cả phân loại</option>
-                                <option value="Hàng thường">Hàng thường</option>
-                                <option value="Hàng Tết">Hàng Tết</option>
-                                <option value="Bánh mì">Bánh mì</option>
-                                <option value="Nước giải khát">Nước giải khát</option>
-                                <option value="Khác">Khác</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-100 text-xs text-slate-600 uppercase font-semibold">
-                                    <th class="p-3">Mã SP</th>
-                                    <th class="p-3">Phân loại</th>
-                                    <th class="p-3">Tên sản phẩm</th>
-                                    <th class="p-3 text-center">ĐVT</th>
-                                    <th class="p-3 text-right">Đơn giá</th>
-                                    <th class="p-3 text-center">Tồn kho</th>
-                                    <th class="p-3 text-center">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventoryTable" class="divide-y text-sm">
-                                <!-- Data kho hàng từ JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 3: LỊCH SỬ ĐƠN HÀNG -->
-        <div id="historyTab" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-3">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-700">Lịch Sử Đơn Hàng Đã Chốt</h2>
-                        <p class="text-xs text-slate-500">Toàn bộ đơn hàng đã chốt và lưu trữ</p>
-                    </div>
-                    <button onclick="exportHistoryExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow flex items-center gap-2">
-                        <span>📊 Xuất Excel Lịch Sử</span>
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-100 text-xs text-slate-600 uppercase font-semibold">
-                                <th class="p-3">Mã đơn</th>
-                                <th class="p-3">Thời gian</th>
-                                <th class="p-3">Tên Khách Hàng</th>
-                                <th class="p-3">Sản phẩm (SL & ĐVT)</th>
-                                <th class="p-3 text-right">Tổng tiền</th>
-                                <th class="p-3 text-center">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTable" class="divide-y text-sm">
-                            <!-- Render từ JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 4: THỐNG KÊ NGÀY -->
-        <div id="statsTab" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4 mb-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-700">Thống Kê Sản Phẩm Bán Trong Ngày</h2>
-                        <p class="text-xs text-slate-500">Tổng hợp chi tiết theo từng mặt hàng và đơn vị tính</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium">Chọn ngày:</label>
-                        <input type="date" id="statsDate" onchange="renderStats()" class="border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button onclick="exportStatsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-medium text-xs transition shadow">Xuất File Excel</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                        <p class="text-xs font-semibold text-indigo-500 uppercase">Tổng Doanh Thu Trong Ngày</p>
-                        <p id="statTotalRev" class="text-2xl font-bold text-indigo-700">0 đ</p>
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <p class="text-xs font-semibold text-slate-500 uppercase">Tổng Số Đơn Hàng Chốt</p>
-                        <p id="statTotalOrders" class="text-2xl font-bold text-slate-700">0</p>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-100 text-xs text-slate-600 uppercase font-semibold">
-                                <th class="p-3">Tên Sản Phẩm</th>
-                                <th class="p-3 text-center">ĐVT</th>
-                                <th class="p-3 text-center">Tổng Số Lượng Bán</th>
-                                <th class="p-3 text-right">Tổng Doanh Thu SP</th>
-                            </tr>
-                        </thead>
-                        <tbody id="statsTable" class="divide-y text-sm">
-                            <!-- Data thống kê -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<body class="bg-gray-100 font-sans p-4 md:p-8">
+  <div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+    
+    <!-- Navigation Tabs -->
+    <div class="flex border-b bg-slate-800 text-white">
+      <button onclick="switchTab('len-don')" id="tab-len-don" class="px-6 py-3 font-semibold border-b-2 border-blue-500 bg-slate-700">Lên Đơn Hàng</button>
+      <button onclick="switchTab('kho-hang')" id="tab-kho-hang" class="px-6 py-3 font-semibold hover:bg-slate-700">Kho Hàng</button>
+      <button onclick="switchTab('lich-su')" id="tab-lich-su" class="px-6 py-3 font-semibold hover:bg-slate-700">Lịch Sử Đơn Hàng</button>
+      <button onclick="switchTab('thong-ke')" id="tab-thong-ke" class="px-6 py-3 font-semibold hover:bg-slate-700">Thống Kê Ngày</button>
     </div>
 
-    <script>
-        // Mẫu dữ liệu Kho ban đầu
-        const defaultInventory = [
-            { id: 'SP01', category: 'Bánh mì', name: 'Bánh mì pate đặc biệt', unit: 'Cái', price: 25000, stock: 50 },
-            { id: 'SP02', category: 'Hàng Tết', name: 'Hộp Quà Mứt Tết Cao Cấp', unit: 'Hộp', price: 250000, stock: 20 },
-            { id: 'SP03'
+    <div class="p-6">
+      <!-- TAB 1: FORM LÊN ĐƠN HÀNG -->
+      <div id="sec-len-don" class="space-y-6">
+        <h2 class="text-xl font-bold text-gray-800">Tạo Đơn Hàng Mới</h2>
+        <form id="orderForm" onsubmit="addOrder(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Tên Khách Hàng</label>
+            <input type="text" id="custName" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Sản Phẩm</label>
+            <select id="orderProduct" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Số Lượng</label>
+            <input type="number" id="orderQty" min="1" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Đơn Vị Tính</label>
+            <select id="orderUnit" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+              <option value="Thùng">Thùng</option>
+              <option value="Hộp">Hộp</option>
+              <option value="Gói">Gói</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700">Lưu Đơn Hàng</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 2: KHO HÀNG -->
+      <div id="sec-kho-hang" class="hidden space-y-6">
+        <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho Hàng & Quy Cách</h2>
+        <form onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded border">
+          <input type="text" id="pName" placeholder="Tên sản phẩm" required class="border p-2 rounded">
+          <input type="number" id="pPrice" placeholder="Đơn giá (VNĐ)" required class="border p-2 rounded">
+          <input type="number" id="pSpec" placeholder="Quy cách (Số lẻ/Thùng)" required class="border p-2 rounded" title="Ví dụ: 20 hộp/thùng hoặc 50 gói/thùng">
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700">Thêm Sản Phẩm</button>
+        </form>
+        <table class="w-full text-left border-collapse border">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border p-2">Tên Sản Phẩm</th>
+              <th class="border p-2">Đơn Giá</th>
+              <th class="border p-2">Quy Cách (Đơn vị lẻ/Thùng)</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTable"></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 3: LỊCH SỬ ĐƠN HÀNG & XUẤT PDF -->
+      <div id="sec-lich-su" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng</h2>
+          <button onclick="exportPDF()" class="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700">Xuất PDF Đơn Hàng Hôm Nay</button>
+        </div>
+        <div id="pdfContent" class="space-y-6 p-4 border rounded bg-white">
+          <div id="historyList"></div>
+        </div>
+      </div>
+
+      <!-- TAB 4: THỐNG KÊ BÁN HÀNG -->
+      <div id="sec-thong-ke" class="hidden space-y-6">
+        <h2 class="text-xl font-bold text-gray-800">Thống Kê Số Lượng Bán Trong Ngày</h2>
+        <table class="w-full text-left border-collapse border">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border p-2">Sản Phẩm</th>
+              <th class="border p-2">Số Lượng Thực Tế Đã Bán</th>
+              <th class="border p-2">Quy Đổi Chuẩn (Tự Động)</th>
+            </tr>
+          </thead>
+          <tbody id="statsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Khởi tạo dữ liệu từ localStorage
+    let inventory = JSON.parse(localStorage.getItem('app_inventory')) || [
+      { name: 'Bánh Mì', price: 50000, spec: 20 },
+      { name: 'Kẹo Thạch', price: 30000, spec: 50 }
+    ];
+    let orders = JSON.parse(localStorage.getItem('app_orders')) || [];
+
+    function saveData() {
+      localStorage.setItem('app_inventory', JSON.stringify(inventory));
+      localStorage.setItem('app_orders', JSON.stringify(orders));
+    }
+
+    function switchTab(tab) {
+      ['len-don', 'kho-hang', 'lich-su', 'thong-ke'].forEach(t => {
+        document.getElementById(`sec-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).classList.remove('bg-slate-700', 'border-b-2', 'border-blue-500');
+      });
+      document.getElementById(`sec-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).classList.add('bg-slate-700', 'border-b-2', 'border-blue-500');
+      
+      if(tab === 'len-don') renderProductSelect();
+      if(tab === 'kho-hang') renderInventory();
+      if(tab === 'lich-su') renderHistory();
+      if(tab === 'thong-ke') renderStats();
+    }
+
+    // Quản lý Kho hàng
+    function addProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('pName').value.trim();
+      const price = parseFloat(document.getElementById('pPrice').value);
+      const spec = parseInt(document.getElementById('pSpec').value);
+      
+      inventory.push({ name, price, spec });
+      saveData();
+      renderInventory();
+      e.target.reset();
+    }
+
+    function renderInventory() {
+      const tbody = document.getElementById('inventoryTable');
+      tbody.innerHTML = inventory.map(p => `
+        <tr>
+          <td class="border p-2 font-medium">${p.name}</td>
+          <td class="border p-2">${p.price.toLocaleString('vi-VN')} VNĐ</td>
+          <td class="border p-2">${p.spec} (Hộp/Gói)/Thùng</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProductSelect() {
+      const select = document.getElementById('orderProduct');
+      select.innerHTML = inventory.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    }
+
+    // Quản lý Đơn hàng
+    function addOrder(e) {
+      e.preventDefault();
+      const customer = document.getElementById('custName').value.trim();
+      const product = document.getElementById('orderProduct').value;
+      const quantity = parseFloat(document.getElementById('orderQty').value);
+      const unit = document.getElementById('orderUnit').value;
+      const date = new Date().toISOString().split('T')[0];
+
+      orders.push({ id: Date.now(), customer, product, quantity, unit, date });
+      saveData();
+      alert('Đã lưu đơn hàng thành công!');
+      document.getElementById('orderForm').reset();
+    }
+
+    // Lịch sử Đơn hàng & In PDF
+    function renderHistory() {
+      const today = new Date().toISOString().split('T')[0];
+      const todayOrders = orders.filter(o => o.date === today);
+      const historyDiv = document.getElementById('historyList');
+
+      if (todayOrders.length === 0) {
+        historyDiv.innerHTML = '<p class="text-gray-500 italic">Chưa có đơn hàng nào trong ngày hôm nay.</p>';
+        return;
+      }
+
+      // Nhóm đơn hàng theo Tên Khách Hàng
+      const grouped = todayOrders.reduce((acc, order) => {
+        acc[order.customer] = acc[order.customer] || [];
+        acc[order.customer].push(order);
+        return acc;
+      }, {});
+
+      historyDiv.innerHTML = Object.keys(grouped).map(cust => `
+        <div class="border-b pb-4 mb-4 last:border-0">
+          <div class="text-lg font-bold text-blue-900 border-b pb-1 mb-2">${cust}</div>
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="text-gray-600">
+                <th class="py-1">Sản Phẩm</th>
+                <th class="py-1">Số Lượng</th>
+                <th class="py-1">Đơn Vị Tính</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${grouped[cust].map(item => `
+                <tr>
+                  <td class="py-1">${item.product}</td>
+                  <td class="py-1">${item.quantity}</td>
+                  <td class="py-1">${item.unit}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('');
+    }
+
+    function exportPDF() {
+      const element = document.getElementById('pdfContent');
+      const today = new Date().toISOString().split('T')[0];
+      const opt = {
+        margin:       10,
+        filename:     `Don_Hang_${today}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    // Thống kê & Quy đổi tự động
+    function renderStats() {
+      const today = new Date().toISOString().split('T')[0];
+      const todayOrders = orders.filter(o => o.date === today);
+      const tbody = document.getElementById('statsTable');
+
+      // Gom tổng số lượng theo sản phẩm và đơn vị
+      const stats = {};
+      todayOrders.forEach(o => {
+        if (!stats[o.product]) {
+          stats[o.product] = { Thùng: 0, Hộp: 0, Gói: 0 };
+        }
+        stats[o.product][o.unit] += o.quantity;
+      });
+
+      tbody.innerHTML = Object.keys(stats).map(pName => {
+        const item = inventory.find(i => i.name === pName);
+        const spec = item ? item.spec : 1; // Số đơn vị lẻ / thùng
+        
+        let rawThung = stats[pName]['Thùng'];
+        let rawLe = stats[pName]['Hộp'] + stats[pName]['Gói'];
+
+        // Thuật toán quy đổi tự động thành 0.5 hoặc 1 thùng
+        let convertedThung = rawThung;
+        let leConLai = rawLe;
+
+        if (spec > 0 && rawLe > 0) {
+          const ratio = rawLe / spec;
+          const fullThung = Math.floor(ratio);
+          const remainderRatio = ratio - fullThung;
+
+          convertedThung += fullThung;
+          leConLai = rawLe % spec;
+
+          if (remainderRatio >= 0.75) {
+            convertedThung += 1;
+            leConLai = 0;
+          } else if (remainderRatio >= 0.4) { // Đạt từ ~0.5 thùng
+            convertedThung += 0.5;
+            leConLai = Math.round(rawLe - (fullThung + 0.5) * spec);
+            if (leConLai < 0) leConLai = 0;
+          }
+        }
+
+        return `
+          <tr>
+            <td class="border p-2 font-medium">${pName}</td>
+            <td class="border p-2">
+              ${stats[pName]['Thùng'] ? stats[pName]['Thùng'] + ' Thùng ' : ''}
+              ${stats[pName]['Hộp'] ? stats[pName]['Hộp'] + ' Hộp ' : ''}
+              ${stats[pName]['Gói'] ? stats[pName]['Gói'] + ' Gói' : ''}
+            </td>
+            <td class="border p-2 font-bold text-blue-700">
+              ${convertedThung > 0 ? convertedThung + ' Thùng ' : ''}
+              ${leConLai > 0 ? `(+ ${leConLai} Hộp/Gói lẻ)` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Khởi tạo trang ban đầu
+    renderProductSelect();
+  </script>
+</body>
+</html>

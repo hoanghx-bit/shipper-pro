@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -34,7 +33,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Số Lượng</label>
-            <input type="number" id="orderQty" min="1" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+            <input type="number" id="orderQty" min="0.1" step="any" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Đơn Vị Tính</label>
@@ -53,18 +52,19 @@
       <!-- TAB 2: KHO HÀNG -->
       <div id="sec-kho-hang" class="hidden space-y-6">
         <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho Hàng & Quy Cách</h2>
-        <form onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded border">
+        <form onsubmit="saveProduct(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded border">
           <input type="text" id="pName" placeholder="Tên sản phẩm" required class="border p-2 rounded">
-          <input type="number" id="pPrice" placeholder="Đơn giá (VNĐ)" required class="border p-2 rounded">
+          <input type="number" id="pPrice" placeholder="Đơn giá/Thùng (VNĐ)" required class="border p-2 rounded">
           <input type="number" id="pSpec" placeholder="Quy cách (Số lẻ/Thùng)" required class="border p-2 rounded" title="Ví dụ: 20 hộp/thùng hoặc 50 gói/thùng">
-          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700">Thêm Sản Phẩm</button>
+          <button type="submit" id="btnSaveProduct" class="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700">Thêm Sản Phẩm</button>
         </form>
         <table class="w-full text-left border-collapse border">
           <thead>
             <tr class="bg-gray-100">
               <th class="border p-2">Tên Sản Phẩm</th>
-              <th class="border p-2">Đơn Giá</th>
-              <th class="border p-2">Quy Cách (Đơn vị lẻ/Thùng)</th>
+              <th class="border p-2">Đơn Giá / Thùng</th>
+              <th class="border p-2">Quy Cách</th>
+              <th class="border p-2 text-center">Thao Tác</th>
             </tr>
           </thead>
           <tbody id="inventoryTable"></tbody>
@@ -75,7 +75,7 @@
       <div id="sec-lich-su" class="hidden space-y-6">
         <div class="flex justify-between items-center">
           <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng</h2>
-          <button onclick="exportPDF()" class="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700">Xuất PDF Đơn Hàng Hôm Nay</button>
+          <button onclick="exportPDF()" class="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700">Xuất PDF Đơn Hàng</button>
         </div>
         <div id="pdfContent" class="space-y-6 p-4 border rounded bg-white">
           <div id="historyList"></div>
@@ -100,12 +100,13 @@
   </div>
 
   <script>
-    // Khởi tạo dữ liệu từ localStorage
+    // Khởi tạo dữ liệu
     let inventory = JSON.parse(localStorage.getItem('app_inventory')) || [
-      { name: 'Bánh Mì', price: 50000, spec: 20 },
-      { name: 'Kẹo Thạch', price: 30000, spec: 50 }
+      { name: 'Bánh Mì', price: 500000, spec: 20 },
+      { name: 'Kẹo Thạch', price: 300000, spec: 50 }
     ];
     let orders = JSON.parse(localStorage.getItem('app_orders')) || [];
+    let editIndex = -1;
 
     function saveData() {
       localStorage.setItem('app_inventory', JSON.stringify(inventory));
@@ -126,26 +127,65 @@
       if(tab === 'thong-ke') renderStats();
     }
 
-    // Quản lý Kho hàng
-    function addProduct(e) {
+    // --- QUẢN LÝ KHO HÀNG ---
+    function saveProduct(e) {
       e.preventDefault();
       const name = document.getElementById('pName').value.trim();
       const price = parseFloat(document.getElementById('pPrice').value);
       const spec = parseInt(document.getElementById('pSpec').value);
       
-      inventory.push({ name, price, spec });
+      if (editIndex > -1) {
+        // Cập nhật sản phẩm
+        inventory[editIndex] = { name, price, spec };
+        editIndex = -1;
+        const btn = document.getElementById('btnSaveProduct');
+        btn.innerText = 'Thêm Sản Phẩm';
+        btn.classList.replace('bg-yellow-500', 'bg-green-600');
+        btn.classList.replace('hover:bg-yellow-600', 'hover:bg-green-700');
+      } else {
+        // Thêm mới
+        inventory.push({ name, price, spec });
+      }
+
       saveData();
       renderInventory();
+      renderProductSelect();
       e.target.reset();
+    }
+
+    function editProduct(index) {
+      const p = inventory[index];
+      document.getElementById('pName').value = p.name;
+      document.getElementById('pPrice').value = p.price;
+      document.getElementById('pSpec').value = p.spec;
+      editIndex = index;
+      
+      const btn = document.getElementById('btnSaveProduct');
+      btn.innerText = 'Cập Nhật';
+      btn.classList.replace('bg-green-600', 'bg-yellow-500');
+      btn.classList.replace('hover:bg-green-700', 'hover:bg-yellow-600');
+    }
+
+    function deleteProduct(index) {
+      if(confirm('Bạn có chắc chắn muốn xoá sản phẩm này khỏi kho?')) {
+        inventory.splice(index, 1);
+        saveData();
+        renderInventory();
+        renderProductSelect();
+      }
     }
 
     function renderInventory() {
       const tbody = document.getElementById('inventoryTable');
-      tbody.innerHTML = inventory.map(p => `
+      tbody.innerHTML = inventory.map((p, index) => `
         <tr>
           <td class="border p-2 font-medium">${p.name}</td>
-          <td class="border p-2">${p.price.toLocaleString('vi-VN')} VNĐ</td>
-          <td class="border p-2">${p.spec} (Hộp/Gói)/Thùng</td>
+          <td class="border p-2 text-blue-700 font-semibold">${p.price.toLocaleString('vi-VN')} đ</td>
+          <td class="border p-2">${p.spec} Lẻ/Thùng</td>
+          <td class="border p-2 text-center">
+            <button onclick="editProduct(${index})" class="text-yellow-600 hover:text-yellow-800 font-bold mx-2">Sửa</button>
+            <button onclick="deleteProduct(${index})" class="text-red-600 hover:text-red-800 font-bold mx-2">Xoá</button>
+          </td>
         </tr>
       `).join('');
     }
@@ -155,7 +195,7 @@
       select.innerHTML = inventory.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     }
 
-    // Quản lý Đơn hàng
+    // --- QUẢN LÝ ĐƠN HÀNG ---
     function addOrder(e) {
       e.preventDefault();
       const customer = document.getElementById('custName').value.trim();
@@ -164,13 +204,25 @@
       const unit = document.getElementById('orderUnit').value;
       const date = new Date().toISOString().split('T')[0];
 
-      orders.push({ id: Date.now(), customer, product, quantity, unit, date });
+      // Lưu lại giá thành tiền tại thời điểm mua (đề phòng kho đổi giá sau này)
+      let totalPrice = 0;
+      const prodObj = inventory.find(p => p.name === product);
+      if (prodObj) {
+        if (unit === 'Thùng') {
+          totalPrice = quantity * prodObj.price;
+        } else {
+          // Tính giá 1 hộp/gói
+          totalPrice = quantity * (prodObj.price / prodObj.spec);
+        }
+      }
+
+      orders.push({ id: Date.now(), customer, product, quantity, unit, date, totalPrice });
       saveData();
       alert('Đã lưu đơn hàng thành công!');
       document.getElementById('orderForm').reset();
     }
 
-    // Lịch sử Đơn hàng & In PDF
+    // --- LỊCH SỬ ĐƠN HÀNG & IN PDF ---
     function renderHistory() {
       const today = new Date().toISOString().split('T')[0];
       const todayOrders = orders.filter(o => o.date === today);
@@ -181,36 +233,63 @@
         return;
       }
 
-      // Nhóm đơn hàng theo Tên Khách Hàng
       const grouped = todayOrders.reduce((acc, order) => {
         acc[order.customer] = acc[order.customer] || [];
         acc[order.customer].push(order);
         return acc;
       }, {});
 
-      historyDiv.innerHTML = Object.keys(grouped).map(cust => `
-        <div class="border-b pb-4 mb-4 last:border-0">
-          <div class="text-lg font-bold text-blue-900 border-b pb-1 mb-2">${cust}</div>
+      historyDiv.innerHTML = Object.keys(grouped).map(cust => {
+        let totalCustomerPrice = 0;
+        const rows = grouped[cust].map(item => {
+          
+          // Ưu tiên lấy giá đã lưu lúc tạo đơn, nếu không có thì tính lại (cho dữ liệu cũ)
+          let itemTotal = item.totalPrice;
+          if (itemTotal === undefined) {
+             const prod = inventory.find(p => p.name === item.product);
+             if (prod) {
+                itemTotal = item.unit === 'Thùng' 
+                  ? item.quantity * prod.price 
+                  : item.quantity * (prod.price / prod.spec);
+             } else {
+                itemTotal = 0;
+             }
+          }
+          
+          totalCustomerPrice += itemTotal;
+
+          return `
+            <tr class="border-b">
+              <td class="py-2">${item.product}</td>
+              <td class="py-2 text-center">${item.quantity} ${item.unit}</td>
+              <td class="py-2 text-right">${Math.round(itemTotal).toLocaleString('vi-VN')} đ</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+        <div class="border-b-2 border-dashed border-gray-300 pb-4 mb-4 last:border-0">
+          <div class="text-lg font-bold text-blue-900 mb-2 uppercase">${cust}</div>
           <table class="w-full text-left text-sm">
             <thead>
-              <tr class="text-gray-600">
-                <th class="py-1">Sản Phẩm</th>
-                <th class="py-1">Số Lượng</th>
-                <th class="py-1">Đơn Vị Tính</th>
+              <tr class="text-gray-700 bg-gray-50">
+                <th class="py-2 px-1">Sản Phẩm</th>
+                <th class="py-2 px-1 text-center">Số Lượng</th>
+                <th class="py-2 px-1 text-right">Thành Tiền</th>
               </tr>
             </thead>
             <tbody>
-              ${grouped[cust].map(item => `
-                <tr>
-                  <td class="py-1">${item.product}</td>
-                  <td class="py-1">${item.quantity}</td>
-                  <td class="py-1">${item.unit}</td>
-                </tr>
-              `).join('')}
+              ${rows}
             </tbody>
+            <tfoot>
+              <tr class="font-bold text-red-600">
+                <td colspan="2" class="py-2 text-right pr-4">Tổng cộng:</td>
+                <td class="py-2 text-right">${Math.round(totalCustomerPrice).toLocaleString('vi-VN')} đ</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     function exportPDF() {
@@ -226,13 +305,12 @@
       html2pdf().set(opt).from(element).save();
     }
 
-    // Thống kê & Quy đổi tự động
+    // --- THỐNG KÊ & QUY ĐỔI TỰ ĐỘNG ---
     function renderStats() {
       const today = new Date().toISOString().split('T')[0];
       const todayOrders = orders.filter(o => o.date === today);
       const tbody = document.getElementById('statsTable');
 
-      // Gom tổng số lượng theo sản phẩm và đơn vị
       const stats = {};
       todayOrders.forEach(o => {
         if (!stats[o.product]) {
@@ -243,12 +321,11 @@
 
       tbody.innerHTML = Object.keys(stats).map(pName => {
         const item = inventory.find(i => i.name === pName);
-        const spec = item ? item.spec : 1; // Số đơn vị lẻ / thùng
+        const spec = item ? item.spec : 1;
         
         let rawThung = stats[pName]['Thùng'];
         let rawLe = stats[pName]['Hộp'] + stats[pName]['Gói'];
 
-        // Thuật toán quy đổi tự động thành 0.5 hoặc 1 thùng
         let convertedThung = rawThung;
         let leConLai = rawLe;
 
@@ -263,7 +340,7 @@
           if (remainderRatio >= 0.75) {
             convertedThung += 1;
             leConLai = 0;
-          } else if (remainderRatio >= 0.4) { // Đạt từ ~0.5 thùng
+          } else if (remainderRatio >= 0.4) {
             convertedThung += 0.5;
             leConLai = Math.round(rawLe - (fullThung + 0.5) * spec);
             if (leConLai < 0) leConLai = 0;
@@ -280,7 +357,7 @@
             </td>
             <td class="border p-2 font-bold text-blue-700">
               ${convertedThung > 0 ? convertedThung + ' Thùng ' : ''}
-              ${leConLai > 0 ? `(+ ${leConLai} Hộp/Gói lẻ)` : ''}
+              ${leConLai > 0 ? `(+ ${leConLai} Lẻ)` : ''}
             </td>
           </tr>
         `;

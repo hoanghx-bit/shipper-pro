@@ -6,107 +6,179 @@
   <title>Ứng Dụng Quản Lý Đơn Hàng</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /* CSS hỗ trợ in ấn thu gọn */
+    @media print {
+      body { background: white; padding: 0; }
+      .no-print { display: none !important; }
+      .print-compact td, .print-compact th { padding: 2px 4px !important; font-size: 13px; }
+      .print-compact input { border: none; background: transparent; padding: 0; margin: 0; font-size: 13px; font-weight: bold; width: 100%; text-align: right; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 font-sans p-4 md:p-8">
+<body class="bg-gray-100 font-sans p-2 md:p-6">
   <div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
     
     <!-- Navigation Tabs -->
-    <div class="flex border-b bg-slate-800 text-white">
-      <button onclick="switchTab('len-don')" id="tab-len-don" class="px-6 py-3 font-semibold border-b-2 border-blue-500 bg-slate-700">Lên Đơn Hàng</button>
-      <button onclick="switchTab('kho-hang')" id="tab-kho-hang" class="px-6 py-3 font-semibold hover:bg-slate-700">Kho Hàng</button>
-      <button onclick="switchTab('lich-su')" id="tab-lich-su" class="px-6 py-3 font-semibold hover:bg-slate-700">Lịch Sử Đơn Hàng</button>
-      <button onclick="switchTab('thong-ke')" id="tab-thong-ke" class="px-6 py-3 font-semibold hover:bg-slate-700">Thống Kê Ngày</button>
+    <div class="flex flex-wrap border-b bg-slate-800 text-white no-print">
+      <button onclick="switchTab('len-don')" id="tab-len-don" class="px-4 py-3 font-semibold border-b-2 border-blue-500 bg-slate-700 w-1/2 md:w-auto">Lên Đơn Hàng</button>
+      <button onclick="switchTab('kho-hang')" id="tab-kho-hang" class="px-4 py-3 font-semibold hover:bg-slate-700 w-1/2 md:w-auto">Kho Hàng</button>
+      <button onclick="switchTab('lich-su')" id="tab-lich-su" class="px-4 py-3 font-semibold hover:bg-slate-700 w-1/2 md:w-auto">Lịch Sử Đơn Hàng</button>
+      <button onclick="switchTab('thong-ke')" id="tab-thong-ke" class="px-4 py-3 font-semibold hover:bg-slate-700 w-1/2 md:w-auto">Thống Kê Ngày</button>
     </div>
 
-    <div class="p-6">
+    <div class="p-4 md:p-6">
+      
       <!-- TAB 1: FORM LÊN ĐƠN HÀNG -->
-      <div id="sec-len-don" class="space-y-6">
+      <div id="sec-len-don" class="space-y-4">
         <h2 class="text-xl font-bold text-gray-800">Tạo Đơn Hàng Mới</h2>
-        <form id="orderForm" onsubmit="addOrder(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Tên Khách Hàng</label>
-            <input type="text" id="custName" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+        
+        <!-- Khung Tên Khách Hàng -->
+        <div class="bg-blue-50 p-4 rounded border border-blue-200">
+          <label class="block text-sm font-bold text-blue-900 mb-1">Tên Khách Hàng (Dùng chung cho toàn bộ bảng kê):</label>
+          <input type="text" id="custName" placeholder="Nhập tên khách hàng..." class="w-full border-gray-300 shadow-sm p-2 rounded focus:ring-2 focus:ring-blue-500 font-semibold text-lg">
+        </div>
+
+        <!-- Form chọn sản phẩm vào bảng kê -->
+        <form id="tempForm" onsubmit="addToTemp(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-4 rounded border">
+          <div class="md:col-span-1">
+            <label class="block text-xs font-medium mb-1 text-gray-600">Sản Phẩm</label>
+            <select id="orderProduct" required class="w-full border p-2 rounded"></select>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Sản Phẩm</label>
-            <select id="orderProduct" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500"></select>
+            <label class="block text-xs font-medium mb-1 text-gray-600">Số Lượng</label>
+            <input type="number" id="orderQty" min="0.1" step="any" required class="w-full border p-2 rounded">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Số Lượng</label>
-            <input type="number" id="orderQty" min="0.1" step="any" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Đơn Vị Tính</label>
-            <select id="orderUnit" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500">
+            <label class="block text-xs font-medium mb-1 text-gray-600">Đơn Vị Tính</label>
+            <select id="orderUnit" class="w-full border p-2 rounded">
               <option value="Thùng">Thùng</option>
               <option value="Hộp">Hộp</option>
               <option value="Gói">Gói</option>
             </select>
           </div>
-          <div class="md:col-span-2">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold hover:bg-blue-700">Lưu Đơn Hàng</button>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-blue-100 text-blue-700 border border-blue-400 px-4 py-2 rounded font-semibold hover:bg-blue-200">Thêm Vào Bảng Kê ⬇</button>
           </div>
         </form>
+
+        <!-- Bảng Kê Tạm -->
+        <div class="border rounded shadow-sm overflow-hidden">
+          <table class="w-full text-left border-collapse bg-white">
+            <thead class="bg-gray-100 text-sm text-gray-700">
+              <tr>
+                <th class="p-2 border-b">Sản Phẩm</th>
+                <th class="p-2 border-b text-center">SL</th>
+                <th class="p-2 border-b text-right">Tạm Tính</th>
+                <th class="p-2 border-b text-center w-12">Xoá</th>
+              </tr>
+            </thead>
+            <tbody id="tempTableBody">
+              <tr><td colspan="4" class="p-4 text-center text-gray-400 italic">Bảng kê trống</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button onclick="saveFinalOrder()" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-blue-700 shadow-md">LƯU ĐƠN HÀNG NÀY</button>
+        </div>
       </div>
 
       <!-- TAB 2: KHO HÀNG -->
-      <div id="sec-kho-hang" class="hidden space-y-6">
+      <div id="sec-kho-hang" class="hidden space-y-4">
         <h2 class="text-xl font-bold text-gray-800">Quản Lý Kho Hàng & Quy Cách</h2>
-        <form onsubmit="saveProduct(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded border">
-          <input type="text" id="pName" placeholder="Tên sản phẩm" required class="border p-2 rounded">
-          <input type="number" id="pPrice" placeholder="Đơn giá/Thùng (VNĐ)" required class="border p-2 rounded">
-          <input type="number" id="pSpec" placeholder="Quy cách (Số lẻ/Thùng)" required class="border p-2 rounded" title="Ví dụ: 20 hộp/thùng hoặc 50 gói/thùng">
-          <button type="submit" id="btnSaveProduct" class="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700">Thêm Sản Phẩm</button>
+        <form onsubmit="saveProduct(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3 bg-gray-50 p-4 rounded border">
+          <input type="text" id="pName" placeholder="Tên sản phẩm" required class="border p-2 rounded md:col-span-1">
+          
+          <select id="pCategory" class="border p-2 rounded md:col-span-1 text-gray-700">
+            <option value="Hàng thường">Hàng thường</option>
+            <option value="Hàng tết">Hàng tết</option>
+            <option value="Bánh mì">Bánh mì</option>
+          </select>
+
+          <input type="number" id="pPrice" placeholder="Đơn giá/Thùng (VNĐ)" required class="border p-2 rounded md:col-span-1">
+          <input type="number" id="pSpec" placeholder="Lẻ/Thùng (vd: 20)" required class="border p-2 rounded md:col-span-1">
+          
+          <button type="submit" id="btnSaveProduct" class="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700 md:col-span-1">Thêm SP</button>
         </form>
-        <table class="w-full text-left border-collapse border">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="border p-2">Tên Sản Phẩm</th>
-              <th class="border p-2">Đơn Giá / Thùng</th>
-              <th class="border p-2">Quy Cách</th>
-              <th class="border p-2 text-center">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody id="inventoryTable"></tbody>
-        </table>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border bg-white min-w-[600px]">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border p-2">Tên Sản Phẩm</th>
+                <th class="border p-2">Phân Loại</th>
+                <th class="border p-2">Đơn Giá / Thùng</th>
+                <th class="border p-2">Quy Cách</th>
+                <th class="border p-2 text-center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTable"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- TAB 3: LỊCH SỬ ĐƠN HÀNG & XUẤT PDF -->
-      <div id="sec-lich-su" class="hidden space-y-6">
-        <div class="flex justify-between items-center">
-          <h2 class="text-xl font-bold text-gray-800">Lịch Sử Đơn Hàng</h2>
-          <button onclick="exportPDF()" class="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700">Xuất PDF Đơn Hàng</button>
+      <div id="sec-lich-su" class="hidden space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-4 bg-gray-50 p-3 rounded border">
+          <div class="flex items-center gap-3">
+            <label class="font-bold text-gray-700">Chọn ngày:</label>
+            <input type="date" id="historyDate" onchange="renderHistory()" class="border-gray-300 p-2 rounded shadow-sm border font-semibold">
+          </div>
+          <button onclick="exportPDF()" class="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700 flex items-center gap-2">
+            Xuất PDF / In
+          </button>
         </div>
-        <div id="pdfContent" class="space-y-6 p-4 border rounded bg-white">
+
+        <div id="pdfContent" class="p-4 border rounded bg-white print-compact">
+          <h2 id="pdfTitle" class="text-xl font-bold text-center mb-4 hidden">BẢNG KÊ ĐƠN HÀNG</h2>
           <div id="historyList"></div>
         </div>
       </div>
 
       <!-- TAB 4: THỐNG KÊ BÁN HÀNG -->
-      <div id="sec-thong-ke" class="hidden space-y-6">
-        <h2 class="text-xl font-bold text-gray-800">Thống Kê Số Lượng Bán Trong Ngày</h2>
-        <table class="w-full text-left border-collapse border">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="border p-2">Sản Phẩm</th>
-              <th class="border p-2">Số Lượng Thực Tế Đã Bán</th>
-              <th class="border p-2">Quy Đổi Chuẩn (Tự Động)</th>
-            </tr>
-          </thead>
-          <tbody id="statsTable"></tbody>
-        </table>
+      <div id="sec-thong-ke" class="hidden space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-4 bg-gray-50 p-3 rounded border">
+          <div class="flex items-center gap-3">
+            <label class="font-bold text-gray-700">Chọn ngày:</label>
+            <input type="date" id="statsDate" onchange="renderStats()" class="border-gray-300 p-2 rounded shadow-sm border font-semibold">
+          </div>
+          <div class="text-lg">
+            <span class="font-bold text-gray-700">Tổng Doanh Thu: </span>
+            <span id="totalRevenue" class="font-bold text-green-700 text-xl">0 đ</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border bg-white min-w-[600px]">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border p-2">Sản Phẩm</th>
+                <th class="border p-2">Đã Bán Thực Tế</th>
+                <th class="border p-2">Quy Đổi Chuẩn</th>
+              </tr>
+            </thead>
+            <tbody id="statsTable"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Khởi tạo dữ liệu
+    // --- KHỞI TẠO DỮ LIỆU ---
     let inventory = JSON.parse(localStorage.getItem('app_inventory')) || [
-      { name: 'Bánh Mì', price: 500000, spec: 20 },
-      { name: 'Kẹo Thạch', price: 300000, spec: 50 }
+      { name: 'Bánh Mì', category: 'Bánh mì', price: 500000, spec: 20 },
+      { name: 'Kẹo Thạch', category: 'Hàng thường', price: 300000, spec: 50 }
     ];
     let orders = JSON.parse(localStorage.getItem('app_orders')) || [];
+    let tempOrders = []; // Mảng chứa đơn tạm
     let editIndex = -1;
+
+    // Gán ngày hiện tại cho các bộ lọc
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('historyDate').value = todayStr;
+    document.getElementById('statsDate').value = todayStr;
 
     function saveData() {
       localStorage.setItem('app_inventory', JSON.stringify(inventory));
@@ -127,24 +199,107 @@
       if(tab === 'thong-ke') renderStats();
     }
 
-    // --- QUẢN LÝ KHO HÀNG ---
+    // --- 1. LÊN ĐƠN HÀNG TẠM ---
+    function addToTemp(e) {
+      e.preventDefault();
+      const product = document.getElementById('orderProduct').value;
+      const quantity = parseFloat(document.getElementById('orderQty').value);
+      const unit = document.getElementById('orderUnit').value;
+
+      let totalPrice = 0;
+      const prodObj = inventory.find(p => p.name === product);
+      if (prodObj) {
+        totalPrice = unit === 'Thùng' ? (quantity * prodObj.price) : (quantity * (prodObj.price / prodObj.spec));
+      }
+
+      tempOrders.push({
+        tempId: Date.now() + Math.random(),
+        product, quantity, unit, totalPrice
+      });
+
+      renderTempTable();
+      document.getElementById('tempForm').reset();
+    }
+
+    function removeTemp(tempId) {
+      tempOrders = tempOrders.filter(o => o.tempId !== tempId);
+      renderTempTable();
+    }
+
+    function renderTempTable() {
+      const tbody = document.getElementById('tempTableBody');
+      if (tempOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">Bảng kê trống</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = tempOrders.map(item => `
+        <tr class="border-b">
+          <td class="p-2">${item.product}</td>
+          <td class="p-2 text-center">${item.quantity} ${item.unit}</td>
+          <td class="p-2 text-right font-medium">${Math.round(item.totalPrice).toLocaleString('vi-VN')} đ</td>
+          <td class="p-2 text-center">
+            <button onclick="removeTemp(${item.tempId})" class="text-red-500 hover:text-red-700 font-bold">✖</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function saveFinalOrder() {
+      const custName = document.getElementById('custName').value.trim();
+      
+      if (!custName) {
+        alert("Vui lòng nhập Tên Khách Hàng trước khi lưu!");
+        document.getElementById('custName').focus();
+        return;
+      }
+      if (tempOrders.length === 0) {
+        alert("Bảng kê đang trống. Vui lòng thêm sản phẩm!");
+        return;
+      }
+
+      const date = new Date().toISOString().split('T')[0];
+
+      // Đẩy tất cả từ bảng kê sang mảng orders chính
+      tempOrders.forEach(item => {
+        orders.push({
+          id: Date.now() + Math.random(),
+          customer: custName,
+          product: item.product,
+          quantity: item.quantity,
+          unit: item.unit,
+          date: date,
+          totalPrice: item.totalPrice
+        });
+      });
+
+      saveData();
+      
+      // Reset
+      tempOrders = [];
+      document.getElementById('custName').value = '';
+      renderTempTable();
+      alert(`Đã lưu thành công đơn hàng cho khách: ${custName}`);
+    }
+
+
+    // --- 2. KHO HÀNG ---
     function saveProduct(e) {
       e.preventDefault();
       const name = document.getElementById('pName').value.trim();
+      const category = document.getElementById('pCategory').value;
       const price = parseFloat(document.getElementById('pPrice').value);
       const spec = parseInt(document.getElementById('pSpec').value);
       
       if (editIndex > -1) {
-        // Cập nhật sản phẩm
-        inventory[editIndex] = { name, price, spec };
+        inventory[editIndex] = { name, category, price, spec };
         editIndex = -1;
         const btn = document.getElementById('btnSaveProduct');
-        btn.innerText = 'Thêm Sản Phẩm';
+        btn.innerText = 'Thêm SP';
         btn.classList.replace('bg-yellow-500', 'bg-green-600');
         btn.classList.replace('hover:bg-yellow-600', 'hover:bg-green-700');
       } else {
-        // Thêm mới
-        inventory.push({ name, price, spec });
+        inventory.push({ name, category, price, spec });
       }
 
       saveData();
@@ -156,6 +311,7 @@
     function editProduct(index) {
       const p = inventory[index];
       document.getElementById('pName').value = p.name;
+      document.getElementById('pCategory').value = p.category || 'Hàng thường';
       document.getElementById('pPrice').value = p.price;
       document.getElementById('pSpec').value = p.spec;
       editIndex = index;
@@ -163,11 +319,10 @@
       const btn = document.getElementById('btnSaveProduct');
       btn.innerText = 'Cập Nhật';
       btn.classList.replace('bg-green-600', 'bg-yellow-500');
-      btn.classList.replace('hover:bg-green-700', 'hover:bg-yellow-600');
     }
 
     function deleteProduct(index) {
-      if(confirm('Bạn có chắc chắn muốn xoá sản phẩm này khỏi kho?')) {
+      if(confirm('Xoá sản phẩm này khỏi kho?')) {
         inventory.splice(index, 1);
         saveData();
         renderInventory();
@@ -178,11 +333,12 @@
     function renderInventory() {
       const tbody = document.getElementById('inventoryTable');
       tbody.innerHTML = inventory.map((p, index) => `
-        <tr>
-          <td class="border p-2 font-medium">${p.name}</td>
-          <td class="border p-2 text-blue-700 font-semibold">${p.price.toLocaleString('vi-VN')} đ</td>
-          <td class="border p-2">${p.spec} Lẻ/Thùng</td>
-          <td class="border p-2 text-center">
+        <tr class="border-b">
+          <td class="p-2 font-medium">${p.name}</td>
+          <td class="p-2 text-gray-600 text-sm">${p.category || 'Hàng thường'}</td>
+          <td class="p-2 text-blue-700 font-semibold">${p.price.toLocaleString('vi-VN')} đ</td>
+          <td class="p-2">${p.spec} Lẻ/Thùng</td>
+          <td class="p-2 text-center whitespace-nowrap">
             <button onclick="editProduct(${index})" class="text-yellow-600 hover:text-yellow-800 font-bold mx-2">Sửa</button>
             <button onclick="deleteProduct(${index})" class="text-red-600 hover:text-red-800 font-bold mx-2">Xoá</button>
           </td>
@@ -195,45 +351,40 @@
       select.innerHTML = inventory.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     }
 
-    // --- QUẢN LÝ ĐƠN HÀNG ---
-    function addOrder(e) {
-      e.preventDefault();
-      const customer = document.getElementById('custName').value.trim();
-      const product = document.getElementById('orderProduct').value;
-      const quantity = parseFloat(document.getElementById('orderQty').value);
-      const unit = document.getElementById('orderUnit').value;
-      const date = new Date().toISOString().split('T')[0];
 
-      // Lưu lại giá thành tiền tại thời điểm mua (đề phòng kho đổi giá sau này)
-      let totalPrice = 0;
-      const prodObj = inventory.find(p => p.name === product);
-      if (prodObj) {
-        if (unit === 'Thùng') {
-          totalPrice = quantity * prodObj.price;
-        } else {
-          // Tính giá 1 hộp/gói
-          totalPrice = quantity * (prodObj.price / prodObj.spec);
+    // --- 3. LỊCH SỬ ĐƠN HÀNG (GỌN, SỬA GIÁ, XOÁ) ---
+    function updatePrice(id, newPriceInput) {
+      const order = orders.find(o => o.id == id);
+      if(order) {
+        // Loại bỏ dấu phẩy/chữ nếu có, lấy số
+        const parsedPrice = parseFloat(newPriceInput.replace(/[^0-9.-]+/g,""));
+        if (!isNaN(parsedPrice)) {
+            order.totalPrice = parsedPrice;
+            saveData();
+            renderHistory();
         }
       }
-
-      orders.push({ id: Date.now(), customer, product, quantity, unit, date, totalPrice });
-      saveData();
-      alert('Đã lưu đơn hàng thành công!');
-      document.getElementById('orderForm').reset();
     }
 
-    // --- LỊCH SỬ ĐƠN HÀNG & IN PDF ---
+    function deleteOrderItem(id) {
+      if(confirm("Xoá sản phẩm này khỏi lịch sử đơn hàng?")) {
+        orders = orders.filter(o => o.id != id);
+        saveData();
+        renderHistory();
+      }
+    }
+
     function renderHistory() {
-      const today = new Date().toISOString().split('T')[0];
-      const todayOrders = orders.filter(o => o.date === today);
+      const selectedDate = document.getElementById('historyDate').value;
+      const filteredOrders = orders.filter(o => o.date === selectedDate);
       const historyDiv = document.getElementById('historyList');
 
-      if (todayOrders.length === 0) {
-        historyDiv.innerHTML = '<p class="text-gray-500 italic">Chưa có đơn hàng nào trong ngày hôm nay.</p>';
+      if (filteredOrders.length === 0) {
+        historyDiv.innerHTML = '<p class="text-gray-500 italic py-4">Không có đơn hàng nào trong ngày này.</p>';
         return;
       }
 
-      const grouped = todayOrders.reduce((acc, order) => {
+      const grouped = filteredOrders.reduce((acc, order) => {
         acc[order.customer] = acc[order.customer] || [];
         acc[order.customer].push(order);
         return acc;
@@ -242,49 +393,44 @@
       historyDiv.innerHTML = Object.keys(grouped).map(cust => {
         let totalCustomerPrice = 0;
         const rows = grouped[cust].map(item => {
-          
-          // Ưu tiên lấy giá đã lưu lúc tạo đơn, nếu không có thì tính lại (cho dữ liệu cũ)
-          let itemTotal = item.totalPrice;
-          if (itemTotal === undefined) {
-             const prod = inventory.find(p => p.name === item.product);
-             if (prod) {
-                itemTotal = item.unit === 'Thùng' 
-                  ? item.quantity * prod.price 
-                  : item.quantity * (prod.price / prod.spec);
-             } else {
-                itemTotal = 0;
-             }
-          }
-          
-          totalCustomerPrice += itemTotal;
+          totalCustomerPrice += (item.totalPrice || 0);
 
           return `
-            <tr class="border-b">
-              <td class="py-2">${item.product}</td>
-              <td class="py-2 text-center">${item.quantity} ${item.unit}</td>
-              <td class="py-2 text-right">${Math.round(itemTotal).toLocaleString('vi-VN')} đ</td>
+            <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+              <td class="py-1 px-1">${item.product}</td>
+              <td class="py-1 px-1 text-center whitespace-nowrap">${item.quantity} ${item.unit}</td>
+              <td class="py-1 px-1 text-right">
+                 <!-- Ô input cho phép sửa giá trực tiếp -->
+                 <input type="text" value="${Math.round(item.totalPrice||0)}" onchange="updatePrice('${item.id}', this.value)" class="w-24 md:w-28 text-right border border-gray-300 rounded px-1 text-blue-700 font-medium no-print">
+                 <span class="hidden print:inline">${Math.round(item.totalPrice||0).toLocaleString('vi-VN')}</span>
+              </td>
+              <td class="py-1 px-1 text-center no-print w-8">
+                 <button onclick="deleteOrderItem('${item.id}')" class="text-red-500 font-bold hover:text-red-700">✖</button>
+              </td>
             </tr>
           `;
         }).join('');
 
         return `
-        <div class="border-b-2 border-dashed border-gray-300 pb-4 mb-4 last:border-0">
-          <div class="text-lg font-bold text-blue-900 mb-2 uppercase">${cust}</div>
+        <div class="border-b-2 border-dashed border-gray-400 pb-2 mb-2 last:border-0">
+          <div class="text-base font-bold text-black uppercase mb-1">${cust}</div>
           <table class="w-full text-left text-sm">
             <thead>
-              <tr class="text-gray-700 bg-gray-50">
-                <th class="py-2 px-1">Sản Phẩm</th>
-                <th class="py-2 px-1 text-center">Số Lượng</th>
-                <th class="py-2 px-1 text-right">Thành Tiền</th>
+              <tr class="text-gray-700 bg-gray-100 border-b border-gray-300">
+                <th class="py-1 px-1 w-5/12">Sản Phẩm</th>
+                <th class="py-1 px-1 w-2/12 text-center">SL</th>
+                <th class="py-1 px-1 w-4/12 text-right">Thành Tiền</th>
+                <th class="py-1 px-1 w-1/12 no-print"></th>
               </tr>
             </thead>
             <tbody>
               ${rows}
             </tbody>
             <tfoot>
-              <tr class="font-bold text-red-600">
-                <td colspan="2" class="py-2 text-right pr-4">Tổng cộng:</td>
-                <td class="py-2 text-right">${Math.round(totalCustomerPrice).toLocaleString('vi-VN')} đ</td>
+              <tr class="font-bold text-red-600 text-base">
+                <td colspan="2" class="py-1 px-1 text-right">Tổng:</td>
+                <td class="py-1 px-1 text-right">${Math.round(totalCustomerPrice).toLocaleString('vi-VN')}</td>
+                <td class="no-print"></td>
               </tr>
             </tfoot>
           </table>
@@ -294,78 +440,31 @@
 
     function exportPDF() {
       const element = document.getElementById('pdfContent');
-      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('pdfTitle').classList.remove('hidden');
+      
+      const selectedDate = document.getElementById('historyDate').value;
       const opt = {
-        margin:       10,
-        filename:     `Don_Hang_${today}.pdf`,
+        margin:       [5, 5, 5, 5], // Căn lề hẹp để tiết kiệm giấy
+        filename:     `Don_Hang_${selectedDate}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
-      html2pdf().set(opt).from(element).save();
-    }
-
-    // --- THỐNG KÊ & QUY ĐỔI TỰ ĐỘNG ---
-    function renderStats() {
-      const today = new Date().toISOString().split('T')[0];
-      const todayOrders = orders.filter(o => o.date === today);
-      const tbody = document.getElementById('statsTable');
-
-      const stats = {};
-      todayOrders.forEach(o => {
-        if (!stats[o.product]) {
-          stats[o.product] = { Thùng: 0, Hộp: 0, Gói: 0 };
-        }
-        stats[o.product][o.unit] += o.quantity;
+      
+      html2pdf().set(opt).from(element).save().then(() => {
+        document.getElementById('pdfTitle').classList.add('hidden');
       });
-
-      tbody.innerHTML = Object.keys(stats).map(pName => {
-        const item = inventory.find(i => i.name === pName);
-        const spec = item ? item.spec : 1;
-        
-        let rawThung = stats[pName]['Thùng'];
-        let rawLe = stats[pName]['Hộp'] + stats[pName]['Gói'];
-
-        let convertedThung = rawThung;
-        let leConLai = rawLe;
-
-        if (spec > 0 && rawLe > 0) {
-          const ratio = rawLe / spec;
-          const fullThung = Math.floor(ratio);
-          const remainderRatio = ratio - fullThung;
-
-          convertedThung += fullThung;
-          leConLai = rawLe % spec;
-
-          if (remainderRatio >= 0.75) {
-            convertedThung += 1;
-            leConLai = 0;
-          } else if (remainderRatio >= 0.4) {
-            convertedThung += 0.5;
-            leConLai = Math.round(rawLe - (fullThung + 0.5) * spec);
-            if (leConLai < 0) leConLai = 0;
-          }
-        }
-
-        return `
-          <tr>
-            <td class="border p-2 font-medium">${pName}</td>
-            <td class="border p-2">
-              ${stats[pName]['Thùng'] ? stats[pName]['Thùng'] + ' Thùng ' : ''}
-              ${stats[pName]['Hộp'] ? stats[pName]['Hộp'] + ' Hộp ' : ''}
-              ${stats[pName]['Gói'] ? stats[pName]['Gói'] + ' Gói' : ''}
-            </td>
-            <td class="border p-2 font-bold text-blue-700">
-              ${convertedThung > 0 ? convertedThung + ' Thùng ' : ''}
-              ${leConLai > 0 ? `(+ ${leConLai} Lẻ)` : ''}
-            </td>
-          </tr>
-        `;
-      }).join('');
     }
 
-    // Khởi tạo trang ban đầu
-    renderProductSelect();
-  </script>
-</body>
-</html>
+    // --- 4. THỐNG KÊ DOANH THU & SỐ LƯỢNG ---
+    function renderStats() {
+      const selectedDate = document.getElementById('statsDate').value;
+      const filteredOrders = orders.filter(o => o.date === selectedDate);
+      const tbody = document.getElementById('statsTable');
+      
+      let totalRev = 0;
+      const stats = {};
+
+      filteredOrders.forEach(o => {
+        // Cộng dồn doanh thu
+        totalRev +=

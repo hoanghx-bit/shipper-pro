@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ứng Dụng Quản Lý Bán Hàng & Kho</title>
+    <!-- Thư viện hỗ trợ xuất PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -23,42 +25,39 @@
         header { text-align: center; margin-bottom: 20px; }
         header h1 { font-size: 24px; color: var(--primary-color); }
 
-        /* Dashboard dạng thẻ */
         .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card-btn { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: var(--secondary-color); transition: 0.2s; }
         .card-btn:hover { border-color: var(--primary-color); }
         .card-btn.active { border-color: var(--primary-color); background-color: #eff6ff; color: var(--primary-color); }
 
-        /* Nội dung các tab */
         .tab-content { display: none; background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--border-color); }
         .tab-content.active { display: block; }
 
-        /* Form và Input */
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; }
         input, select { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 14px; }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 
-        /* Nút bấm */
         .btn { padding: 8px 16px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-primary { background: var(--primary-color); color: white; }
         .btn-danger { background: var(--accent-red); color: white; padding: 4px 8px; font-size: 12px; }
         .btn-success { background: var(--accent-green); color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
 
-        /* Bảng hiển thị */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         th { background-color: #f1f5f9; }
 
-        /* Nhãn phân loại */
-        .badge { padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .badge-thuong { background: #e0f2fe; color: #0369a1; }
-        .badge-tet { background: #fef3c7; color: #b45309; }
-        .badge-banhmi { background: #fce7f3; color: #be185d; }
-        .badge-paid { background: #dcfce7; color: #15803d; }
-        .badge-debt { background: #fee2e2; color: #b91c1c; }
-
         .summary-box { background: #f8fafc; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-top: 15px; }
+        
+        /* Chỉnh CSS riêng cho phần Lịch sử */
+        .order-history-card { background: #fff; border: 1px dashed var(--secondary-color); padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+        .order-history-card h3 { color: var(--primary-color); margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        .order-history-card .total-row { display: flex; justify-content: flex-end; font-size: 16px; font-weight: bold; margin-top: 10px; color: var(--accent-red); }
+        
+        /* Quản lý danh mục tag */
+        .cat-tag { display: inline-block; background: #e2e8f0; padding: 4px 10px; border-radius: 15px; font-size: 12px; margin: 0 5px 5px 0; }
+        .cat-tag span { cursor: pointer; color: var(--accent-red); font-weight: bold; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -68,15 +67,25 @@
         <h1>QUẢN LÝ BÁN HÀNG & KHO HÀNG</h1>
     </header>
 
-    <!-- Trang chủ dạng thẻ điều hướng -->
     <div class="nav-cards">
         <div class="card-btn active" onclick="switchTab(event, 'tab-kho')">📦 Tab Kho Hàng</div>
         <div class="card-btn" onclick="switchTab(event, 'tab-donhang')">🛒 Tab Lên Đơn Hàng</div>
-        <div class="card-btn" onclick="switchTab(event, 'tab-lichsu')">📜 Lịch Sử & Công Nợ</div>
+        <div class="card-btn" onclick="switchTab(event, 'tab-lichsu')">📜 Lịch Sử & Xuất PDF</div>
     </div>
 
     <!-- TAB 1: KHO HÀNG -->
     <div id="tab-kho" class="tab-content active">
+        
+        <!-- Quản lý phân loại -->
+        <div class="summary-box" style="margin-top: 0; margin-bottom: 20px;">
+            <label>Quản lý Phân Loại Hàng</label>
+            <div style="display: flex; gap: 10px; max-width: 400px; margin-bottom: 10px;">
+                <input type="text" id="nhapPhanLoai" placeholder="Nhập tên phân loại mới...">
+                <button type="button" class="btn btn-success" onclick="themPhanLoai()">Thêm</button>
+            </div>
+            <div id="danhSachPhanLoai"></div>
+        </div>
+
         <h2>Thêm Sản Phẩm Mới</h2>
         <form id="formKhoHang" style="margin-top: 10px;">
             <div class="form-row">
@@ -86,18 +95,18 @@
                 </div>
                 <div class="form-group">
                     <label>Phân loại *</label>
-                    <select id="loaiSP">
-                        <option value="Hàng thường">Hàng thường</option>
-                        <option value="Hàng Tết">Hàng Tết</option>
-                        <option value="Bánh mì">Bánh mì</option>
-                    </select>
+                    <select id="loaiSP" required></select>
                 </div>
                 <div class="form-group">
-                    <label>Đơn giá (VNĐ) *</label>
-                    <input type="number" id="giaSP" required min="0" placeholder="0">
+                    <label>Đơn giá (Lẻ) *</label>
+                    <input type="number" id="giaSP" required min="0" placeholder="0 VNĐ">
                 </div>
                 <div class="form-group">
-                    <label>Tồn kho *</label>
+                    <label>Quy cách (SL lẻ / 1 Thùng) *</label>
+                    <input type="number" id="quyCach" required min="1" value="1" placeholder="Vd: 24 (hộp/thùng)">
+                </div>
+                <div class="form-group">
+                    <label>Tồn kho (Tổng SL lẻ) *</label>
                     <input type="number" id="tonKho" required min="0" placeholder="0">
                 </div>
             </div>
@@ -110,8 +119,9 @@
                 <tr>
                     <th>Tên Sản Phẩm</th>
                     <th>Phân Loại</th>
-                    <th>Đơn Giá</th>
-                    <th>Tồn Kho</th>
+                    <th>Đơn Giá Lẻ</th>
+                    <th>Quy Cách</th>
+                    <th>Tồn Kho (Lẻ)</th>
                     <th>Thao Tác</th>
                 </tr>
             </thead>
@@ -127,30 +137,30 @@
                 <label>Tên khách hàng *</label>
                 <input type="text" id="tenKhach" placeholder="Nhập tên khách hàng">
             </div>
-            <div class="form-group">
-                <label>Hình thức thanh toán</label>
-                <select id="trangThaiTT">
-                    <option value="Đã thanh toán">Đã thanh toán</option>
-                    <option value="Công nợ">Ghi nợ (Công nợ)</option>
-                </select>
-            </div>
         </div>
 
-        <div class="form-row" style="background: #f1f5f9; padding: 12px; border-radius: 6px;">
+        <div class="form-row" style="background: #f1f5f9; padding: 12px; border-radius: 6px; align-items: end;">
+            <div class="form-group">
+                <label>Lọc phân loại</label>
+                <select id="locLoaiDon" onchange="capNhatDropdownSP()"></select>
+            </div>
             <div class="form-group">
                 <label>Chọn hàng từ kho</label>
-                <select id="selectSP" onchange="capNhatGiaChon()"></select>
+                <select id="selectSP"></select>
             </div>
-            <div class="form-group">
-                <label>Đơn giá</label>
-                <input type="text" id="giaChon" readonly placeholder="0">
-            </div>
-            <div class="form-group">
-                <label>Số lượng mua</label>
+            <div class="form-group" style="max-width: 120px;">
+                <label>Số lượng</label>
                 <input type="number" id="soluongMua" value="1" min="1">
             </div>
-            <div class="form-group" style="align-self: flex-end;">
-                <button type="button" class="btn btn-success" onclick="themVaoGio()">+ Thêm Vào Đơn</button>
+            <div class="form-group" style="max-width: 150px;">
+                <label>Đơn vị</label>
+                <select id="donViMua">
+                    <option value="Lẻ">Lẻ (Gói/Hộp)</option>
+                    <option value="Thùng">Thùng</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-success" style="width: 100%; height: 36px;" onclick="themVaoGio()">+ Thêm</button>
             </div>
         </div>
 
@@ -159,7 +169,7 @@
             <thead>
                 <tr>
                     <th>Sản Phẩm</th>
-                    <th>Đơn Giá</th>
+                    <th>Đơn Vị</th>
                     <th>Số Lượng</th>
                     <th>Thành Tiền</th>
                     <th>Xóa</th>
@@ -169,10 +179,6 @@
         </table>
 
         <div class="summary-box">
-            <div class="form-group">
-                <label>Giảm giá / Khuyến mãi (VNĐ)</label>
-                <input type="number" id="giamGia" value="0" min="0" oninput="tinhTongTien()">
-            </div>
             <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
                 <span>Tổng tiền thanh toán:</span>
                 <span id="tongThanhTien" style="color: var(--primary-color); font-size: 18px;">0 VNĐ</span>
@@ -181,80 +187,100 @@
         </div>
     </div>
 
-    <!-- TAB 3: LỊCH SỬ & CÔNG NỢ -->
+    <!-- TAB 3: LỊCH SỬ -->
     <div id="tab-lichsu" class="tab-content">
-        <h2>Lịch Sử Đơn Hàng & Công Nợ</h2>
-        <div class="form-group" style="margin-top: 10px; max-width: 300px;">
-            <input type="text" id="timKhach" placeholder="Lọc theo tên khách hàng..." oninput="renderLichSu()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>Lịch Sử Đơn Hàng</h2>
+            <div style="display: flex; gap: 10px;">
+                <input type="date" id="ngayLoc" onchange="renderLichSu()" style="width: auto;">
+                <button class="btn btn-warning" onclick="xuatPDF()">🖨️ Xuất PDF Ngày Này</button>
+            </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã Đơn</th>
-                    <th>Thời Gian</th>
-                    <th>Khách Hàng</th>
-                    <th>Tổng Tiền</th>
-                    <th>Trạng Thái</th>
-                    <th>Thao Tác</th>
-                </tr>
-            </thead>
-            <tbody id="bangLichSu"></tbody>
-        </table>
+        
+        <!-- Vùng chứa nội dung sẽ xuất ra PDF -->
+        <div id="vungXuatPDF" style="background: #fff; padding: 10px;">
+            <div id="danhSachLichSu"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    // Dữ liệu kho & đơn hàng lưu vĩnh viễn trên LocalStorage
-    let dsKho = JSON.parse(localStorage.getItem('DS_KHO')) || [
-        { id: 1, ten: "Bánh mì hoa cúc", loai: "Bánh mì", gia: 45000, ton: 50 },
-        { id: 2, ten: "Giỏ quà Tết 2026", loai: "Hàng Tết", gia: 350000, ton: 20 },
-        { id: 3, ten: "Nước ngọt Coca", loai: "Hàng thường", gia: 10000, ton: 100 }
-    ];
+    // --- KHỞI TẠO DỮ LIỆU TỪ LOCAL STORAGE ---
+    let dsPhanLoai = JSON.parse(localStorage.getItem('DS_PHAN_LOAI')) || ["Hàng thường", "Hàng Tết", "Bánh mì"];
+    let dsKho = JSON.parse(localStorage.getItem('DS_KHO')) || [];
     let dsDonHang = JSON.parse(localStorage.getItem('DS_DON_HANG')) || [];
     let gioHang = [];
 
-    // Chuyển tab dạng thẻ
+    // --- ĐIỀU HƯỚNG TAB ---
     function switchTab(e, tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.card-btn').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(tabId).classList.add('active');
         e.currentTarget.classList.add('active');
 
-        if(tabId === 'tab-donhang') capNhatDropdownSP();
-        if(tabId === 'tab-lichsu') renderLichSu();
+        if(tabId === 'tab-donhang') renderLocPhanLoai();
+        if(tabId === 'tab-lichsu') setNgayHienTai();
     }
 
-    // 1. CHỨC NĂNG KHO HÀNG
-    document.getElementById('formKhoHang').addEventListener('submit', function(e) {
-        e.preventDefault(); // Sửa lỗi tự động reload trang làm mất dữ liệu
+    // --- QUẢN LÝ PHÂN LOẠI ---
+    function renderPhanLoai() {
+        const div = document.getElementById('danhSachPhanLoai');
+        const selectKho = document.getElementById('loaiSP');
+        div.innerHTML = ''; selectKho.innerHTML = '';
         
+        dsPhanLoai.forEach((loai, index) => {
+            div.innerHTML += `<div class="cat-tag">${loai} <span onclick="xoaPhanLoai(${index})">✖</span></div>`;
+            selectKho.innerHTML += `<option value="${loai}">${loai}</option>`;
+        });
+    }
+
+    function themPhanLoai() {
+        const val = document.getElementById('nhapPhanLoai').value.trim();
+        if(!val) return;
+        if(dsPhanLoai.includes(val)) return alert("Phân loại này đã tồn tại!");
+        dsPhanLoai.push(val);
+        localStorage.setItem('DS_PHAN_LOAI', JSON.stringify(dsPhanLoai));
+        document.getElementById('nhapPhanLoai').value = '';
+        renderPhanLoai();
+    }
+
+    function xoaPhanLoai(index) {
+        if(confirm("Xóa phân loại này?")) {
+            dsPhanLoai.splice(index, 1);
+            localStorage.setItem('DS_PHAN_LOAI', JSON.stringify(dsPhanLoai));
+            renderPhanLoai();
+        }
+    }
+
+    // --- QUẢN LÝ KHO HÀNG ---
+    document.getElementById('formKhoHang').addEventListener('submit', function(e) {
+        e.preventDefault();
         const ten = document.getElementById('tenSP').value.trim();
         const loai = document.getElementById('loaiSP').value;
         const gia = Number(document.getElementById('giaSP').value);
+        const quyCach = Number(document.getElementById('quyCach').value);
         const ton = Number(document.getElementById('tonKho').value);
 
-        dsKho.push({ id: Date.now(), ten, loai, gia, ton });
+        dsKho.push({ id: Date.now(), ten, loai, gia, quyCach, ton });
         luuKho();
         renderKho();
         this.reset();
-        alert("Đã thêm sản phẩm thành công vào Kho!");
+        document.getElementById('quyCach').value = 1;
+        alert("Thêm sản phẩm thành công!");
     });
 
-    function luuKho() {
-        localStorage.setItem('DS_KHO', JSON.stringify(dsKho));
-    }
+    function luuKho() { localStorage.setItem('DS_KHO', JSON.stringify(dsKho)); }
 
     function renderKho() {
         const tbody = document.getElementById('bangKhoHang');
         tbody.innerHTML = '';
         dsKho.forEach(item => {
-            let badgeClass = item.loai === 'Hàng Tết' ? 'badge-tet' : (item.loai === 'Bánh mì' ? 'badge-banhmi' : 'badge-thuong');
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${item.ten}</strong></td>
-                    <td><span class="badge ${badgeClass}">${item.loai}</span></td>
+                    <td>${item.loai}</td>
                     <td>${item.gia.toLocaleString()} đ</td>
+                    <td>${item.quyCach}</td>
                     <td>${item.ton}</td>
                     <td><button class="btn btn-danger" onclick="xoaSPKho(${item.id})">Xóa</button></td>
                 </tr>
@@ -265,43 +291,63 @@
     function xoaSPKho(id) {
         if(confirm("Xóa sản phẩm này khỏi kho?")) {
             dsKho = dsKho.filter(i => i.id !== id);
-            luuKho();
-            renderKho();
+            luuKho(); renderKho();
         }
     }
 
-    // 2. CHỨC NĂNG LÊN ĐƠN HÀNG
-    function capNhatDropdownSP() {
-        const select = document.getElementById('selectSP');
-        select.innerHTML = '<option value="">-- Chọn sản phẩm trong kho --</option>';
-        dsKho.forEach(item => {
-            select.innerHTML += `<option value="${item.id}">${item.ten} (${item.loai}) - Tồn: ${item.ton}</option>`;
+    // --- LÊN ĐƠN HÀNG ---
+    function renderLocPhanLoai() {
+        const selectLoc = document.getElementById('locLoaiDon');
+        selectLoc.innerHTML = '<option value="TatCa">-- Tất cả phân loại --</option>';
+        dsPhanLoai.forEach(loai => {
+            selectLoc.innerHTML += `<option value="${loai}">${loai}</option>`;
         });
-        capNhatGiaChon();
+        capNhatDropdownSP();
     }
 
-    function capNhatGiaChon() {
-        const id = Number(document.getElementById('selectSP').value);
-        const sp = dsKho.find(i => i.id === id);
-        document.getElementById('giaChon').value = sp ? sp.gia.toLocaleString() + ' đ' : '0 đ';
+    function capNhatDropdownSP() {
+        const loaiLoc = document.getElementById('locLoaiDon').value;
+        const selectSP = document.getElementById('selectSP');
+        selectSP.innerHTML = '';
+        
+        let dsLoc = dsKho;
+        if(loaiLoc !== 'TatCa') dsLoc = dsKho.filter(sp => sp.loai === loaiLoc);
+
+        if(dsLoc.length === 0) {
+            selectSP.innerHTML = '<option value="">(Không có SP nào)</option>';
+            return;
+        }
+
+        dsLoc.forEach(item => {
+            selectSP.innerHTML += `<option value="${item.id}">${item.ten} (Tồn: ${item.ton} lẻ | Quy cách: ${item.quyCach}/thùng)</option>`;
+        });
     }
 
     function themVaoGio() {
         const id = Number(document.getElementById('selectSP').value);
         const sl = Number(document.getElementById('soluongMua').value);
+        const donVi = document.getElementById('donViMua').value;
         const sp = dsKho.find(i => i.id === id);
 
         if(!sp) return alert("Vui lòng chọn sản phẩm!");
         if(sl <= 0) return alert("Số lượng phải lớn hơn 0!");
-        if(sl > sp.ton) return alert(`Số lượng trong kho không đủ! (Tồn: ${sp.ton})`);
+        
+        // Tính toán số lượng quy ra lẻ để kiểm tra tồn kho
+        const slQuyRaLe = donVi === 'Thùng' ? sl * sp.quyCach : sl;
 
-        const index = gioHang.findIndex(i => i.id === id);
-        if(index > -1) {
-            if(gioHang[index].sl + sl > sp.ton) return alert("Tổng số lượng vượt quá tồn kho!");
-            gioHang[index].sl += sl;
-        } else {
-            gioHang.push({ id: sp.id, ten: sp.ten, gia: sp.gia, sl: sl });
-        }
+        if(slQuyRaLe > sp.ton) return alert(`Không đủ tồn kho! (Yêu cầu: ${slQuyRaLe} lẻ, Tồn: ${sp.ton} lẻ)`);
+
+        const donGiaTinh = donVi === 'Thùng' ? sp.gia * sp.quyCach : sp.gia;
+        const thanhTien = donGiaTinh * sl;
+
+        gioHang.push({ 
+            id: sp.id, 
+            ten: sp.ten, 
+            sl: sl, 
+            donVi: donVi, 
+            slQuyRaLe: slQuyRaLe,
+            thanhTien: thanhTien 
+        });
 
         renderGioHang();
     }
@@ -309,18 +355,21 @@
     function renderGioHang() {
         const tbody = document.getElementById('bangGioHang');
         tbody.innerHTML = '';
+        let tongTien = 0;
+
         gioHang.forEach((item, index) => {
+            tongTien += item.thanhTien;
             tbody.innerHTML += `
                 <tr>
                     <td>${item.ten}</td>
-                    <td>${item.gia.toLocaleString()} đ</td>
+                    <td>${item.donVi}</td>
                     <td>${item.sl}</td>
-                    <td>${(item.gia * item.sl).toLocaleString()} đ</td>
+                    <td>${item.thanhTien.toLocaleString()} đ</td>
                     <td><button class="btn btn-danger" onclick="xoaItemGio(${index})">Xóa</button></td>
                 </tr>
             `;
         });
-        tinhTongTien();
+        document.getElementById('tongThanhTien').innerText = tongTien.toLocaleString() + ' VNĐ';
     }
 
     function xoaItemGio(index) {
@@ -328,85 +377,108 @@
         renderGioHang();
     }
 
-    function tinhTongTien() {
-        const subtotal = gioHang.reduce((sum, item) => sum + (item.gia * item.sl), 0);
-        const giamGia = Number(document.getElementById('giamGia').value) || 0;
-        const total = Math.max(0, subtotal - giamGia);
-        document.getElementById('tongThanhTien').innerText = total.toLocaleString() + ' VNĐ';
-        return total;
-    }
-
     function luuDonHang() {
         const tenKhach = document.getElementById('tenKhach').value.trim();
-        const trangThai = document.getElementById('trangThaiTT').value;
-
         if(!tenKhach) return alert("Vui lòng nhập tên khách hàng!");
         if(gioHang.length === 0) return alert("Chưa có sản phẩm nào trong đơn!");
 
+        let tongTien = 0;
         // Trừ tồn kho
         gioHang.forEach(item => {
             const spKho = dsKho.find(k => k.id === item.id);
-            if(spKho) spKho.ton -= item.sl;
+            if(spKho) spKho.ton -= item.slQuyRaLe;
+            tongTien += item.thanhTien;
         });
-        luuKho();
+        luuKho(); renderKho();
 
         // Lưu đơn hàng
+        const ngayHienTai = new Date().toISOString().split('T')[0]; // Định dạng YYYY-MM-DD
         const donHang = {
             id: 'DH' + Date.now().toString().slice(-6),
-            ngay: new Date().toLocaleString('vi-VN'),
+            ngayISO: ngayHienTai,
             khach: tenKhach,
-            tongTien: tinhTongTien(),
-            trangThai: trangThai
+            chiTiet: [...gioHang],
+            tongTien: tongTien
         };
 
-        dsDonHang.unshift(donHang);
+        dsDonHang.push(donHang);
         localStorage.setItem('DS_DON_HANG', JSON.stringify(dsDonHang));
 
         // Reset form
         gioHang = [];
         document.getElementById('tenKhach').value = '';
-        document.getElementById('giamGia').value = 0;
+        document.getElementById('soluongMua').value = 1;
         renderGioHang();
         alert("Đã lưu đơn hàng thành công!");
     }
 
-    // 3. CHỨC NĂNG LỊCH SỬ & CÔNG NỢ
+    // --- LỊCH SỬ & XUẤT PDF ---
+    function setNgayHienTai() {
+        if(!document.getElementById('ngayLoc').value) {
+            document.getElementById('ngayLoc').value = new Date().toISOString().split('T')[0];
+        }
+        renderLichSu();
+    }
+
     function renderLichSu() {
-        const tbody = document.getElementById('bangLichSu');
-        const filter = document.getElementById('timKhach').value.toLowerCase();
-        tbody.innerHTML = '';
+        const divLichSu = document.getElementById('danhSachLichSu');
+        const ngayLoc = document.getElementById('ngayLoc').value;
+        divLichSu.innerHTML = '';
 
-        const list = dsDonHang.filter(d => d.khach.toLowerCase().includes(filter));
+        const dsLocTheoNgay = dsDonHang.filter(d => d.ngayISO === ngayLoc);
 
-        list.forEach(don => {
-            const isPaid = don.trangThai === 'Đã thanh toán';
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>#${don.id}</strong></td>
-                    <td>${don.ngay}</td>
-                    <td>${don.khach}</td>
-                    <td><strong>${don.tongTien.toLocaleString()} đ</strong></td>
-                    <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-debt'}">${don.trangThai}</span></td>
-                    <td>
-                        ${!isPaid ? `<button class="btn btn-success" onclick="doiTrangThaiTT('${don.id}')">Đánh dấu Đã Trả Nợ</button>` : '—'}
-                    </td>
-                </tr>
+        if(dsLocTheoNgay.length === 0) {
+            divLichSu.innerHTML = '<p style="text-align:center; color: #64748b;">Không có đơn hàng nào trong ngày này.</p>';
+            return;
+        }
+
+        // Tạo giao diện như danh sách mua cho từng khách
+        dsLocTheoNgay.forEach(don => {
+            let bangChiTiet = `
+                <table style="margin-top: 5px; margin-bottom: 5px;">
+                    <thead><tr><th>Sản phẩm</th><th>Đơn vị</th><th>Số lượng</th><th>Thành tiền</th></tr></thead>
+                    <tbody>
+            `;
+            
+            don.chiTiet.forEach(sp => {
+                bangChiTiet += `
+                    <tr>
+                        <td>${sp.ten}</td>
+                        <td>${sp.donVi}</td>
+                        <td>${sp.sl}</td>
+                        <td>${sp.thanhTien.toLocaleString()} đ</td>
+                    </tr>
+                `;
+            });
+
+            bangChiTiet += `</tbody></table>`;
+
+            divLichSu.innerHTML += `
+                <div class="order-history-card">
+                    <h3>Khách hàng: <strong>${don.khach}</strong> <span style="float:right; font-size:12px; color: #64748b;">Mã: #${don.id}</span></h3>
+                    ${bangChiTiet}
+                    <div class="total-row">Tổng tiền đơn hàng: ${don.tongTien.toLocaleString()} VNĐ</div>
+                </div>
             `;
         });
     }
 
-    function doiTrangThaiTT(donId) {
-        const don = dsDonHang.find(d => d.id === donId);
-        if(don && confirm(`Xác nhận khách ${don.khach} đã thanh toán đơn #${don.id}?`)) {
-            don.trangThai = 'Đã thanh toán';
-            localStorage.setItem('DS_DON_HANG', JSON.stringify(dsDonHang));
-            renderLichSu();
+    function xuatPDF() {
+        const ngayLoc = document.getElementById('ngayLoc').value;
+        const vungXuat = document.getElementById('vungXuatPDF');
+        
+        if(vungXuat.innerText.includes("Không có đơn hàng nào")) {
+            return alert("Không có dữ liệu để xuất PDF!");
         }
-    }
 
-    // Chạy mặc định khi tải trang
-    renderKho();
-</script>
-</body>
-</html>
+        // Tùy chỉnh file PDF
+        const opt = {
+            margin:       0.5,
+            filename:     `Bao_Cao_Don_Hang_${ngayLoc}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
 
+        // Gọi thư viện html2pdf
+  

@@ -55,21 +55,9 @@
         .order-history-card h3 { color: var(--primary-color); margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
         .order-history-card .total-row { display: flex; justify-content: flex-end; font-size: 16px; font-weight: bold; margin-top: 10px; color: var(--accent-red); }
         
-        /* Modal Cài đặt Phân loại */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-content {
-            background: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        .modal-header h3 { margin: 0; color: var(--primary-color); }
-        .close-btn { cursor: pointer; font-size: 20px; color: var(--accent-red); font-weight: bold; }
-        .cat-list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f1f5f9; margin-bottom: 8px; border-radius: 5px; }
-        .cat-list-item button { background: none; border: none; color: var(--accent-red); cursor: pointer; font-weight: bold; }
+        /* Cài đặt danh sách inline */
+        .cat-list-item { display: flex; justify-content: space-between; padding: 6px 10px; background: #fff; margin-bottom: 5px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 14px;}
+        .cat-list-item button { background: none; border: none; color: var(--accent-red); font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -94,13 +82,25 @@
                     <label>Tên sản phẩm *</label>
                     <input type="text" id="tenSP" required placeholder="Tên sản phẩm">
                 </div>
+                
                 <div class="form-group">
                     <label>Phân loại *</label>
                     <div style="display: flex; gap: 8px;">
                         <select id="loaiSP" required style="flex: 1;"></select>
-                        <button type="button" class="btn btn-secondary" onclick="moModal()">⚙️ Cài đặt</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleCaiDat()">⚙️ Cài đặt</button>
+                    </div>
+                    
+                    <!-- Khung cài đặt mở rộng (Ẩn đi theo mặc định) -->
+                    <div id="khungCaiDat" style="display: none; background: #f1f5f9; padding: 12px; margin-top: 8px; border-radius: 6px; border: 1px dashed var(--secondary-color);">
+                        <label style="color: var(--primary-color);">Quản lý Phân loại</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                            <input type="text" id="nhapPhanLoai" placeholder="Nhập tên phân loại...">
+                            <button type="button" class="btn btn-success" onclick="themPhanLoai()">Lưu</button>
+                        </div>
+                        <div id="danhSachPhanLoaiInline" style="max-height: 150px; overflow-y: auto;"></div>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label>Đơn giá (Lẻ) *</label>
                     <input type="number" id="giaSP" required min="0" placeholder="0 VNĐ">
@@ -202,25 +202,6 @@
     </div>
 </div>
 
-<!-- Modal Quản Lý Phân Loại -->
-<div id="modalPhanLoai" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Cài đặt Phân Loại</h3>
-            <div class="close-btn" onclick="dongModal()">✖</div>
-        </div>
-        
-        <form id="formThemPhanLoai" style="display: flex; gap: 10px; margin-bottom: 15px;" onsubmit="themPhanLoai(event)">
-            <input type="text" id="nhapPhanLoai" required placeholder="Nhập phân loại mới...">
-            <button type="submit" class="btn btn-success">Thêm</button>
-        </form>
-
-        <div style="max-height: 250px; overflow-y: auto;" id="danhSachPhanLoaiModal">
-            <!-- Danh sách phân loại sẽ render ở đây -->
-        </div>
-    </div>
-</div>
-
 <script>
     // --- KHỞI TẠO DỮ LIỆU TỪ LOCAL STORAGE ---
     let dsPhanLoai = ["Hàng thường", "Hàng Tết", "Bánh mì"];
@@ -247,14 +228,15 @@
         if(tabId === 'tab-lichsu') setNgayHienTai();
     }
 
-    // --- MODAL & QUẢN LÝ PHÂN LOẠI ---
-    function moModal() {
-        document.getElementById('modalPhanLoai').classList.add('active');
-        renderDanhSachPhanLoaiModal();
-    }
-
-    function dongModal() {
-        document.getElementById('modalPhanLoai').classList.remove('active');
+    // --- QUẢN LÝ PHÂN LOẠI TRỰC TIẾP (INLINE) ---
+    function toggleCaiDat() {
+        const khung = document.getElementById('khungCaiDat');
+        if (khung.style.display === 'none') {
+            khung.style.display = 'block';
+            renderDanhSachPhanLoaiInline();
+        } else {
+            khung.style.display = 'none';
+        }
     }
 
     function renderDropdownPhanLoai() {
@@ -263,36 +245,34 @@
         dsPhanLoai.forEach(loai => {
             selectKho.innerHTML += `<option value="${loai}">${loai}</option>`;
         });
-        // Cập nhật luôn cho Tab Lên Đơn
-        renderLocPhanLoai();
+        renderLocPhanLoai(); // Đồng bộ sang Tab Lên Đơn
     }
 
-    function renderDanhSachPhanLoaiModal() {
-        const div = document.getElementById('danhSachPhanLoaiModal');
+    function renderDanhSachPhanLoaiInline() {
+        const div = document.getElementById('danhSachPhanLoaiInline');
         div.innerHTML = '';
         dsPhanLoai.forEach((loai, index) => {
             div.innerHTML += `
                 <div class="cat-list-item">
                     <span>${loai}</span>
-                    <button onclick="xoaPhanLoai(${index})">✖ Xóa</button>
+                    <button type="button" onclick="xoaPhanLoai(${index})">✖ Xóa</button>
                 </div>
             `;
         });
     }
 
-    function themPhanLoai(e) {
-        e.preventDefault(); 
+    function themPhanLoai() {
         const inputElement = document.getElementById('nhapPhanLoai');
         const val = inputElement.value.trim();
         
-        if(!val) return;
+        if(!val) return alert("Vui lòng nhập tên phân loại!");
         if(dsPhanLoai.includes(val)) return alert("Phân loại này đã tồn tại!");
         
         dsPhanLoai.push(val);
         localStorage.setItem('DS_PHAN_LOAI', JSON.stringify(dsPhanLoai));
         inputElement.value = '';
         
-        renderDanhSachPhanLoaiModal();
+        renderDanhSachPhanLoaiInline();
         renderDropdownPhanLoai();
     }
 
@@ -300,7 +280,7 @@
         if(confirm("Bạn có chắc muốn xóa phân loại này?")) {
             dsPhanLoai.splice(index, 1);
             localStorage.setItem('DS_PHAN_LOAI', JSON.stringify(dsPhanLoai));
-            renderDanhSachPhanLoaiModal();
+            renderDanhSachPhanLoaiInline();
             renderDropdownPhanLoai();
         }
     }
@@ -333,7 +313,7 @@
                     <td>${item.loai}</td>
                     <td>${item.gia.toLocaleString()} đ</td>
                     <td>${item.quyCach}</td>
-                    <td><button class="btn btn-danger" onclick="xoaSPKho(${item.id})">Xóa</button></td>
+                    <td><button type="button" class="btn btn-danger" onclick="xoaSPKho(${item.id})">Xóa</button></td>
                 </tr>
             `;
         });
@@ -404,7 +384,7 @@
                     <td>${item.donVi}</td>
                     <td>${item.sl}</td>
                     <td>${item.thanhTien.toLocaleString()} đ</td>
-                    <td><button class="btn btn-danger" onclick="xoaItemGio(${index})">Xóa</button></td>
+                    <td><button type="button" class="btn btn-danger" onclick="xoaItemGio(${index})">Xóa</button></td>
                 </tr>
             `;
         });
@@ -473,4 +453,20 @@
             `;
             
             don.chiTiet.forEach(sp => {
-                bangChiTiet += `<tr><td>${sp.ten}</td><td>${sp.donVi}</td><td>${sp.sl}</td><
+                bangChiTiet += `<tr><td>${sp.ten}</td><td>${sp.donVi}</td><td>${sp.sl}</td><td>${sp.thanhTien.toLocaleString()} đ</td></tr>`;
+            });
+
+            bangChiTiet += `</tbody></table>`;
+
+            divLichSu.innerHTML += `
+                <div class="order-history-card">
+                    <h3>Khách hàng: <strong>${don.khach}</strong> <span style="float:right; font-size:12px; color: #64748b;">Mã: #${don.id}</span></h3>
+                    ${bangChiTiet}
+                    <div class="total-row">Tổng tiền đơn hàng: ${don.tongTien.toLocaleString()} VNĐ</div>
+                </div>
+            `;
+        });
+    }
+
+    function xuatPDF() {
+        

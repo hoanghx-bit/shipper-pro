@@ -569,17 +569,17 @@ function renderDraft() {
 
       <div class="total-row">
         <div class="total-line">
-          <span>Doanh số Bán: <b>${money(totalSale)} ₫</b></span>
-          <span style="color:var(--purple)">Doanh số DMS: <b>${money(totalDms)} ₫</b></span>
-          <span style="color:var(--success)">Chênh lệch Giá Bán vs NET: <b>+${money(diff)} ₫</b></span>
+          <span>Doanh số Bán: <b>${money(totalSale)}</b></span>
+          <span style="color:var(--purple)">Doanh số DMS: <b>${money(totalDms)}</b></span>
+          <span style="color:var(--success)">Chênh lệch Giá Bán vs NET: <b>+${money(diff)}</b></span>
         </div>
         ${discount > 0 ? `
         <div class="total-line" style="color: var(--danger); font-size: 13px;">
-          <span>Chiết khấu: <b>- ${money(discount)} ₫</b> ${c.discountReason ? `(${esc(c.discountReason)})` : ''}</span>
-        </div>` : ''}
-        <div class="total-line" style="border-top: 1px dashed var(--border); padding-top: 8px; color: var(--primary); font-size: 15px;">
-          <span>Tiền phải thu: <b style="font-size: 16px;">${money(finalAmount)} ₫</b></span>
+          <span>Chiết khấu: <b>- ${money(discount)}</b> ${c.discountReason ? `(${esc(c.discountReason)})` : ''}</span>
         </div>
+        <div class="total-line" style="border-top: 1px dashed var(--border); padding-top: 8px; color: var(--primary); font-size: 15px;">
+          <span>Tiền phải thu: <b style="font-size: 16px;">${money(finalAmount)}</b></span>
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -951,13 +951,13 @@ function renderHistory() {
         <span style="width: 90px;"></span>
         <span style="width: 30px;"></span>
         <span style="width: 80px; text-align: right;">-${discountKStr}</span>
-      </div>` : ''}
+      </div>
       <div style="display: flex; justify-content: space-between; margin: 4px 0 4px 20px; font-weight: bold; color: #0f4c81;">
         <span style="flex: 1;">Tiền phải thu</span>
         <span style="width: 90px;"></span>
         <span style="width: 30px;"></span>
         <span style="width: 80px; text-align: right;">${finalKStr}</span>
-      </div>
+      </div>` : ''}
     </div>`;
   }).join('');
 

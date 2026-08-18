@@ -257,7 +257,6 @@ tr:last-child td { border-bottom: none; }
           <select id="pCategory">
             <option value="Hàng thường">Hàng thường</option>
             <option value="Hàng tết">Hàng tết</option>
-            <option value="Bánh mì">Bánh mì</option>
           </select>
         </div>
         <div class="col-2"><label>QC/Thùng</label><input id="pQct" type="number" step="0.01" min="0"></div>
@@ -370,7 +369,7 @@ tr:last-child td { border-bottom: none; }
 
 </div>
 
-<!-- EDIT MODAL -->
+<!-- EDIT PRODUCT MODAL -->
 <div id="editModal" class="modal">
   <div class="modal-box">
     <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:12px;">Cập nhật Thông tin Sản phẩm</h3>
@@ -398,6 +397,18 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- EDIT HISTORY MODAL -->
+<div id="historyEditModal" class="modal">
+  <div class="modal-box" style="width: min(900px, 100%);">
+    <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:12px;">Sửa Chứng Từ / Đơn Hàng Lịch Sử</h3>
+    <div id="historyEditFormContent"></div>
+    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px">
+      <button class="btn light" onclick="closeHistoryEditModal()">Đóng</button>
+      <button class="btn primary" onclick="saveHistoryEdit()">Lưu Thay Đổi</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // UTILITIES & STATE
@@ -408,6 +419,10 @@ let products = load(KEY_PRODUCTS, []);
 let history  = load(KEY_HISTORY, []);
 let draft    = [];
 let editIndex = -1;
+
+let editingBatchId = null;
+let editingCustomerIndex = null;
+let currentEditCustomerData = null;
 
 const $ = id => document.getElementById(id);
 const money = n => Number(n||0).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
@@ -856,7 +871,7 @@ $('excelFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// TAB 3: LỊCH SỬ LOGIC (DẠNG VĂN BẢN THUẦN TÚY, CĂN CHỈNH THẲNG HÀNG, KHÔNG TRÀN DÒNG)
+// TAB 3: LỊCH SỬ LOGIC (DẠNG VĂN BẢN THUẦN TÚY, CĂN CHỈNH THẲNG HÀNG, KHÔNG TRÀN DÒNG, SỐ ĐẦY ĐỦ KHÔNG DÙNG DẤU PHẨY, CÓ NÚT SỬA/XÓA)
 function renderHistory() {
   const dateStr = $('historyDate').value || today();
   const batches = history.filter(b => b.date === dateStr);
@@ -873,7 +888,7 @@ function renderHistory() {
   let allCustomers = [];
   batches.forEach(b => {
     if (b.customers && b.customers.length) {
-      b.customers.forEach(c => allCustomers.push({ ...c, batchId: b.id }));
+      b.customers.forEach((c, cIdx) => allCustomers.push({ ...c, batchId: b.id, customerIndex: cIdx }));
     }
   });
 
@@ -904,7 +919,7 @@ function renderHistory() {
     return unit.charAt(0).toUpperCase();
   };
 
-  // 1. TẠO GIAO DIỆN PHẦN ĐƠN HÀNG DẠNG VĂN BẢN (HÀNG NGANG, KHÔNG TRÀN DÒNG, MÀU SẮC CHỈ HIỂN THỊ SAU TÊN SẢN PHẨM)
+  // 1. TẠO GIAO DIỆN PHẦN ĐƠN HÀNG DẠNG VĂN BẢN (HÀNG NGANG, KHÔNG TRÀN DÒNG, KHÔNG DẤU PHẨY SỐ TIỀN, CÓ NÚT SỬA/XÓA)
   let ordersHtml = allCustomers.map((c, idx) => {
     let totalAmount = 0;
     let itemLines = (c.items || []).map(it => {
@@ -914,9 +929,7 @@ function renderHistory() {
       const rev = it.amount ?? (it.qty * price);
       totalAmount += rev;
 
-      const kAmount = rev >= 1000 ? (rev / 1000) : rev;
-      const kAmountStr = Number.isInteger(kAmount) ? money(kAmount) : kAmount.toFixed(2).replace('.', ',');
-
+      const fullAmountStr = Math.round(rev).toString();
       const unitStr = getShortUnit(it.unit);
       let qtyStr = fmtQtyShort(it.qty) + (unitStr === 'T' || unitStr === 'H' ? unitStr : ' ' + unitStr);
 
@@ -924,43 +937,46 @@ function renderHistory() {
         <span style="flex: 1; padding-right: 15px; overflow: hidden; text-overflow: ellipsis;">${esc(pName)}${it.color ? ' ('+esc(it.color)+')' : ''}</span>
         <span style="width: 100px; text-align: left; white-space: nowrap;">${esc(qtyStr)}</span>
         <span style="width: 30px; text-align: center;">=</span>
-        <span style="width: 90px; text-align: right; white-space: nowrap;">${kAmountStr}</span>
+        <span style="width: 110px; text-align: right; white-space: nowrap;">${fullAmountStr}</span>
       </div>`;
     }).join('');
 
-    const totalK = totalAmount >= 1000 ? (totalAmount / 1000) : totalAmount;
-    const totalKStr = Number.isInteger(totalK) ? money(totalK) : totalK.toFixed(2).replace('.', ',');
+    const totalStr = Math.round(totalAmount).toString();
     const discount = Number(c.discount || 0);
     const finalAmount = Math.max(0, totalAmount - discount);
-    const finalK = finalAmount >= 1000 ? (finalAmount / 1000) : finalAmount;
-    const finalKStr = Number.isInteger(finalK) ? money(finalK) : finalK.toFixed(2).replace('.', ',');
-    const discountK = discount >= 1000 ? (discount / 1000) : discount;
-    const discountKStr = Number.isInteger(discountK) ? money(discountK) : discountK.toFixed(2).replace('.', ',');
+    const finalStr = Math.round(finalAmount).toString();
+    const discountStr = Math.round(discount).toString();
 
     const showTotalRow = (c.items && c.items.length > 1) || discount > 0;
 
     return `<div style="margin-bottom: 24px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
-      <div style="font-weight: bold; margin-bottom: 6px; white-space: nowrap;">${idx + 1}. ${esc(c.customer)}</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-weight: bold; white-space: nowrap;">${idx + 1}. ${esc(c.customer)}</span>
+        <div class="no-print" style="display: flex; gap: 6px;">
+          <button class="btn light" style="padding:2px 8px; font-size:11px; color:var(--primary);" onclick="openHistoryEdit('${c.batchId}', ${c.customerIndex})">Sửa</button>
+          <button class="btn light" style="padding:2px 8px; font-size:11px; color:var(--danger);" onclick="deleteHistoryCustomer('${c.batchId}', ${c.customerIndex})">Xóa</button>
+        </div>
+      </div>
       ${itemLines}
       ${showTotalRow ? `
       <div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 6px 0 4px 20px; font-weight: bold;">
         <span style="flex: 1;">Tổng</span>
         <span style="width: 100px;"></span>
         <span style="width: 30px;"></span>
-        <span style="width: 90px; text-align: right;">${totalKStr}</span>
+        <span style="width: 110px; text-align: right;">${totalStr}</span>
       </div>` : ''}
       ${discount > 0 ? `
       <div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 4px 0 4px 20px; color: #b91c1c; font-style: italic;">
         <span style="flex: 1;">Trừ ${c.discountReason ? esc(c.discountReason) : 'chiết khấu'}</span>
         <span style="width: 100px;"></span>
         <span style="width: 30px;"></span>
-        <span style="width: 90px; text-align: right;">-${discountKStr}</span>
+        <span style="width: 110px; text-align: right;">-${discountStr}</span>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 4px 0 4px 20px; font-weight: bold; color: #0f4c81;">
         <span style="flex: 1;">Tiền phải thu</span>
         <span style="width: 100px;"></span>
         <span style="width: 30px;"></span>
-        <span style="width: 90px; text-align: right;">${finalKStr}</span>
+        <span style="width: 110px; text-align: right;">${finalStr}</span>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -999,6 +1015,147 @@ function deleteDayBatches(dateStr) {
   history = history.filter(x => x.date !== dateStr);
   save(KEY_HISTORY, history);
   renderHistory();
+}
+
+function deleteHistoryCustomer(batchId, customerIndex) {
+  if (!confirm('Xác nhận xóa khách hàng này khỏi lịch sử đơn hàng?')) return;
+  const batch = history.find(b => b.id === batchId);
+  if (!batch) return;
+  batch.customers.splice(customerIndex, 1);
+  if (batch.customers.length === 0) {
+    history = history.filter(b => b.id !== batchId);
+  }
+  save(KEY_HISTORY, history);
+  renderHistory();
+}
+
+function openHistoryEdit(batchId, customerIndex) {
+  editingBatchId = batchId;
+  editingCustomerIndex = customerIndex;
+  const batch = history.find(b => b.id === batchId);
+  if (!batch || !batch.customers[customerIndex]) return;
+  // Deep clone customer data
+  currentEditCustomerData = JSON.parse(JSON.stringify(batch.customers[customerIndex]));
+  renderHistoryEditForm();
+  $('historyEditModal').classList.add('show');
+}
+
+function closeHistoryEditModal() {
+  $('historyEditModal').classList.remove('show');
+  editingBatchId = null;
+  editingCustomerIndex = null;
+  currentEditCustomerData = null;
+}
+
+function renderHistoryEditForm() {
+  const container = $('historyEditFormContent');
+  if (!currentEditCustomerData) return;
+
+  container.innerHTML = `
+    <div class="grid" style="margin-bottom: 16px;">
+      <div class="col-6">
+        <label>Tên Khách Hàng</label>
+        <input id="editHistCustName" type="text" value="${esc(currentEditCustomerData.customer)}">
+      </div>
+      <div class="col-3">
+        <label>Chiết khấu (₫)</label>
+        <input id="editHistDiscount" type="number" step="1000" value="${currentEditCustomerData.discount || 0}">
+      </div>
+      <div class="col-3">
+        <label>Lý do chiết khấu</label>
+        <input id="editHistDiscountReason" type="text" value="${esc(currentEditCustomerData.discountReason || '')}">
+      </div>
+    </div>
+    <h4 style="margin: 16px 0 8px 0; color: var(--primary);">Danh sách sản phẩm trong đơn</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Sản phẩm</th>
+            <th>Phân loại/Màu</th>
+            <th class="right">Số lượng</th>
+            <th>Đơn vị</th>
+            <th class="right">Đơn giá (₫)</th>
+            <th class="center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="editHistItemsBody">
+          ${currentEditCustomerData.items.map((it, idx) => `
+            <tr>
+              <td><input type="text" value="${esc(it.productName)}" onchange="updateHistItemField(${idx}, 'productName', this.value)"></td>
+              <td><input type="text" value="${esc(it.color || '')}" onchange="updateHistItemField(${idx}, 'color', this.value)"></td>
+              <td class="right"><input type="number" step="0.5" min="0.5" value="${it.qty}" style="text-align:right" onchange="updateHistItemField(${idx}, 'qty', this.value)"></td>
+              <td>
+                <select onchange="updateHistItemField(${idx}, 'unit', this.value)">
+                  ${['Thùng','Hộp','Gói','Dây'].map(u => `<option ${u===it.unit?'selected':''}>${u}</option>`).join('')}
+                </select>
+              </td>
+              <td class="right"><input type="number" step="1000" value="${it.price}" style="text-align:right" onchange="updateHistItemField(${idx}, 'price', this.value)"></td>
+              <td class="center"><button class="btn danger" style="padding:4px 8px; font-size:12px;" onclick="removeHistItem(${idx})">Xóa</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 12px;">
+      <button class="btn primary" style="font-size: 12px; padding: 6px 12px;" onclick="addHistItem()">+ Thêm dòng sản phẩm</button>
+    </div>
+  `;
+}
+
+function updateHistItemField(idx, field, val) {
+  if (!currentEditCustomerData || !currentEditCustomerData.items[idx]) return;
+  if (field === 'qty' || field === 'price') {
+    currentEditCustomerData.items[idx][field] = Number(val) || 0;
+  } else {
+    currentEditCustomerData.items[idx][field] = val;
+  }
+}
+
+function removeHistItem(idx) {
+  if (!currentEditCustomerData) return;
+  currentEditCustomerData.items.splice(idx, 1);
+  renderHistoryEditForm();
+}
+
+function addHistItem() {
+  if (!currentEditCustomerData) return;
+  currentEditCustomerData.items.push({
+    productName: 'Sản phẩm mới',
+    color: '',
+    qty: 1,
+    unit: 'Thùng',
+    price: 0,
+    netPrice: 0
+  });
+  renderHistoryEditForm();
+}
+
+function saveHistoryEdit() {
+  if (!editingBatchId || editingCustomerIndex === null || !currentEditCustomerData) return;
+  const batch = history.find(b => b.id === editingBatchId);
+  if (!batch) return;
+
+  const custName = $('editHistCustName').value.trim();
+  if (!custName) { alert('Vui lòng nhập tên khách hàng.'); return; }
+  currentEditCustomerData.customer = custName;
+  currentEditCustomerData.discount = Number($('editHistDiscount').value || 0);
+  currentEditCustomerData.discountReason = $('editHistDiscountReason').value.trim();
+
+  // Recalculate amounts for each item
+  currentEditCustomerData.items.forEach(it => {
+    const q = Number(it.qty || 0);
+    const pr = Number(it.price || 0);
+    it.amount = q * pr;
+    it.dmsAmount = q * (it.netPrice || 0);
+    it.difference = it.amount - it.dmsAmount;
+  });
+
+  batch.customers[editingCustomerIndex] = currentEditCustomerData;
+  save(KEY_HISTORY, history);
+  closeHistoryEditModal();
+  renderHistory();
+  alert('Đã cập nhật đơn hàng thành công!');
 }
 
 // TAB 4: THỐNG KÊ LOGIC

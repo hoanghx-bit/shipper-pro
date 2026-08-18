@@ -6,7 +6,6 @@
 <title>Hệ Thống Quản Lý Phân Phối (DMS)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ===== DESIGN SYSTEM & VARIABLES ===== */
 :root {
   --primary: #0f4c81;
   --primary-hover: #0a365c;
@@ -38,7 +37,7 @@ body {
 button, input, select { font: inherit; }
 button { cursor: pointer; transition: all 0.2s ease; }
 
-/* ===== DMS HEADER & TAB CARDS ===== */
+/* HEADER & TABS */
 .header {
   background: var(--primary);
   color: #fff;
@@ -64,27 +63,29 @@ button { cursor: pointer; transition: all 0.2s ease; }
   gap: 12px;
   flex-wrap: wrap;
 }
-.nav-tabs button {
+.tab-btn {
   border: none;
   border-radius: 8px 8px 0 0;
   padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   color: #e2e8f0;
   font-weight: 600;
   border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.nav-tabs button:hover { background: rgba(255, 255, 255, 0.2); }
-.nav-tabs button.active {
+.tab-btn:hover { background: rgba(255, 255, 255, 0.25); }
+.tab-btn.active {
   background: var(--bg-body);
   color: var(--primary);
   border-bottom: 3px solid var(--accent);
 }
 
-/* ===== MAIN LAYOUT ===== */
+/* LAYOUT */
 .container { max-width: 1440px; margin: 24px auto; padding: 0 20px; }
-.tab { display: none; animation: fadeIn 0.3s ease; }
-.tab.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.tab-content { display: none; animation: fadeIn 0.25s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 .card {
   background: var(--bg-card);
@@ -96,7 +97,7 @@ button { cursor: pointer; transition: all 0.2s ease; }
 }
 .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 10px; }
 
-/* ===== GRID & FORMS ===== */
+/* GRID & FORMS */
 .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
 .col-12 { grid-column: span 12; }
 .col-9 { grid-column: span 9; }
@@ -105,7 +106,6 @@ button { cursor: pointer; transition: all 0.2s ease; }
 .col-4 { grid-column: span 4; }
 .col-3 { grid-column: span 3; }
 .col-2 { grid-column: span 2; }
-.col-1 { grid-column: span 1; }
 
 label { font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px; color: var(--text-muted); }
 input, select {
@@ -124,19 +124,18 @@ input:focus, select:focus {
   background: #fff;
 }
 
-/* ===== BUTTONS ===== */
-.btn { border: none; border-radius: 6px; padding: 10px 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+/* BUTTONS */
+.btn { border: none; border-radius: 6px; padding: 10px 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
 .primary { background: var(--primary); color: #fff; }
 .primary:hover { background: var(--primary-hover); }
 .success { background: var(--success); color: #fff; }
 .danger { background: var(--danger); color: #fff; }
-.dark { background: var(--text-main); color: #fff; }
 .light { background: var(--secondary); color: var(--text-main); border: 1px solid var(--border); }
 .light:hover { background: #e2e8f0; }
 .warning { background: var(--warning); color: #fff; }
 .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
 
-/* ===== DATA TABLES ===== */
+/* TABLES */
 .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
 table { border-collapse: collapse; width: 100%; background: #fff; text-align: left; }
 th { background: #f8fafc; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; border-bottom: 2px solid var(--border); white-space: nowrap; }
@@ -147,33 +146,32 @@ tr:last-child td { border-bottom: none; }
 .center { text-align: center; }
 .muted { color: var(--text-muted); font-size: 13px; }
 
-/* ===== KPI METRICS ===== */
+/* METRICS */
 .kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
 .kpi .box { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 8px; padding: 16px 20px; box-shadow: var(--shadow-sm); }
 .kpi .box.dms { border-left-color: var(--purple); }
 .kpi .box.diff { border-left-color: var(--success); }
 .kpi .box.cum { border-left-color: var(--warning); }
-.kpi .box-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-.kpi .num { font-size: 24px; font-weight: 800; color: var(--primary); margin-top: 8px; }
+.kpi .box-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.kpi .num { font-size: 22px; font-weight: 800; color: var(--primary); margin-top: 8px; }
 .kpi .box.dms .num { color: var(--purple); }
 .kpi .box.diff .num { color: var(--success); }
 .kpi .box.cum .num { color: var(--warning); }
 
-/* ===== ORDER MODULE ===== */
+/* DRAFT ORDER LIST */
 .customer { border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; background: #fff; overflow: hidden; box-shadow: var(--shadow-sm); }
 .customer-head { padding: 14px 18px; background: #f8fafc; font-weight: 700; font-size: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.order-row { display: grid; grid-template-columns: 2fr 100px 120px 40px 180px 50px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
+.order-row { display: grid; grid-template-columns: 2fr 100px 120px 30px 220px 40px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
 .order-row:last-child { border-bottom: none; }
-.order-row select, .order-row input { padding: 8px; height: 38px; }
-.total-row { display: flex; justify-content: flex-end; gap: 40px; padding: 14px 18px; font-weight: 700; background: #f8fafc; border-top: 1px solid var(--border); font-size: 15px; color: var(--primary); }
+.order-row input, .order-row select { height: 38px; padding: 6px 10px; }
+.total-row { display: flex; justify-content: flex-end; gap: 30px; padding: 14px 18px; font-weight: 700; background: #f8fafc; border-top: 1px solid var(--border); font-size: 14px; color: var(--primary); flex-wrap: wrap; }
 
-/* ===== MODAL & A4 REPORT ===== */
+/* MODAL & REPORT */
 .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
 .modal.show { display: flex; }
 .modal-box { background: #fff; border-radius: 12px; width: min(800px, 100%); max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-.history-a4 { background: #fff; color: #000; max-width: 800px; margin: 0 auto; padding: 40px; box-shadow: var(--shadow-md); border-radius: 8px; font-family: 'Times New Roman', serif; }
+.history-a4 { background: #fff; color: #000; max-width: 850px; margin: 0 auto; padding: 40px; box-shadow: var(--shadow-md); border-radius: 8px; font-family: 'Times New Roman', serif; }
 
-/* RESPONSIVE */
 @media (max-width: 992px) {
   .grid { grid-template-columns: repeat(6, 1fr); }
   .col-3, .col-2 { grid-column: span 3; }
@@ -182,14 +180,13 @@ tr:last-child td { border-bottom: none; }
 @media (max-width: 600px) {
   .grid { grid-template-columns: 1fr; }
   .col-1, .col-2, .col-3, .col-4, .col-6, .col-8, .col-9, .col-12 { grid-column: span 1; }
-  .nav-tabs button { flex: 1; text-align: center; border-radius: 6px; margin-bottom: 8px; }
   .order-row { grid-template-columns: 1fr; gap: 8px; background: #f8fafc; margin: 8px; border-radius: 6px; padding: 12px; }
 }
 @media print {
   body { background: #fff; }
-  .header, .no-print, .nav-tabs { display: none !important; }
+  .header, .no-print { display: none !important; }
   .container { margin: 0; padding: 0; max-width: 100%; }
-  .card { border: none; box-shadow: none; padding: 0; margin: 0; }
+  .card { border: none; box-shadow: none; padding: 0; }
   .history-a4 { box-shadow: none; padding: 0; max-width: 100%; }
 }
 </style>
@@ -202,174 +199,176 @@ tr:last-child td { border-bottom: none; }
     <small>Quản lý Đơn hàng - Tồn kho - Doanh số & Doanh số DMS</small>
   </div>
   <div class="nav-tabs">
-    <button class="dms-tab active" data-tab="#orders">📝 Lên đơn</button>
-    <button class="dms-tab" data-tab="#warehouse">🏪 Kho hàng</button>
-    <button class="dms-tab" data-tab="#history">🕘 Lịch sử</button>
-    <button class="dms-tab" data-tab="#stats">📊 Thống kê</button>
+    <button class="tab-btn active" data-target="orders" onclick="switchTab('orders')">📝 Lên đơn</button>
+    <button class="tab-btn" data-target="warehouse" onclick="switchTab('warehouse')">🏪 Kho hàng</button>
+    <button class="tab-btn" data-target="history" onclick="switchTab('history')">🕘 Lịch sử</button>
+    <button class="tab-btn" data-target="stats" onclick="switchTab('stats')">📊 Thống kê</button>
   </div>
 </div>
 
 <div class="container">
-<!-- MODUN LÊN ĐƠN -->
-<section id="orders" class="tab active">
-  <div class="card no-print">
-    <div class="section-title">Khởi tạo Đơn hàng (Sales Order)</div>
-    <div class="grid">
-      <div class="col-2"><label>Ngày chứng từ</label><input id="orderDate" type="date"></div>
-      <div class="col-4"><label>Khách hàng / Đại lý</label><input id="entryCustomer" placeholder="Nhập tên khách hàng..."></div>
-      <div class="col-4"><label>Sản phẩm xuất</label><select id="entryProduct"></select></div>
-      <div class="col-2"><label>Phân loại/Màu</label><input id="entryColor" placeholder="Vd: Đỏ, Xanh..."></div>
-      
-      <div class="col-2"><label>Số lượng</label><input id="entryQty" type="number" min="0.5" step="0.5" value="1"></div>
-      <div class="col-2"><label>Đơn vị tính</label>
-        <select id="entryUnit"><option>Thùng</option><option>Hộp</option><option>Gói</option><option>Dây</option></select>
-      </div>
-      <div class="col-2" style="display:flex;align-items:end">
-        <button class="btn primary" style="width:100%; height:40px" onclick="recordOrderLine()">Thêm vào Đơn</button>
-      </div>
-      <div class="col-6" style="display:flex;align-items:end">
-         <div id="entryPriceHint" class="muted" style="padding-bottom:10px;"></div>
+
+  <!-- TAB 1: LÊN ĐƠN -->
+  <section id="orders" class="tab-content active">
+    <div class="card no-print">
+      <div class="section-title">Khởi tạo Đơn hàng (Sales Order)</div>
+      <div class="grid">
+        <div class="col-2"><label>Ngày chứng từ</label><input id="orderDate" type="date"></div>
+        <div class="col-4"><label>Khách hàng / Đại lý</label><input id="entryCustomer" placeholder="Nhập tên khách hàng..."></div>
+        <div class="col-4"><label>Sản phẩm xuất</label><select id="entryProduct"></select></div>
+        <div class="col-2"><label>Phân loại/Màu</label><input id="entryColor" placeholder="Vd: Đỏ, Xanh..."></div>
+        
+        <div class="col-2"><label>Số lượng</label><input id="entryQty" type="number" min="0.5" step="0.5" value="1"></div>
+        <div class="col-2"><label>Đơn vị tính</label>
+          <select id="entryUnit"><option>Thùng</option><option>Hộp</option><option>Gói</option><option>Dây</option></select>
+        </div>
+        <div class="col-2" style="display:flex;align-items:end">
+          <button class="btn primary" style="width:100%; height:40px" onclick="recordOrderLine()">Thêm vào Đơn</button>
+        </div>
+        <div class="col-6" style="display:flex;align-items:end">
+           <div id="entryPriceHint" class="muted" style="padding-bottom:10px;"></div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
-    <div class="toolbar" style="justify-content: space-between; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-      <h3 style="margin:0; color: var(--primary)">Giỏ hàng tạm tính</h3>
-      <div>
-        <button class="btn light" onclick="clearDraft()">Làm mới</button>
-        <button class="btn success" onclick="saveBatch()">💾 Lưu Phiếu Xuất</button>
+    <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+      <div class="toolbar" style="justify-content: space-between; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+        <h3 style="margin:0; color: var(--primary)">Giỏ hàng tạm tính</h3>
+        <div>
+          <button class="btn light" onclick="clearDraft()">Làm mới</button>
+          <button class="btn success" onclick="saveBatch()">💾 Lưu Phiếu Xuất</button>
+        </div>
       </div>
+      <div id="saveMsg" class="muted" style="margin-bottom:8px; font-weight:600; color: var(--success)"></div>
+      <div id="customers"></div>
     </div>
-    <div id="saveMsg" class="muted" style="margin-bottom:8px; font-weight:600; color: var(--success)"></div>
-    <div id="customers"></div>
-  </div>
-</section>
+  </section>
 
-<!-- MODUN KHO HÀNG -->
-<section id="warehouse" class="tab">
-  <div class="card no-print">
-    <div class="section-title">Danh mục Sản phẩm & Bảng giá Master Data</div>
-    <div class="grid">
-      <div class="col-3"><label>Tên sản phẩm</label><input id="pName"></div>
-      <div class="col-2"><label>Mã / SKU</label><input id="pCode"></div>
-      <div class="col-2"><label>Nhóm Danh mục</label>
-        <select id="pCategory">
+  <!-- TAB 2: KHO HÀNG -->
+  <section id="warehouse" class="tab-content">
+    <div class="card no-print">
+      <div class="section-title">Danh mục Sản phẩm & Bảng giá Master Data</div>
+      <div class="grid">
+        <div class="col-3"><label>Tên sản phẩm</label><input id="pName"></div>
+        <div class="col-2"><label>Mã / SKU</label><input id="pCode"></div>
+        <div class="col-2"><label>Nhóm Danh mục</label>
+          <select id="pCategory">
             <option value="Hàng thường">Hàng thường</option>
             <option value="Hàng tết">Hàng tết</option>
             <option value="Bánh mì">Bánh mì</option>
-        </select>
-      </div>
-      <div class="col-2"><label>QC/Thùng</label><input id="pQct" type="number" step="0.01" min="0"></div>
-      <div class="col-3"><label>Đơn giá gốc</label><input id="pBase" type="number" step="0.01" min="0"></div>
-      
-      <div class="col-3"><label>Giá NET</label><input id="pNet" type="number" step="0.01" min="0"></div>
-      <div class="col-3"><label>Giá Bán (Thùng)</label><input id="pCarton" type="number" step="0.01" min="0"></div>
-      <div class="col-3"><label>Giá Bán (Lẻ/Gói)</label><input id="pPack" type="number" step="0.01" min="0"></div>
-      <div class="col-3"><label>Giá Thùng quy đổi</label><input id="pCartonPack" type="number" step="0.01" min="0" readonly style="background:#e2e8f0"></div>
-      
-      <div class="col-12" style="display:flex; justify-content:flex-end; gap:12px; margin-top: 8px;">
-        <label class="btn warning">⬆ Nhập từ Excel (Lấy toàn bộ data)
-          <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden>
-        </label>
-        <button class="btn primary" onclick="addProductManually()">+ Thêm Sản Phẩm</button>
+          </select>
+        </div>
+        <div class="col-2"><label>QC/Thùng</label><input id="pQct" type="number" step="0.01" min="0"></div>
+        <div class="col-3"><label>Đơn giá gốc</label><input id="pBase" type="number" step="0.01" min="0"></div>
+        
+        <div class="col-3"><label>Giá NET</label><input id="pNet" type="number" step="0.01" min="0"></div>
+        <div class="col-3"><label>Giá Bán (Thùng)</label><input id="pCarton" type="number" step="0.01" min="0"></div>
+        <div class="col-3"><label>Giá Bán (Lẻ/Gói)</label><input id="pPack" type="number" step="0.01" min="0"></div>
+        <div class="col-3"><label>Giá Quy đổi (Thùng)</label><input id="pCartonPack" type="number" step="0.01" min="0" readonly style="background:#e2e8f0"></div>
+        
+        <div class="col-12" style="display:flex; justify-content:flex-end; gap:12px; margin-top: 8px;">
+          <label class="btn warning" style="cursor:pointer">⬆ Nhập từ Excel (Lấy toàn bộ data)
+            <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden>
+          </label>
+          <button class="btn primary" onclick="addProductManually()">+ Thêm Sản Phẩm</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="toolbar no-print">
-      <input id="warehouseSearch" placeholder="🔍 Tìm theo Tên hoặc Mã SKU..." style="width: 300px" oninput="renderWarehouse()">
-      <select id="warehouseFilter" class="btn light" style="max-width: 200px; height: 39px;">
+    <div class="card">
+      <div class="toolbar no-print">
+        <input id="warehouseSearch" placeholder="🔍 Tìm theo Tên hoặc Mã SKU..." style="width: 300px" oninput="renderWarehouse()">
+        <select id="warehouseFilter" class="btn light" style="max-width: 200px; height: 39px;" onchange="renderWarehouse()">
           <option value="">Tất cả danh mục</option>
           <option value="Hàng thường">Hàng thường</option>
           <option value="Hàng tết">Hàng tết</option>
           <option value="Bánh mì">Bánh mì</option>
-      </select>
-      <button class="btn danger" onclick="resetWarehouse()" style="margin-left:auto">Làm sạch Data</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Mã SKU</th>
-            <th>Tên Sản Phẩm</th>
-            <th class="right">QC/T</th>
-            <th class="right">Giá Gốc</th>
-            <th class="right" style="color:var(--purple)">Giá NET</th>
-            <th class="right" style="color:var(--primary)">Giá Bán Thùng</th>
-            <th class="right">Giá Lẻ</th>
-            <th class="right">Quy Đổi</th>
-            <th class="center">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody id="warehouseBody"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- MODUN LỊCH SỬ -->
-<section id="history" class="tab">
-  <div class="card no-print">
-    <div class="toolbar" style="margin: 0; justify-content: space-between;">
-      <div style="display:flex; gap: 12px; align-items:center;">
-        <label style="margin:0">Tra cứu ngày:</label>
-        <input id="historyDate" type="date" style="width:auto" onchange="renderHistory()">
+        </select>
+        <button class="btn danger" onclick="resetWarehouse()" style="margin-left:auto">Làm sạch Data Kho</button>
       </div>
-      <div style="display:flex; gap: 8px;">
-        <button class="btn primary" onclick="exportHistoryWord()">📝 Kết xuất Word</button>
-        <button class="btn success" onclick="exportHistoryExcel()">📗 Kết xuất Excel</button>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mã SKU</th>
+              <th>Tên Sản Phẩm</th>
+              <th class="right">QC/T</th>
+              <th class="right">Giá Gốc</th>
+              <th class="right" style="color:var(--purple)">Giá NET</th>
+              <th class="right" style="color:var(--primary)">Giá Bán Thùng</th>
+              <th class="right">Giá Lẻ</th>
+              <th class="right">Quy Đổi</th>
+              <th class="center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="warehouseBody"></tbody>
+        </table>
       </div>
     </div>
-  </div>
-  <div id="historyA4" class="history-a4"></div>
-</section>
+  </section>
 
-<!-- MODUN THỐNG KÊ -->
-<section id="stats" class="tab">
-  <div class="card no-print">
-    <div class="toolbar" style="margin:0;">
-      <div style="display:flex; gap:16px; align-items:end; flex-wrap:wrap">
-        <div><label>Ngày</label><input id="statsDate" type="date" onchange="renderStats()"></div>
-        <div><label>Tháng</label><input id="statsMonth" type="month" onchange="renderStats()"></div>
-        <button class="btn light" onclick="clearStatFilter()" style="height:39px">Hủy lọc</button>
-        <button class="btn primary" onclick="exportStatsWord()" style="height:39px; margin-left:auto">📝 Báo cáo Word</button>
+  <!-- TAB 3: LỊCH SỬ -->
+  <section id="history" class="tab-content">
+    <div class="card no-print">
+      <div class="toolbar" style="margin: 0; justify-content: space-between;">
+        <div style="display:flex; gap: 12px; align-items:center;">
+          <label style="margin:0">Tra cứu ngày:</label>
+          <input id="historyDate" type="date" style="width:auto" onchange="renderHistory()">
+        </div>
+        <div style="display:flex; gap: 8px;">
+          <button class="btn primary" onclick="exportHistoryWord()">📝 Kết xuất Word</button>
+          <button class="btn success" onclick="exportHistoryExcel()">📗 Kết xuất Excel</button>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div class="kpi">
-    <div class="box"><div class="box-title">Doanh số bán (Giá Bán)</div><div id="kpiRevenue" class="num">0 ₫</div></div>
-    <div class="box dms"><div class="box-title">Doanh số DMS (Giá NET)</div><div id="kpiDmsRevenue" class="num">0 ₫</div></div>
-    <div class="box diff"><div class="box-title">Chênh lệch (Kỳ chọn)</div><div id="kpiDifference" class="num">0 ₫</div></div>
-    <div class="box cum"><div class="box-title">Chênh lệch (Cộng dồn)</div><div id="kpiCumulative" class="num">0 ₫</div></div>
-    <div class="box"><div class="box-title">Số điểm bán (KH)</div><div id="kpiCustomers" class="num">0</div></div>
-    <div class="box"><div class="box-title">Tổng sản lượng bán</div><div id="kpiItems" class="num">0</div></div>
-  </div>
+    <div id="historyA4" class="history-a4"></div>
+  </section>
 
-  <div class="card" style="margin-top:24px">
-    <div class="section-title">Phân tích Bán hàng theo Sản phẩm (Sales & DMS Analytics)</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Sản Phẩm</th>
-            <th>Đơn Vị Phân Phối</th>
-            <th class="right">Sản Lượng</th>
-            <th class="right">Doanh Số Bán</th>
-            <th class="right" style="color:var(--purple)">Doanh Số DMS</th>
-            <th class="right" style="color:var(--success)">Chênh Lệch</th>
-          </tr>
-        </thead>
-        <tbody id="statsBody"></tbody>
-      </table>
+  <!-- TAB 4: THỐNG KÊ -->
+  <section id="stats" class="tab-content">
+    <div class="card no-print">
+      <div class="toolbar" style="margin:0;">
+        <div style="display:flex; gap:16px; align-items:end; flex-wrap:wrap">
+          <div><label>Lọc Ngày</label><input id="statsDate" type="date" onchange="renderStats()"></div>
+          <div><label>Lọc Tháng</label><input id="statsMonth" type="month" onchange="renderStats()"></div>
+          <button class="btn light" onclick="clearStatFilter()" style="height:39px">Hủy lọc</button>
+          <button class="btn primary" onclick="exportStatsWord()" style="height:39px; margin-left:auto">📝 Báo cáo Word</button>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+    
+    <div class="kpi">
+      <div class="box"><div class="box-title">Doanh số bán (Giá Bán)</div><div id="kpiRevenue" class="num">0 ₫</div></div>
+      <div class="box dms"><div class="box-title">Doanh số DMS (Giá NET)</div><div id="kpiDmsRevenue" class="num">0 ₫</div></div>
+      <div class="box diff"><div class="box-title">Chênh lệch (Kỳ chọn)</div><div id="kpiDifference" class="num">0 ₫</div></div>
+      <div class="box cum"><div class="box-title">Chênh lệch (Cộng dồn)</div><div id="kpiCumulative" class="num">0 ₫</div></div>
+      <div class="box"><div class="box-title">Số điểm bán (KH)</div><div id="kpiCustomers" class="num">0</div></div>
+      <div class="box"><div class="box-title">Tổng sản lượng bán</div><div id="kpiItems" class="num">0</div></div>
+    </div>
+
+    <div class="card" style="margin-top:24px">
+      <div class="section-title">Phân tích Bán hàng theo Sản phẩm (Sales & DMS Analytics)</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sản Phẩm</th>
+              <th>Đơn Vị Phân Phối</th>
+              <th class="right">Sản Lượng</th>
+              <th class="right">Doanh Số Bán</th>
+              <th class="right" style="color:var(--purple)">Doanh Số DMS</th>
+              <th class="right" style="color:var(--success)">Chênh Lệch</th>
+            </tr>
+          </thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
 </div>
 
-<!-- MODAL CẬP NHẬT -->
+<!-- EDIT MODAL -->
 <div id="editModal" class="modal">
   <div class="modal-box">
     <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:12px;">Cập nhật Thông tin Sản phẩm</h3>
@@ -378,9 +377,9 @@ tr:last-child td { border-bottom: none; }
       <div class="col-3"><label>Mã / SKU</label><input id="eCode"></div>
       <div class="col-3"><label>Nhóm Danh mục</label>
         <select id="eCategory">
-            <option value="Hàng thường">Hàng thường</option>
-            <option value="Hàng tết">Hàng tết</option>
-            <option value="Bánh mì">Bánh mì</option>
+          <option value="Hàng thường">Hàng thường</option>
+          <option value="Hàng tết">Hàng tết</option>
+          <option value="Bánh mì">Bánh mì</option>
         </select>
       </div>
       <div class="col-4"><label>QC/T</label><input id="eQct" type="number" step="0.01"></div>
@@ -388,7 +387,7 @@ tr:last-child td { border-bottom: none; }
       <div class="col-4"><label>Giá NET</label><input id="eNet" type="number" step="0.01"></div>
       <div class="col-4"><label>Giá Bán Thùng</label><input id="eCarton" type="number" step="0.01"></div>
       <div class="col-4"><label>Giá Lẻ</label><input id="ePack" type="number" step="0.01"></div>
-      <div class="col-4"><label>Giá quy đổi</label><input id="eCartonPack" type="number" step="0.01"></div>
+      <div class="col-4"><label>Giá Quy đổi</label><input id="eCartonPack" type="number" step="0.01"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px">
       <button class="btn light" onclick="closeModal()">Đóng</button>
@@ -399,255 +398,350 @@ tr:last-child td { border-bottom: none; }
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-// SWITCH TAB CARDS
-document.querySelectorAll('.nav-tabs button').forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll('.nav-tabs button').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelector(b.dataset.tab).classList.add('active');
-    
-    if(b.dataset.tab === '#warehouse' && typeof renderWarehouse === 'function') renderWarehouse();
-    if(b.dataset.tab === '#history' && typeof renderHistory === 'function') renderHistory();
-    if(b.dataset.tab === '#stats' && typeof renderStats === 'function') renderStats();
+// UTILITIES & STATE
+const KEY_PRODUCTS = 'order_app_products_v1';
+const KEY_HISTORY  = 'order_app_history_v1';
+
+let products = load(KEY_PRODUCTS, []);
+let history  = load(KEY_HISTORY, []);
+let draft    = [];
+let editIndex = -1;
+
+const $ = id => document.getElementById(id);
+const money = n => Number(n||0).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+const today = () => new Date().toISOString().slice(0,10);
+
+function load(k, f) { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch(e) { return f; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e) { console.error(e); alert('Lỗi lưu dữ liệu!'); return false; } }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function formatQty(n) { n = Number(n||0); return Number.isInteger(n) ? String(n) : String(n.toFixed(2)).replace(/\.00$/,''); }
+
+// TAB SWITCHING LOGIC (DIRECT & RELIABLE)
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+  const targetTab = $(tabId);
+  if (targetTab) targetTab.classList.add('active');
+
+  const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
+  if (btn) btn.classList.add('active');
+
+  if (tabId === 'warehouse') renderWarehouse();
+  if (tabId === 'history')   renderHistory();
+  if (tabId === 'stats')     renderStats();
+}
+
+// INITIALIZE DATES
+$('orderDate').value   = today();
+$('historyDate').value = today();
+$('statsDate').value   = today();
+
+// CALCULATION LOGIC
+function salePrice(p, unit) {
+  if (!p) return 0;
+  return unit === 'Thùng' ? Number(p.cartonByPack || p.cartonPrice || 0) : Number(p.packPrice || 0);
+}
+
+function netUnitPrice(p, unit) {
+  if (!p) return 0;
+  const net = Number(p.netPrice || 0);
+  const qct = Number(p.qct || 1);
+  return unit === 'Thùng' ? (net * (qct > 0 ? qct : 1)) : net;
+}
+
+function calcItemSale(it) {
+  const p = products.find(x => String(x.id) === String(it.productId));
+  return p ? Number(it.qty || 0) * salePrice(p, it.unit || 'Thùng') : 0;
+}
+
+function calcItemDms(it) {
+  const p = products.find(x => String(x.id) === String(it.productId));
+  return p ? Number(it.qty || 0) * netUnitPrice(p, it.unit || 'Thùng') : 0;
+}
+
+// TAB 1: LÊN ĐƠN LOGIC
+function populateEntryProducts() {
+  const sel = $('entryProduct');
+  if (!sel) return;
+  const old = sel.value;
+  sel.innerHTML = products.length 
+    ? products.map(p => `<option value="${p.id}">${esc(p.name)} (${p.code||'SKU'})</option>`).join('')
+    : '<option value="">Chưa có sản phẩm trong kho</option>';
+  if (products.some(p => String(p.id) === old)) sel.value = old;
+  updateEntryPrice();
+}
+
+function updateEntryPrice() {
+  const p = products.find(x => String(x.id) === String($('entryProduct').value));
+  const u = $('entryUnit').value;
+  if (!p) { $('entryPriceHint').textContent = ''; return; }
+  const price = salePrice(p, u);
+  const net   = netUnitPrice(p, u);
+  const diff  = price - net;
+  $('entryPriceHint').innerHTML = `Giá Bán: <b>${money(price)} ₫</b> | Giá NET: <b style="color:var(--purple)">${money(net)} ₫</b> | Lệch: <b style="color:var(--success)">+${money(diff)} ₫</b> / ${u}`;
+}
+
+$('entryProduct').addEventListener('change', updateEntryPrice);
+$('entryUnit').addEventListener('change', updateEntryPrice);
+
+function recordOrderLine() {
+  const customer = $('entryCustomer').value.trim();
+  const productId = $('entryProduct').value;
+  const unit = $('entryUnit').value;
+  const color = $('entryColor').value.trim();
+  let qty = Number($('entryQty').value);
+
+  if (!customer) { alert('Vui lòng nhập tên khách hàng/đại lý.'); return; }
+  if (!productId) { alert('Vui lòng chọn sản phẩm.'); return; }
+  if (!Number.isFinite(qty) || qty < 0.5) { alert('Số lượng xuất tối thiểu là 0,5.'); $('entryQty').value = '1'; return; }
+  qty = Math.round(qty * 2) / 2;
+
+  const p = products.find(x => String(x.id) === String(productId));
+  if (!p) { alert('Lỗi: Mã sản phẩm không tồn tại trong kho.'); return; }
+
+  let c = draft.find(x => x.customer.toLowerCase() === customer.toLowerCase());
+  if (!c) { c = { customer, items: [] }; draft.push(c); }
+
+  c.items.push({ productId, productName: p.name, color, qty, unit });
+  $('entryQty').value = '1';
+  $('entryColor').value = '';
+  $('saveMsg').textContent = '✓ Đã đưa vào phiếu tạm. Tiếp tục chọn hàng hoặc nhấn "Lưu Phiếu Xuất".';
+  renderDraft();
+}
+
+function renderDraft() {
+  const box = $('customers');
+  if (!draft.length) {
+    box.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted); background:#fff; border-radius:8px; border:1px solid var(--border)">Giỏ hàng tạm tính đang trống. Vui lòng thêm sản phẩm từ khung phía trên.</div>';
+    return;
   }
-});
 
-const KEY_PRODUCTS='order_app_products_v1', KEY_HISTORY='order_app_history_v1', KEY_DIFFERENCE='order_app_difference_v1';
-let products=load(KEY_PRODUCTS,[]);
-let history=load(KEY_HISTORY,[]);
-let draft=[];
-let editIndex=-1;
+  box.innerHTML = draft.map((c, ci) => {
+    const totalSale = c.items.reduce((s, it) => s + calcItemSale(it), 0);
+    const totalDms  = c.items.reduce((s, it) => s + calcItemDms(it), 0);
+    const diff      = totalSale - totalDms;
 
-const $=id=>document.getElementById(id);
-const money=n=>Number(n||0).toLocaleString('vi-VN',{maximumFractionDigits:2});
-const today=()=>new Date().toISOString().slice(0,10);
-function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch(e){return f}}
-function save(k,v){
-  try{ localStorage.setItem(k,JSON.stringify(v)); return true; }
-  catch(e){ console.error(e); alert('Lỗi truy xuất hệ thống: '+e.message); return false; }
-}
-
-function escAttr(v){return String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-
-$('orderDate').value=today(); $('historyDate').value=today(); $('statsDate').value=today();
-
-// TÍNH GIÁ BÁN & GIÁ NET THEO ĐƠN VỊ TÍNH
-function salePrice(p,unit){
-  if(!p)return 0;
-  return unit==='Thùng' ? Number(p.cartonByPack ?? p.cartonPrice ?? 0) : Number(p.packPrice ?? 0);
-}
-function netUnitPrice(p,unit){
-  if(!p)return 0;
-  return unit==='Thùng' ? Number(p.netPrice||0)*Number(p.qct||0) : Number(p.netPrice||0);
-}
-function formatQty(n){n=Number(n||0);return Number.isInteger(n)?String(n):String(n.toFixed(2)).replace(/\.00$/,'')}
-function calcItemSale(it){const p=products.find(x=>x.id===it.productId);return p?Number(it.qty||0)*salePrice(p,it.unit||'Thùng'):0}
-function calcItemDms(it){const p=products.find(x=>x.id===it.productId);return p?Number(it.qty||0)*netUnitPrice(p,it.unit||'Thùng'):0}
-
-function recordOrderLine(){
-  const customer=$('entryCustomer').value.trim();
-  const productId=$('entryProduct').value;
-  const unit=$('entryUnit').value;
-  const color=$('entryColor').value.trim();
-  let qty=Number($('entryQty').value);
-  if(!customer){alert('Vui lòng nhập tên khách hàng/đại lý.');return}
-  if(!productId){alert('Vui lòng chọn vật tư/sản phẩm.');return}
-  if(!Number.isFinite(qty)||qty<0.5){alert('Số lượng nhập kho tối thiểu là 0,5.');$('entryQty').value='1';return}
-  qty=Math.round(qty*2)/2;
-  const p=products.find(x=>x.id===productId);
-  if(!p){alert('Lỗi: Mã SKU không tồn tại trong hệ thống.');return}
-  if(!(salePrice(p,unit)>0)){alert('Sản phẩm chưa thiết lập Master Data giá bán cho '+unit+'.');return}
-  let c=draft.find(x=>x.customer.toLowerCase()===customer.toLowerCase());
-  if(!c){c={customer,items:[]};draft.push(c)}
-  c.items.push({productId,productName:p.name,color,qty,unit});
-  $('entryQty').value='1';
-  $('entryColor').value='';
-  $('saveMsg').textContent='✓ Đã đưa vào phiếu tạm. Tiếp tục thêm mã sản phẩm hoặc tiến hành Lưu.';
-  renderDraft();
-}
-
-function changeItem(ci,ii,field,value){
-  if(field==='productId')draft[ci].items[ii].productId=value;
-  else if(field==='unit')draft[ci].items[ii].unit=value;
-  else{let q=Number(value);if(!Number.isFinite(q)||q<0.5)q=0.5;draft[ci].items[ii].qty=Math.round(q*2)/2}
-  renderDraft();
-}
-function removeCustomer(ci){draft.splice(ci,1);renderDraft()}
-function removeItem(ci,ii){draft[ci].items.splice(ii,1);if(!draft[ci].items.length)draft.splice(ci,1);renderDraft()}
-
-function renderDraft(){
-  const box=$('customers');
-  if(!draft.length){box.innerHTML='<div style="padding: 40px; text-align: center; color: var(--text-muted);">Giỏ hàng trống. Vui lòng thêm sản phẩm xuất bán phía trên.</div>';return}
-  box.innerHTML=draft.map((c,ci)=>{
-    const totalSale=c.items.reduce((s,it)=>s+calcItemSale(it),0);
-    const totalDms=c.items.reduce((s,it)=>s+calcItemDms(it),0);
-    const diff=totalSale-totalDms;
-    return `<div class="customer"><div class="customer-head"><span>Tuyến: <b>${esc(c.customer)}</b></span><button class="btn light" style="padding:6px 12px; font-size:12px; color:var(--danger);" onclick="removeCustomer(${ci})">Xóa</button></div>
-    ${c.items.map((it,ii)=>{
-      const p=products.find(x=>x.id===it.productId), u=it.unit||'Thùng', price=salePrice(p,u), netPrice=netUnitPrice(p,u), displayName=it.color?p.name+' ('+it.color+')':p.name;
-      const rowSale=Number(it.qty)*price, rowDms=Number(it.qty)*netPrice;
-      return `<div class="order-row">
-      <div><b>${esc(displayName)}</b></div>
-      <input type="number" min="0.5" step="0.5" value="${it.qty}" onchange="changeItem(${ci},${ii},'qty',this.value)">
-      <select onchange="changeItem(${ci},${ii},'unit',this.value)">${['Thùng','Hộp','Gói','Dây'].map(x=>`<option ${x===u?'selected':''}>${x}</option>`).join('')}</select>
-      <div style="text-align:center">=</div>
-      <div class="right">
-        <div><b>${money(rowSale)} VNĐ</b> (Bán)</div>
-        <div style="font-size:11px; color:var(--purple)">DMS: ${money(rowDms)} VNĐ</div>
-        <div style="font-size:11px; color:var(--success)">Lệch: +${money(rowSale-rowDms)}</div>
+    return `<div class="customer">
+      <div class="customer-head">
+        <span>Tuyến Khách Hàng: <b>${esc(c.customer)}</b></span>
+        <button class="btn light" style="padding:4px 10px; font-size:12px; color:var(--danger);" onclick="removeCustomer(${ci})">Xóa</button>
       </div>
-      <button class="btn light" style="padding:6px" onclick="removeItem(${ci},${ii})">🗑</button></div>`
-    }).join('')}
-    <div class="total-row">
-      <span>Doanh số Bán: <b>${money(totalSale)} VNĐ</b></span>
-      <span style="color:var(--purple)">Doanh số DMS: <b>${money(totalDms)} VNĐ</b></span>
-      <span style="color:var(--success)">Chênh lệch: <b>+${money(diff)} VNĐ</b></span>
-    </div></div>`
+      ${c.items.map((it, ii) => {
+        const p = products.find(x => String(x.id) === String(it.productId));
+        const u = it.unit || 'Thùng';
+        const price = p ? salePrice(p, u) : 0;
+        const net = p ? netUnitPrice(p, u) : 0;
+        const displayName = it.color ? `${p ? p.name : it.productName} (${it.color})` : (p ? p.name : it.productName);
+        const rowSale = Number(it.qty) * price;
+        const rowDms  = Number(it.qty) * net;
+
+        return `<div class="order-row">
+          <div><b>${esc(displayName)}</b></div>
+          <input type="number" min="0.5" step="0.5" value="${it.qty}" onchange="changeDraftItem(${ci},${ii},'qty',this.value)">
+          <select onchange="changeDraftItem(${ci},${ii},'unit',this.value)">
+            ${['Thùng','Hộp','Gói','Dây'].map(x => `<option ${x===u?'selected':''}>${x}</option>`).join('')}
+          </select>
+          <div style="text-align:center">=</div>
+          <div class="right">
+            <div><b>${money(rowSale)} ₫</b> <small class="muted">(Bán)</small></div>
+            <div style="font-size:11px; color:var(--purple)">DMS: ${money(rowDms)} ₫</div>
+            <div style="font-size:11px; color:var(--success)">Chênh lệch: +${money(rowSale - rowDms)} ₫</div>
+          </div>
+          <button class="btn light" style="padding:6px" onclick="removeDraftItem(${ci},${ii})">🗑</button>
+        </div>`;
+      }).join('')}
+      <div class="total-row">
+        <span>Doanh số Bán: <b>${money(totalSale)} ₫</b></span>
+        <span style="color:var(--purple)">Doanh số DMS: <b>${money(totalDms)} ₫</b></span>
+        <span style="color:var(--success)">Chênh lệch Giá Bán vs NET: <b>+${money(diff)} ₫</b></span>
+      </div>
+    </div>`;
   }).join('');
 }
 
-function clearDraft(){if(confirm('Hủy bỏ phiên làm việc hiện tại?')){draft=[];$('saveMsg').textContent='';renderDraft()}}
+function changeDraftItem(ci, ii, field, val) {
+  if (field === 'qty') {
+    let q = Number(val);
+    if (!Number.isFinite(q) || q < 0.5) q = 0.5;
+    draft[ci].items[ii].qty = Math.round(q * 2) / 2;
+  } else if (field === 'unit') {
+    draft[ci].items[ii].unit = val;
+  }
+  renderDraft();
+}
 
-function saveBatch(){
-  if(!draft || !draft.length){ alert('Không thể lưu phiếu trống.'); return; }
-  const date=$('orderDate')?.value||today();
-  const customers=draft.map(c=>({
-    customer:String(c.customer||'').trim(),
-    items:(c.items||[]).map(it=>{
-      const p=products.find(x=>String(x.id)===String(it.productId));
-      const unit=it.unit||'Thùng';
-      const qty=Math.max(.5,Math.round(Number(it.qty||.5)*2)/2);
-      const price=p?salePrice(p,unit):Number(it.price||0);
-      const net=p?netUnitPrice(p,unit):Number(it.netPrice||0);
-      const color=String(it.color||'').trim();
-      const amount=qty*price;
-      const dmsAmount=qty*net;
-      const difference=amount-dmsAmount;
+function removeCustomer(ci) { draft.splice(ci, 1); renderDraft(); }
+function removeDraftItem(ci, ii) {
+  draft[ci].items.splice(ii, 1);
+  if (!draft[ci].items.length) draft.splice(ci, 1);
+  renderDraft();
+}
+function clearDraft() { if (confirm('Xóa sạch giỏ hàng tạm?')) { draft = []; $('saveMsg').textContent = ''; renderDraft(); } }
+
+function saveBatch() {
+  if (!draft.length) { alert('Không có dữ liệu đơn hàng để lưu.'); return; }
+  const date = $('orderDate').value || today();
+
+  const customers = draft.map(c => ({
+    customer: c.customer,
+    items: c.items.map(it => {
+      const p = products.find(x => String(x.id) === String(it.productId));
+      const unit = it.unit || 'Thùng';
+      const qty = Number(it.qty || 1);
+      const price = p ? salePrice(p, unit) : 0;
+      const net = p ? netUnitPrice(p, unit) : 0;
+      const amount = qty * price;
+      const dmsAmount = qty * net;
       return {
-        productId:p?.id||it.productId,
-        productName:p?.name||it.productName||'',
-        color, unit, qty, price, netPrice:net,
-        amount, dmsAmount, difference
+        productId: it.productId,
+        productName: p ? p.name : it.productName,
+        color: it.color || '',
+        unit, qty, price, netPrice: net,
+        amount, dmsAmount,
+        difference: amount - dmsAmount
       };
     })
-  })).filter(c=>c.customer && c.items.length);
+  }));
 
-  if(!customers.length){alert('Dữ liệu phiếu không hợp lệ.');return;}
-
-  const batch={
-    id:(crypto.randomUUID?crypto.randomUUID():('B'+Date.now()+Math.random().toString(16).slice(2))),
-    date, customers, createdAt:new Date().toISOString()
+  const batch = {
+    id: 'B' + Date.now() + Math.random().toString(16).slice(2, 6),
+    date, customers, createdAt: new Date().toISOString()
   };
-  
+
   history.push(batch);
-  save(KEY_HISTORY,history);
+  save(KEY_HISTORY, history);
 
-  draft=[];
-  if($('entryColor'))$('entryColor').value='';
-  if($('entryQty'))$('entryQty').value='1';
-  if($('saveMsg'))$('saveMsg').textContent='✓ Đã lưu Dữ liệu Giao dịch thành công.';
-  renderDraft(); renderHistory(); renderStats();
+  draft = [];
+  $('saveMsg').textContent = '✓ Đã lưu đơn hàng thành công!';
+  renderDraft();
 }
 
-function recalcCartonPack(){
- const q=Number($('pQct').value||0), pack=Number($('pPack').value||0);
- $('pCartonPack').value=(q&&pack)?q*pack:'';
+// TAB 2: KHO HÀNG LOGIC
+function recalcCartonPack() {
+  const q = Number($('pQct').value || 0);
+  const pack = Number($('pPack').value || 0);
+  $('pCartonPack').value = (q && pack) ? (q * pack) : '';
 }
-$('pQct').addEventListener('input',recalcCartonPack);
-$('pPack').addEventListener('input',recalcCartonPack);
+$('pQct').addEventListener('input', recalcCartonPack);
+$('pPack').addEventListener('input', recalcCartonPack);
 
-function renderWarehouse(){
- const q=($('warehouseSearch').value||'').toLowerCase();
- const cat=($('warehouseFilter')?.value||'');
- 
- const arr=products.filter(p=>{
-    const matchQ = (p.name+' '+(p.code||'')).toLowerCase().includes(q);
-    const pCat = p.category || "";
-    const matchCat = cat === "" ? true : (pCat === cat);
-    return matchQ && matchCat;
- });
+function renderWarehouse() {
+  const search = ($('warehouseSearch').value || '').toLowerCase();
+  const category = $('warehouseFilter').value;
 
- $('warehouseBody').innerHTML=arr.length?arr.map(p=>{const idx=products.findIndex(x=>x.id===p.id);return `<tr>
- <td><b>${esc(p.code||'—')}</b></td>
- <td>${esc(p.name)} ${p.category ? `<span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px; margin-left:6px">${esc(p.category)}</span>` : ''}</td>
- <td class="right">${p.qct??'—'}</td>
- <td class="right">${p.basePrice!=null?money(p.basePrice):'—'}</td>
- <td class="right" style="color:var(--purple); font-weight:700">${p.netPrice!=null?money(p.netPrice):'—'}</td>
- <td class="right" style="color:var(--primary); font-weight:700">${p.cartonPrice!=null?money(p.cartonPrice):'—'}</td>
- <td class="right">${p.packPrice!=null?money(p.packPrice):'—'}</td>
- <td class="right" style="background:#f8fafc"><b>${p.cartonByPack!=null?money(p.cartonByPack):'—'}</b></td>
- <td class="center"><button class="btn light" style="padding:4px 8px;font-size:12px;" onclick="openEdit(${idx})">Sửa</button></td></tr>`}).join(''):'<tr><td colspan="9" style="text-align:center; padding: 40px; color: var(--text-muted)">Không tìm thấy sản phẩm.</td></tr>';
+  const filtered = products.filter(p => {
+    const matchSearch = (p.name + ' ' + (p.code || '')).toLowerCase().includes(search);
+    const matchCat = category === '' ? true : (p.category === category);
+    return matchSearch && matchCat;
+  });
+
+  const tbody = $('warehouseBody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="center muted" style="padding:40px;">Không tìm thấy sản phẩm phù hợp.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(p => {
+    const idx = products.findIndex(x => x.id === p.id);
+    return `<tr>
+      <td><b>${esc(p.code || '—')}</b></td>
+      <td>${esc(p.name)} ${p.category ? `<span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px; margin-left:6px">${esc(p.category)}</span>` : ''}</td>
+      <td class="right">${p.qct ?? '—'}</td>
+      <td class="right">${p.basePrice != null ? money(p.basePrice) : '—'}</td>
+      <td class="right" style="color:var(--purple); font-weight:700">${p.netPrice != null ? money(p.netPrice) : '—'}</td>
+      <td class="right" style="color:var(--primary); font-weight:700">${p.cartonPrice != null ? money(p.cartonPrice) : '—'}</td>
+      <td class="right">${p.packPrice != null ? money(p.packPrice) : '—'}</td>
+      <td class="right" style="background:#f8fafc"><b>${p.cartonByPack != null ? money(p.cartonByPack) : '—'}</b></td>
+      <td class="center"><button class="btn light" style="padding:4px 8px; font-size:12px;" onclick="openEdit(${idx})">Sửa</button></td>
+    </tr>`;
+  }).join('');
 }
 
-function addProductManually(){
-  const name=$('pName').value.trim();
-  if(!name){alert('Vui lòng nhập tên sản phẩm.');return;}
-  const code=$('pCode').value.trim();
-  const category=$('pCategory').value;
-  const qct=Number($('pQct').value||0);
-  const basePrice=Number($('pBase').value||0);
-  const netPrice=Number($('pNet').value||0);
-  const cartonPrice=Number($('pCarton').value||0);
-  const packPrice=Number($('pPack').value||0);
-  const cartonByPack=Number($('pCartonPack').value||0);
+function addProductManually() {
+  const name = $('pName').value.trim();
+  if (!name) { alert('Vui lòng nhập tên sản phẩm.'); return; }
+
+  const code = $('pCode').value.trim();
+  const category = $('pCategory').value;
+  const qct = Number($('pQct').value || 0);
+  const basePrice = Number($('pBase').value || 0);
+  const netPrice = Number($('pNet').value || 0);
+  const cartonPrice = Number($('pCarton').value || 0);
+  const packPrice = Number($('pPack').value || 0);
+  const cartonByPack = Number($('pCartonPack').value || 0);
 
   products.push({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()),
-    name, code, category, qct, basePrice, netPrice, cartonPrice, packPrice, cartonByPack,
-    price: cartonByPack || cartonPrice || 0
+    id: 'P' + Date.now() + Math.random().toString(16).slice(2, 6),
+    name, code, category, qct, basePrice, netPrice, cartonPrice, packPrice, cartonByPack
   });
+
   save(KEY_PRODUCTS, products);
-  renderWarehouse(); populateEntryProducts();
-  alert('Thêm sản phẩm thành công!');
+  renderWarehouse();
+  populateEntryProducts();
+  alert('Đã thêm sản phẩm mới!');
 }
 
-function openEdit(i){
-  editIndex=i; const p=products[i]; if(!p)return;
-  $('eName').value=p.name??''; $('eCode').value=p.code??'';
-  $('eCategory').value=p.category??'Hàng thường';
-  $('eQct').value=p.qct??''; $('eBase').value=p.basePrice??'';
-  $('eNet').value=p.netPrice??''; $('eCarton').value=p.cartonPrice??'';
-  $('ePack').value=p.packPrice??''; $('eCartonPack').value=p.cartonByPack??'';
+function openEdit(idx) {
+  editIndex = idx;
+  const p = products[idx];
+  if (!p) return;
+  $('eName').value = p.name ?? '';
+  $('eCode').value = p.code ?? '';
+  $('eCategory').value = p.category ?? 'Hàng thường';
+  $('eQct').value = p.qct ?? '';
+  $('eBase').value = p.basePrice ?? '';
+  $('eNet').value = p.netPrice ?? '';
+  $('eCarton').value = p.cartonPrice ?? '';
+  $('ePack').value = p.packPrice ?? '';
+  $('eCartonPack').value = p.cartonByPack ?? '';
   $('editModal').classList.add('show');
 }
-function closeModal(){$('editModal').classList.remove('show')}
+function closeModal() { $('editModal').classList.remove('show'); }
 
-function saveEdit(){
-  if(typeof editIndex!=='number' || !products[editIndex]) return;
-  const p=products[editIndex];
-  const val=id=>String($(id)?.value??'').trim();
-  const num=id=>{
-    let raw=val(id).replace(/\s/g,''); if(!raw)return 0;
-    if(/^\d{1,3}(\.\d{3})+$/.test(raw)) raw=raw.replace(/\./g,''); else raw=raw.replace(',','.');
-    const n=Number(raw); return Number.isFinite(n)?n:0;
-  };
+function saveEdit() {
+  if (editIndex < 0 || !products[editIndex]) return;
+  const p = products[editIndex];
 
-  p.name=val('eName')||p.name||''; p.code=val('eCode');
-  p.category=$('eCategory').value;
-  p.qct=num('eQct'); p.basePrice=num('eBase'); p.netPrice=num('eNet');
-  p.cartonPrice=num('eCarton'); p.packPrice=num('ePack'); p.cartonByPack=num('eCartonPack');
-  p.price=p.cartonByPack || p.cartonPrice || 0;
+  p.name = $('eName').value.trim();
+  p.code = $('eCode').value.trim();
+  p.category = $('eCategory').value;
+  p.qct = Number($('eQct').value || 0);
+  p.basePrice = Number($('eBase').value || 0);
+  p.netPrice = Number($('eNet').value || 0);
+  p.cartonPrice = Number($('eCarton').value || 0);
+  p.packPrice = Number($('ePack').value || 0);
+  p.cartonByPack = Number($('eCartonPack').value || 0);
 
-  if(!save(KEY_PRODUCTS,products))return;
-  closeModal(); renderWarehouse(); populateEntryProducts(); renderDraft();
+  save(KEY_PRODUCTS, products);
+  closeModal();
+  renderWarehouse();
+  populateEntryProducts();
 }
 
-function resetWarehouse(){if(confirm('Xóa sạch database vật tư kho hàng?')){products=[];save(KEY_PRODUCTS,products);renderWarehouse();populateEntryProducts();}}
+function resetWarehouse() {
+  if (confirm('Bạn có chắc chắn muốn xóa sạch toàn bộ dữ liệu Kho hàng?')) {
+    products = [];
+    save(KEY_PRODUCTS, products);
+    renderWarehouse();
+    populateEntryProducts();
+  }
+}
 
-/* LOGIC IMPORT TOÀN BỘ EXCEL ĐƯỢC NÂNG CẤP HOÀN TOÀN */
+// IMPORT EXCEL LẤY TOÀN BỘ DỮ LIỆU
 $('excelFile').addEventListener('change', async e => {
-  const file = e.target.files[0]; if (!file) return;
+  const file = e.target.files[0];
+  if (!file) return;
+
   try {
-    if (typeof XLSX === 'undefined') { alert('Lỗi: Thư viện XLSX chưa tải.'); return; }
+    if (typeof XLSX === 'undefined') { alert('Lỗi: Thư viện XLSX chưa tải xong!'); return; }
     const data = await file.arrayBuffer();
     const wb = XLSX.read(data, { type: 'array' });
     const ws = wb.Sheets[wb.SheetNames[0]];
     const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
-    
+
     const cleanKey = s => String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
-    
+
     let headerIndex = -1;
     for (let i = 0; i < Math.min(matrix.length, 15); i++) {
       const keys = (matrix[i] || []).map(cleanKey);
@@ -655,20 +749,18 @@ $('excelFile').addEventListener('change', async e => {
         headerIndex = i; break;
       }
     }
-    
-    if (headerIndex < 0) headerIndex = 0; // Fallback to first row
-    
+    if (headerIndex < 0) headerIndex = 0;
+
     const headers = matrix[headerIndex] || [];
     const rows = matrix.slice(headerIndex + 1);
-    
-    const vnNum = v => {
-      if (v === null || v === undefined || v === '') return null;
+
+    const parseNum = v => {
+      if (v === null || v === undefined || v === '') return 0;
       if (typeof v === 'number') return v;
       let s = String(v).trim().replace(/\s/g, '');
       if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
       else if (s.includes(',')) s = s.replace(',', '.');
-      else if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
-      const n = Number(s); return Number.isFinite(n) ? n : null;
+      const n = Number(s); return Number.isFinite(n) ? n : 0;
     };
 
     let updated = 0, created = 0;
@@ -678,210 +770,239 @@ $('excelFile').addEventListener('change', async e => {
       const getVal = (terms) => {
         for (let idx = 0; idx < headers.length; idx++) {
           const hClean = cleanKey(headers[idx]);
-          if (terms.some(t => hClean.includes(t))) {
-            return row[idx];
-          }
+          if (terms.some(t => hClean.includes(t))) return row[idx];
         }
         return '';
       };
 
       const name = String(getVal(['sanpham', 'ten', 'mathang'])).trim();
-      if (!name) return; // Bỏ qua nếu không có tên sản phẩm
+      if (!name) return;
 
-      const code = String(getVal(['sku', 'ma', 'code', 'tt'])).trim();
+      const code = String(getVal(['sku', 'ma', 'code', 'stt'])).trim();
       const category = String(getVal(['danhmuc', 'nhom', 'loai'])).trim() || 'Hàng thường';
-      const qct = vnNum(getVal(['qct', 'quycach', 'thung']));
-      const basePrice = vnNum(getVal(['goc', 'dongiagoc']));
-      const netPrice = vnNum(getVal(['net', 'gianet']));
-      const cartonPrice = vnNum(getVal(['giathung', 'giabanthung', 'banthung']));
-      const packPrice = vnNum(getVal(['giale', 'giagoi', 'giahop', 'banle']));
-      const cartonByPack = (qct != null && packPrice != null) ? (qct * packPrice) : vnNum(getVal(['quydoi', 'gioi']));
+      const qct = parseNum(getVal(['qct', 'quycach', 'thung']));
+      const basePrice = parseNum(getVal(['goc', 'dongiagoc']));
+      const netPrice = parseNum(getVal(['net', 'gianet']));
+      const cartonPrice = parseNum(getVal(['giathung', 'giabanthung', 'banthung']));
+      const packPrice = parseNum(getVal(['giale', 'giagoi', 'giahop', 'banle']));
+      const cartonByPack = (qct > 0 && packPrice > 0) ? (qct * packPrice) : parseNum(getVal(['quydoi', 'gioi']));
 
       let p = products.find(x => (code && String(x.code) === code) || x.name.toLowerCase() === name.toLowerCase());
       if (p) {
         p.code = code || p.code;
         p.category = category || p.category;
-        p.qct = qct ?? p.qct;
-        p.basePrice = basePrice ?? p.basePrice;
-        p.netPrice = netPrice ?? p.netPrice;
-        p.cartonPrice = cartonPrice ?? p.cartonPrice;
-        p.packPrice = packPrice ?? p.packPrice;
-        p.cartonByPack = cartonByPack ?? p.cartonByPack;
-        p.price = p.cartonByPack ?? p.cartonPrice ?? p.price ?? 0;
+        p.qct = qct || p.qct;
+        p.basePrice = basePrice || p.basePrice;
+        p.netPrice = netPrice || p.netPrice;
+        p.cartonPrice = cartonPrice || p.cartonPrice;
+        p.packPrice = packPrice || p.packPrice;
+        p.cartonByPack = cartonByPack || p.cartonByPack;
         updated++;
       } else {
         products.push({
-          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-          name, code, category, qct, basePrice, netPrice, cartonPrice, packPrice, cartonByPack,
-          price: cartonByPack ?? cartonPrice ?? 0
+          id: 'P' + Date.now() + Math.random().toString(16).slice(2, 6),
+          name, code, category, qct, basePrice, netPrice, cartonPrice, packPrice, cartonByPack
         });
         created++;
       }
     });
 
     save(KEY_PRODUCTS, products);
-    renderWarehouse(); populateEntryProducts(); renderDraft();
+    renderWarehouse();
+    populateEntryProducts();
     alert(`Đã nạp toàn bộ Excel thành công:\n- Thêm mới: ${created} sản phẩm\n- Cập nhật: ${updated} sản phẩm`);
   } catch (err) {
-    alert('Lỗi xử lý file Excel: ' + err.message);
+    alert('Lỗi khi đọc file Excel: ' + err.message);
   }
   e.target.value = '';
 });
 
-$('warehouseFilter')?.addEventListener('change', renderWarehouse);
+// TAB 3: LỊCH SỬ LOGIC
+function renderHistory() {
+  const date = $('historyDate').value || today();
+  const batches = history.filter(b => b.date === date);
+  const container = $('historyA4');
 
-function renderHistory(){
-  const date=$('historyDate')?.value||today();
-  const batches=history.filter(b=>b.date===date);
-  const a4=$('historyA4'); if(!a4)return;
-  a4.innerHTML=`<div style="text-align:center; font-size:22px; font-weight:800; margin-bottom: 24px;">BÁO CÁO BÁN HÀNG NGÀY<br><span style="font-size:14px; color:#666; font-weight:normal">Ngày chứng từ: ${esc(date)}</span></div>
-    ${batches.length?batches.map((b,bi)=>`
-      <div style="margin:16px 0; border:1px solid #e2e8f0; border-radius:8px; padding: 16px;">
-        ${(b.customers||[]).map((c,ci)=>`
-          <div style="margin:10px 0">
-            <div style="font-weight:700;font-size:14px; border-bottom:1px solid #eee; padding-bottom:6px; margin-bottom:8px">${ci+1}. Khách hàng/Đại lý: ${esc(c.customer)}</div>
-            <div style="padding-left:16px">
-              ${(c.items||[]).map(it=>{
-                const pname=it.color?it.productName+' ('+it.color+')':it.productName;
-                const rev=it.amount??(Number(it.qty)*Number(it.price));
-                const dms=it.dmsAmount??(Number(it.qty)*Number(it.netPrice));
-                return `<div style="display:flex;justify-content:space-between;line-height:1.8;font-size:13px">
-                  <span>- ${esc(pname)}</span> 
-                  <span>${formatQty(it.qty)} ${esc(it.unit||'Thùng')} | Bán: <b>${money(rev)}</b> | DMS: <span style="color:var(--purple)">${money(dms)}</span></span>
+  if (!batches.length) {
+    container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:50px;">Không có chứng từ/đơn hàng được lưu trong ngày ${esc(date)}.</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="text-align:center; font-size:22px; font-weight:800; margin-bottom: 24px;">
+      BÁO CÁO PHÁT HÀNG & DOANH SỐ DMS<br>
+      <span style="font-size:14px; color:#64748b; font-weight:normal">Ngày ghi nhận: ${esc(date)}</span>
+    </div>
+    ${batches.map(b => `
+      <div style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+        ${(b.customers || []).map((c, ci) => `
+          <div style="margin-bottom:12px">
+            <div style="font-weight:700; font-size:14px; border-bottom:1px solid #cbd5e1; padding-bottom:4px; margin-bottom:8px">
+              ${ci+1}. Khách hàng: ${esc(c.customer)}
+            </div>
+            <div style="padding-left:12px">
+              ${(c.items || []).map(it => {
+                const name = it.color ? `${it.productName} (${it.color})` : it.productName;
+                const rev = it.amount ?? (it.qty * it.price);
+                const dms = it.dmsAmount ?? (it.qty * it.netPrice);
+                return `<div style="display:flex; justify-content:space-between; line-height:1.8; font-size:13px">
+                  <span>- ${esc(name)}</span>
+                  <span>${formatQty(it.qty)} ${esc(it.unit)} | Bán: <b>${money(rev)} ₫</b> | DMS: <span style="color:var(--purple)">${money(dms)} ₫</span></span>
                 </div>`;
               }).join('')}
             </div>
-          </div>`).join('')}
-        <div class="no-print" style="margin-top: 16px; border-top:1px dashed #ccc; padding-top:12px; text-align:right">
-          <button class="btn danger" style="padding:6px 12px; font-size:12px;" onclick="deleteBatch('${b.id}')">Hủy phiếu</button>
+          </div>
+        `).join('')}
+        <div class="no-print" style="text-align:right; border-top:1px dashed #cbd5e1; padding-top:10px; margin-top:10px">
+          <button class="btn danger" style="padding:4px 10px; font-size:12px;" onclick="deleteBatch('${b.id}')">Hủy Phiếu</button>
         </div>
-      </div>`).join(''):'<div style="text-align:center; color:#999; padding:40px;">Hệ thống không ghi nhận giao dịch trong ngày.</div>'}
-    `;
+      </div>
+    `).join('')}
+  `;
 }
 
-function deleteBatch(id){
- if(!confirm('Hủy bỏ toàn bộ phiếu xuất này?'))return;
- history=history.filter(x=>String(x.id)!==String(id));
- save(KEY_HISTORY,history);
- renderHistory(); renderStats();
+function deleteBatch(id) {
+  if (!confirm('Xác nhận xóa phiếu xuất này?')) return;
+  history = history.filter(x => String(x.id) !== String(id));
+  save(KEY_HISTORY, history);
+  renderHistory();
 }
 
-function getFilteredStats(){
- const date=$('statsDate').value, month=$('statsMonth').value;
- return history.filter(b=>month?b.date.startsWith(month):b.date===date);
-}
+// TAB 4: THỐNG KÊ LOGIC
+function renderStats() {
+  const date = $('statsDate').value;
+  const month = $('statsMonth').value;
 
-function renderStats(){
-  const arr=getFilteredStats();
-  const map={};
-  
-  let totalSaleRev = 0;
-  let totalDmsRev = 0;
-  let totalDiff = 0;
-  let totalQty = 0;
+  const filtered = history.filter(b => {
+    if (month) return b.date.startsWith(month);
+    if (date)  return b.date === date;
+    return true;
+  });
 
-  arr.forEach(b=>(b.customers||[]).forEach(c=>(c.items||[]).forEach(it=>{
-    const key=String(it.productId||'')+'|'+String(it.productName||'');
-    if(!map[key]) map[key]={name:it.productName||'', units:{}, saleRev:0, dmsRev:0, diff:0};
-    
-    const qty=Number(it.qty||0);
-    const u=it.unit||'Thùng';
-    const rowSale=it.amount??(qty*Number(it.price||0));
-    const rowDms=it.dmsAmount??(qty*Number(it.netPrice||0));
-    const rowDiff=it.difference??(rowSale-rowDms);
+  let totalSale = 0, totalDms = 0, totalDiff = 0, totalItems = 0;
+  const productMap = {};
 
-    map[key].units[u]=(map[key].units[u]||0)+qty;
-    map[key].saleRev+=rowSale;
-    map[key].dmsRev+=rowDms;
-    map[key].diff+=rowDiff;
+  filtered.forEach(b => (b.customers || []).forEach(c => (c.items || []).forEach(it => {
+    const key = it.productId || it.productName;
+    if (!productMap[key]) productMap[key] = { name: it.productName, units: {}, sale: 0, dms: 0, diff: 0 };
 
-    totalSaleRev+=rowSale;
-    totalDmsRev+=rowDms;
-    totalDiff+=rowDiff;
+    const q = Number(it.qty || 0);
+    const u = it.unit || 'Thùng';
+    const sale = it.amount ?? (q * (it.price || 0));
+    const dms  = it.dmsAmount ?? (q * (it.netPrice || 0));
+    const diff = it.difference ?? (sale - dms);
+
+    productMap[key].units[u] = (productMap[key].units[u] || 0) + q;
+    productMap[key].sale += sale;
+    productMap[key].dms  += dms;
+    productMap[key].diff += diff;
+
+    totalSale += sale;
+    totalDms  += dms;
+    totalDiff += diff;
   })));
 
-  // Tính cộng dồn toàn thời gian
+  // Cumulative difference all-time
   let cumDiff = 0;
-  history.forEach(b=>(b.customers||[]).forEach(c=>(c.items||[]).forEach(it=>{
-    const qty=Number(it.qty||0);
-    const rowSale=it.amount??(qty*Number(it.price||0));
-    const rowDms=it.dmsAmount??(qty*Number(it.netPrice||0));
-    cumDiff += (it.difference ?? (rowSale-rowDms));
+  history.forEach(b => (b.customers || []).forEach(c => (c.items || []).forEach(it => {
+    const q = Number(it.qty || 0);
+    const sale = it.amount ?? (q * (it.price || 0));
+    const dms  = it.dmsAmount ?? (q * (it.netPrice || 0));
+    cumDiff += (it.difference ?? (sale - dms));
   })));
 
-  Object.values(map).forEach(x=>Object.values(x.units).forEach(q=>totalQty+=Number(q||0)));
+  Object.values(productMap).forEach(p => Object.values(p.units).forEach(q => totalItems += q));
 
-  $('kpiRevenue').textContent=money(totalSaleRev) + " ₫";
-  $('kpiDmsRevenue').textContent=money(totalDmsRev) + " ₫";
-  $('kpiDifference').textContent=money(totalDiff) + " ₫";
-  $('kpiCumulative').textContent=money(cumDiff) + " ₫";
-  $('kpiCustomers').textContent=arr.reduce((n,b)=>n+(b.customers||[]).length,0);
-  $('kpiItems').textContent=formatQty(totalQty);
+  $('kpiRevenue').textContent     = money(totalSale) + ' ₫';
+  $('kpiDmsRevenue').textContent  = money(totalDms) + ' ₫';
+  $('kpiDifference').textContent  = money(totalDiff) + ' ₫';
+  $('kpiCumulative').textContent  = money(cumDiff) + ' ₫';
+  $('kpiCustomers').textContent   = filtered.reduce((n, b) => n + (b.customers || []).length, 0);
+  $('kpiItems').textContent       = formatQty(totalItems);
 
-  const items=Object.values(map).sort((a,b)=>a.name.localeCompare(b.name,'vi'));
-  $('statsBody').innerHTML=items.length?items.map(x=>{
-    const qtyText=Object.entries(x.units).map(([u,q])=>`${formatQty(q)} ${u}`).join(' + ');
+  const list = Object.values(productMap);
+  const tbody = $('statsBody');
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="center muted" style="padding:30px">Không có số liệu thống kê trong thời gian chọn.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(p => {
+    const unitText = Object.entries(p.units).map(([u, q]) => `${formatQty(q)} ${u}`).join(' + ');
+    const totalQty = Object.values(p.units).reduce((a, b) => a + b, 0);
     return `<tr>
-      <td><b>${esc(x.name)}</b></td>
-      <td>${esc(qtyText)}</td>
-      <td class="right">${formatQty(Object.values(x.units).reduce((a,b)=>a+b,0))}</td>
-      <td class="right" style="font-weight:700; color:var(--primary)">${money(x.saleRev)} ₫</td>
-      <td class="right" style="font-weight:700; color:var(--purple)">${money(x.dmsRev)} ₫</td>
-      <td class="right" style="font-weight:700; color:var(--success)">+${money(x.diff)} ₫</td>
+      <td><b>${esc(p.name)}</b></td>
+      <td>${esc(unitText)}</td>
+      <td class="right">${formatQty(totalQty)}</td>
+      <td class="right" style="font-weight:700; color:var(--primary)">${money(p.sale)} ₫</td>
+      <td class="right" style="font-weight:700; color:var(--purple)">${money(p.dms)} ₫</td>
+      <td class="right" style="font-weight:700; color:var(--success)">+${money(p.diff)} ₫</td>
     </tr>`;
-  }).join(''):'<tr><td colspan="6" class="center muted" style="padding:30px">Chưa có số liệu thống kê trong kỳ.</td></tr>';
+  }).join('');
 }
 
-function clearStatFilter(){$('statsMonth').value='';$('statsDate').value=today();renderStats()}
-
-function exportHistoryWord(){
- const date=$('historyDate').value||today();
- const cs=history.filter(x=>x.date===date).flatMap(x=>x.customers);
- if(!cs.length){alert('Không có đơn trong ngày này.');return}
- downloadBlob(new Blob([makePrintableHTML(cs,'ĐƠN HÀNG NGÀY '+date)],{type:'application/msword;charset=utf-8'}), 'don-hang-'+date+'.doc');
+function clearStatFilter() {
+  $('statsMonth').value = '';
+  $('statsDate').value  = today();
+  renderStats();
 }
 
-function exportStatsWord(){
-  const date=$('statsDate')?.value||today();
-  const arr=getFilteredStats();
-  let text=`BÁO CÁO BÁN HÀNG & DMS\nKỳ chọn: ${date}\n\n`;
-  arr.forEach(b=>(b.customers||[]).forEach(c=>{
-    text+=`Khách hàng: ${c.customer}\n`;
-    (c.items||[]).forEach(it=>{
-      text+=` - ${it.productName}: ${it.qty} ${it.unit} | Doanh số: ${money(it.amount)} | DMS: ${money(it.dmsAmount)}\n`;
-    });
-  }));
-  const html=`<!doctype html><html><head><meta charset="utf-8"></head><body><div style="font-family:Arial;font-size:13pt;line-height:1.6;white-space:pre-wrap">${esc(text)}</div></body></html>`;
-  downloadBlob(new Blob([html],{type:'application/msword;charset=utf-8'}),'thong-ke-'+date+'.doc');
+// EXPORTS
+function exportHistoryWord() {
+  const date = $('historyDate').value || today();
+  const text = $('historyA4').innerText;
+  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><div style="font-family:Arial;line-height:1.6;white-space:pre-wrap">${esc(text)}</div></body></html>`;
+  downloadBlob(new Blob([html], { type: 'application/msword;charset=utf-8' }), `lich-su-${date}.doc`);
 }
 
-function exportHistoryExcel(){
- const date=$('historyDate').value||today();
- const cs=history.filter(x=>x.date===date).flatMap(x=>x.customers);
- if(!cs.length){alert('Không có dữ liệu trong ngày này.');return}
- exportExcelData(cs,'lich-su-'+date+'.xlsx');
+function exportHistoryExcel() {
+  const date = $('historyDate').value || today();
+  const batches = history.filter(b => b.date === date);
+  if (!batches.length) { alert('Không có dữ liệu trong ngày chọn!'); return; }
+
+  const rows = [['Khách hàng', 'Sản phẩm', 'Số lượng', 'Đơn vị', 'Giá Bán', 'Giá NET', 'Doanh số Bán', 'Doanh số DMS', 'Chênh lệch']];
+  batches.forEach(b => (b.customers || []).forEach(c => (c.items || []).forEach(it => {
+    rows.push([
+      c.customer, it.color ? `${it.productName} (${it.color})` : it.productName,
+      it.qty, it.unit, it.price, it.netPrice, it.amount, it.dmsAmount, it.difference
+    ]);
+  })));
+
+  if (typeof XLSX !== 'undefined') {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'GiaoDich');
+    XLSX.writeFile(wb, `don-hang-${date}.xlsx`);
+  }
 }
 
-function exportExcelData(cs,name){
- if(typeof XLSX!=='undefined'){
-   const rows=[['Khách hàng','Sản phẩm','Số lượng','Đơn vị','Giá Bán','Giá NET','Doanh số Bán','Doanh số DMS','Chênh lệch']];
-   cs.forEach(c=>c.items.forEach(it=>rows.push([
-     c.customer, it.color?it.productName+' ('+it.color+')':it.productName, it.qty, it.unit,
-     it.price, it.netPrice, it.amount, it.dmsAmount, it.difference
-   ])));
-   const ws=XLSX.utils.aoa_to_sheet(rows); const wb=XLSX.utils.book_new();
-   XLSX.utils.book_append_sheet(wb,ws,'Chi tiết'); XLSX.writeFile(wb,name); return;
- }
+function exportStatsWord() {
+  const date = $('statsDate').value || today();
+  let text = `BÁO CÁO THỐNG KÊ DMS & BÁN HÀNG - NGÀY ${date}\n\n`;
+  text += `Doanh số bán: ${$('kpiRevenue').textContent}\n`;
+  text += `Doanh số DMS: ${$('kpiDmsRevenue').textContent}\n`;
+  text += `Chênh lệch: ${$('kpiDifference').textContent}\n\n`;
+
+  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><div style="font-family:Arial;line-height:1.6;white-space:pre-wrap">${esc(text)}</div></body></html>`;
+  downloadBlob(new Blob([html], { type: 'application/msword;charset=utf-8' }), `thong-ke-${date}.doc`);
 }
 
-function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
 
-function populateEntryProducts(){const sel=$('entryProduct');if(!sel)return;const old=sel.value;sel.innerHTML=products.length?products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join(''):'<option value="">Chưa có sản phẩm</option>';if(products.some(p=>p.id===old))sel.value=old;updateEntryPrice()}
-function updateEntryPrice(){const p=products.find(x=>x.id===$('entryProduct').value),u=$('entryUnit').value;if(!p){$('entryPriceHint').textContent='';return}const price=salePrice(p,u),net=netUnitPrice(p,u);$('entryPriceHint').innerHTML='Giá Bán xuất: <b>'+money(price)+'</b> / '+u+' <span style="margin:0 8px; color:#ccc">|</span> Giá NET: <b style="color:var(--purple)">'+money(net)+'</b> / '+u+' <span style="margin:0 8px; color:#ccc">|</span> Lệch: <b style="color:var(--success)">+'+money(price-net)+'</b> / '+u}
-document.addEventListener('change',e=>{if(e.target.id==='entryProduct'||e.target.id==='entryUnit')updateEntryPrice()});
-document.addEventListener('DOMContentLoaded',()=>{populateEntryProducts()});
-
-renderDraft();renderWarehouse();renderHistory();renderStats();
+// FIRST INITIALIZATION
+document.addEventListener('DOMContentLoaded', () => {
+  populateEntryProducts();
+  renderDraft();
+  switchTab('orders');
+});
 </script>
 </body>
 </html>

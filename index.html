@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hệ Thống Quản Lý Phân Phối (DMS)</title>
+<title>DMS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -170,7 +170,7 @@ tr:last-child td { border-bottom: none; }
 .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
 .modal.show { display: flex; }
 .modal-box { background: #fff; border-radius: 12px; width: min(800px, 100%); max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-.history-a4 { background: #fff; color: #000; max-width: 850px; margin: 0 auto; padding: 40px; box-shadow: var(--shadow-md); border-radius: 8px; font-family: 'Times New Roman', serif; }
+.history-a4 { background: #fff; color: #000; max-width: 850px; margin: 0 auto; padding: 40px; box-shadow: var(--shadow-md); border-radius: 8px; font-family: 'Times New Roman', Times, serif; font-size: 16px; line-height: 1.4; }
 
 @media (max-width: 992px) {
   .grid { grid-template-columns: repeat(6, 1fr); }
@@ -817,53 +817,128 @@ $('excelFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// TAB 3: LỊCH SỬ LOGIC
+// TAB 3: LỊCH SỬ LOGIC (THEO MẪU FILE WORD & ẢNH 1)
 function renderHistory() {
-  const date = $('historyDate').value || today();
-  const batches = history.filter(b => b.date === date);
+  const dateStr = $('historyDate').value || today();
+  const batches = history.filter(b => b.date === dateStr);
   const container = $('historyA4');
 
   if (!batches.length) {
-    container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:50px;">Không có chứng từ/đơn hàng được lưu trong ngày ${esc(date)}.</div>`;
+    container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:50px;">Không có chứng từ/đơn hàng được lưu trong ngày ${esc(dateStr)}.</div>`;
     return;
   }
 
-  container.innerHTML = `
-    <div style="text-align:center; font-size:22px; font-weight:800; margin-bottom: 24px;">
-      BÁO CÁO PHÁT HÀNG & DOANH SỐ DMS<br>
-      <span style="font-size:14px; color:#64748b; font-weight:normal">Ngày ghi nhận: ${esc(date)}</span>
-    </div>
-    ${batches.map(b => `
-      <div style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
-        ${(b.customers || []).map((c, ci) => `
-          <div style="margin-bottom:12px">
-            <div style="font-weight:700; font-size:14px; border-bottom:1px solid #cbd5e1; padding-bottom:4px; margin-bottom:8px">
-              ${ci+1}. Khách hàng: ${esc(c.customer)}
-            </div>
-            <div style="padding-left:12px">
-              ${(c.items || []).map(it => {
-                const name = it.color ? `${it.productName} (${it.color})` : it.productName;
-                const rev = it.amount ?? (it.qty * it.price);
-                const dms = it.dmsAmount ?? (it.qty * it.netPrice);
-                return `<div style="display:flex; justify-content:space-between; line-height:1.8; font-size:13px">
-                  <span>- ${esc(name)}</span>
-                  <span>${formatQty(it.qty)} ${esc(it.unit)} | Bán: <b>${money(rev)} ₫</b> | DMS: <span style="color:var(--purple)">${money(dms)} ₫</span></span>
-                </div>`;
-              }).join('')}
-            </div>
-          </div>
-        `).join('')}
-        <div class="no-print" style="text-align:right; border-top:1px dashed #cbd5e1; padding-top:10px; margin-top:10px">
-          <button class="btn danger" style="padding:4px 10px; font-size:12px;" onclick="deleteBatch('${b.id}')">Hủy Phiếu</button>
-        </div>
+  // Format ngày dạng d/M (ví dụ: 7/8)
+  const dateParts = dateStr.split('-');
+  const dayMonth = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : dateStr;
+
+  // Gom toàn bộ danh sách khách hàng trong ngày
+  let allCustomers = [];
+  batches.forEach(b => {
+    if (b.customers && b.customers.length) {
+      b.customers.forEach(c => allCustomers.push({ ...c, batchId: b.id }));
+    }
+  });
+
+  // Gom tổng sản lượng theo từng sản phẩm cho phần "Tổng ngày"
+  const productTotals = {};
+  let grandQty = 0;
+
+  allCustomers.forEach(c => {
+    (c.items || []).forEach(it => {
+      const name = it.productName || 'Sản phẩm';
+      const qty = Number(it.qty || 0);
+      productTotals[name] = (productTotals[name] || 0) + qty;
+      grandQty += qty;
+    });
+  });
+
+  const fmtQtyShort = num => {
+    let s = Number.isInteger(num) ? String(num) : num.toFixed(2).replace(/\.?0+$/, '');
+    return s.replace('.', ',');
+  };
+
+  const getShortUnit = unit => {
+    if (!unit) return 'T';
+    if (unit.toLowerCase().startsWith('th')) return 'T';
+    return unit.charAt(0).toUpperCase();
+  };
+
+  // 1. TẠO GIAO DIỆN PHẦN ĐƠN HÀNG (THEO MẪU FILE WORD)
+  let ordersHtml = allCustomers.map((c, idx) => {
+    let totalAmount = 0;
+    let itemRows = (c.items || []).map(it => {
+      const price = it.price || 0;
+      const rev = it.amount ?? (it.qty * price);
+      totalAmount += rev;
+
+      const kAmount = rev >= 1000 ? (rev / 1000) : rev;
+      const kAmountStr = Number.isInteger(kAmount) ? money(kAmount) : kAmount.toFixed(1).replace('.', ',');
+
+      const unitStr = getShortUnit(it.unit);
+      const qtyStr = fmtQtyShort(it.qty) + unitStr + (it.color ? ` (${it.color})` : '');
+
+      return `<tr style="line-height: 1.8;">
+        <td style="padding-right: 12px; font-weight: 500; vertical-align: top;">${esc(it.productName)}</td>
+        <td style="padding: 0 12px; text-align: left; white-space: nowrap; vertical-align: top;">| ${esc(qtyStr)}</td>
+        <td style="padding: 0 12px; text-align: center; vertical-align: top;">| =</td>
+        <td style="padding-left: 12px; text-align: right; font-weight: 600; vertical-align: top;">| ${kAmountStr}</td>
+      </tr>`;
+    }).join('');
+
+    const totalK = totalAmount >= 1000 ? (totalAmount / 1000) : totalAmount;
+    const totalKStr = Number.isInteger(totalK) ? money(totalK) : totalK.toFixed(1).replace('.', ',');
+
+    const showTotalRow = (c.items && c.items.length > 1);
+
+    return `<div style="margin-bottom: 24px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
+      <div style="font-weight: bold; margin-bottom: 6px;">${idx + 1}. ${esc(c.customer)}</div>
+      <table style="border-collapse: collapse; margin-left: 0; width: 100%; max-width: 550px;">
+        ${itemRows}
+        ${showTotalRow ? `
+        <tr style="line-height: 2;">
+          <td style="font-weight: bold; padding-right: 12px;">| Tổng</td>
+          <td></td>
+          <td></td>
+          <td style="padding-left: 12px; text-align: right; font-weight: bold;">| ${totalKStr}</td>
+        </tr>` : ''}
+      </table>
+    </div>`;
+  }).join('');
+
+  // 2. TẠO GIAO DIỆN PHẦN THỐNG KÊ TỔNG NGÀY (THEO ẢNH 1)
+  let summaryRows = Object.entries(productTotals).map(([pName, qty]) => {
+    return `<div style="display: flex; justify-content: space-between; width: 320px; margin: 6px 0; font-size: 17px;">
+      <span>${esc(pName)}:</span>
+      <span style="font-weight: 600;">${fmtQtyShort(qty)} T</span>
+    </div>`;
+  }).join('');
+
+  const grandQtyStr = fmtQtyShort(grandQty);
+
+  let summaryHtml = `
+  <div style="margin-top: 50px; padding-top: 30px; border-top: 2px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif;">
+    <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">Tổng ngày ${dayMonth}</h2>
+    <div style="display: inline-block;">
+      ${summaryRows}
+      <div style="display: flex; justify-content: space-between; width: 320px; margin-top: 14px; padding-top: 8px; font-size: 18px; font-weight: bold;">
+        <span>Tổng:</span>
+        <span>${grandQtyStr} T</span>
       </div>
-    `).join('')}
-  `;
+    </div>
+  </div>`;
+
+  let deleteControls = `<div class="no-print" style="margin-top: 30px; text-align: right; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+    <span class="muted" style="margin-right: 12px;">Phiếu xuất ngày ${dateStr}: ${batches.length} đợt lưu</span>
+    <button class="btn danger" style="padding: 6px 12px; font-size: 12px;" onclick="deleteDayBatches('${dateStr}')">🗑 Xóa tất cả đơn ngày ${dateStr}</button>
+  </div>`;
+
+  container.innerHTML = ordersHtml + summaryHtml + deleteControls;
 }
 
-function deleteBatch(id) {
-  if (!confirm('Xác nhận xóa phiếu xuất này?')) return;
-  history = history.filter(x => String(x.id) !== String(id));
+function deleteDayBatches(dateStr) {
+  if (!confirm(`Xác nhận xóa toàn bộ đơn hàng trong ngày ${dateStr}?`)) return;
+  history = history.filter(x => x.date !== dateStr);
   save(KEY_HISTORY, history);
   renderHistory();
 }
@@ -952,7 +1027,7 @@ function clearStatFilter() {
 function exportHistoryWord() {
   const date = $('historyDate').value || today();
   const text = $('historyA4').innerText;
-  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><div style="font-family:Arial;line-height:1.6;white-space:pre-wrap">${esc(text)}</div></body></html>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><div style="font-family:'Times New Roman',serif;line-height:1.6;white-space:pre-wrap">${esc(text)}</div></body></html>`;
   downloadBlob(new Blob([html], { type: 'application/msword;charset=utf-8' }), `lich-su-${date}.doc`);
 }
 

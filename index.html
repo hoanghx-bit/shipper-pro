@@ -164,7 +164,9 @@ tr:last-child td { border-bottom: none; }
 .order-row { display: grid; grid-template-columns: 2fr 100px 120px 30px 220px 40px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
 .order-row:last-child { border-bottom: none; }
 .order-row input, .order-row select { height: 38px; padding: 6px 10px; }
-.total-row { display: flex; justify-content: flex-end; gap: 30px; padding: 14px 18px; font-weight: 700; background: #f8fafc; border-top: 1px solid var(--border); font-size: 14px; color: var(--primary); flex-wrap: wrap; }
+.total-row { display: flex; flex-direction: column; gap: 8px; padding: 14px 18px; font-weight: 700; background: #f8fafc; border-top: 1px solid var(--border); font-size: 14px; color: var(--primary); }
+.total-line { display: flex; justify-content: flex-end; gap: 30px; flex-wrap: wrap; }
+.discount-box { display: flex; gap: 12px; padding: 12px 18px; background: #fff; border-top: 1px dashed var(--border); align-items: center; flex-wrap: wrap; }
 
 /* MODAL & REPORT */
 .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
@@ -501,7 +503,7 @@ function recordOrderLine() {
   if (!p) { alert('Lỗi: Mã sản phẩm không tồn tại trong kho.'); return; }
 
   let c = draft.find(x => x.customer.toLowerCase() === customer.toLowerCase());
-  if (!c) { c = { customer, items: [] }; draft.push(c); }
+  if (!c) { c = { customer, items: [], discount: 0, discountReason: '' }; draft.push(c); }
 
   c.items.push({ productId, productName: p.name, color, qty, unit });
   $('entryQty').value = '1';
@@ -521,6 +523,8 @@ function renderDraft() {
     const totalSale = c.items.reduce((s, it) => s + calcItemSale(it), 0);
     const totalDms  = c.items.reduce((s, it) => s + calcItemDms(it), 0);
     const diff      = totalSale - totalDms;
+    const discount  = Number(c.discount || 0);
+    const finalAmount = Math.max(0, totalSale - discount);
 
     return `<div class="customer">
       <div class="customer-head">
@@ -551,10 +555,31 @@ function renderDraft() {
           <button class="btn light" style="padding:6px" onclick="removeDraftItem(${ci},${ii})">🗑</button>
         </div>`;
       }).join('')}
+      
+      <div class="discount-box">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="font-size: 11px; margin-bottom: 2px;">Chiết khấu (Trừ tiền ₫)</label>
+          <input type="number" min="0" step="1000" value="${c.discount || 0}" oninput="changeDraftMeta(${ci}, 'discount', this.value)" placeholder="Nhập số tiền chiết khấu...">
+        </div>
+        <div style="flex: 2; min-width: 250px;">
+          <label style="font-size: 11px; margin-bottom: 2px;">Lý do chiết khấu</label>
+          <input type="text" value="${esc(c.discountReason || '')}" oninput="changeDraftMeta(${ci}, 'discountReason', this.value)" placeholder="Vd: Trừ 1 hộp tảo biển hết date...">
+        </div>
+      </div>
+
       <div class="total-row">
-        <span>Doanh số Bán: <b>${money(totalSale)} ₫</b></span>
-        <span style="color:var(--purple)">Doanh số DMS: <b>${money(totalDms)} ₫</b></span>
-        <span style="color:var(--success)">Chênh lệch Giá Bán vs NET: <b>+${money(diff)} ₫</b></span>
+        <div class="total-line">
+          <span>Doanh số Bán: <b>${money(totalSale)} ₫</b></span>
+          <span style="color:var(--purple)">Doanh số DMS: <b>${money(totalDms)} ₫</b></span>
+          <span style="color:var(--success)">Chênh lệch Giá Bán vs NET: <b>+${money(diff)} ₫</b></span>
+        </div>
+        ${discount > 0 ? `
+        <div class="total-line" style="color: var(--danger); font-size: 13px;">
+          <span>Chiết khấu: <b>- ${money(discount)} ₫</b> ${c.discountReason ? `(${esc(c.discountReason)})` : ''}</span>
+        </div>` : ''}
+        <div class="total-line" style="border-top: 1px dashed var(--border); padding-top: 8px; color: var(--primary); font-size: 15px;">
+          <span>Tiền phải thu: <b style="font-size: 16px;">${money(finalAmount)} ₫</b></span>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -567,6 +592,15 @@ function changeDraftItem(ci, ii, field, val) {
     draft[ci].items[ii].qty = Math.round(q * 2) / 2;
   } else if (field === 'unit') {
     draft[ci].items[ii].unit = val;
+  }
+  renderDraft();
+}
+
+function changeDraftMeta(ci, field, val) {
+  if (field === 'discount') {
+    draft[ci].discount = Number(val) || 0;
+  } else if (field === 'discountReason') {
+    draft[ci].discountReason = val;
   }
   renderDraft();
 }
@@ -585,6 +619,8 @@ function saveBatch() {
 
   const customers = draft.map(c => ({
     customer: c.customer,
+    discount: Number(c.discount || 0),
+    discountReason: c.discountReason || '',
     items: c.items.map(it => {
       const p = products.find(x => String(x.id) === String(it.productId));
       const unit = it.unit || 'Thùng';
@@ -817,7 +853,7 @@ $('excelFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// TAB 3: LỊCH SỬ LOGIC (THEO MẪU FILE WORD & ẢNH MỚI NHẤT)
+// TAB 3: LỊCH SỬ LOGIC (DẠNG VĂN BẢN THUẦN TÚY, CĂN CHỈNH THẲNG HÀNG, KHÔNG CÓ KẺ GẠCH DỌC/NGANG)
 function renderHistory() {
   const dateStr = $('historyDate').value || today();
   const batches = history.filter(b => b.date === dateStr);
@@ -828,7 +864,6 @@ function renderHistory() {
     return;
   }
 
-  // Format ngày dạng d/M
   const dateParts = dateStr.split('-');
   const dayMonth = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : dateStr;
 
@@ -866,10 +901,10 @@ function renderHistory() {
     return unit.charAt(0).toUpperCase();
   };
 
-  // 1. TẠO GIAO DIỆN PHẦN ĐƠN HÀNG (THEO MẪU FILE WORD)
+  // 1. TẠO GIAO DIỆN PHẦN ĐƠN HÀNG DẠNG VĂN BẢN (KHÔNG GẠCH ĐỨNG/NGANG)
   let ordersHtml = allCustomers.map((c, idx) => {
     let totalAmount = 0;
-    let itemRows = (c.items || []).map(it => {
+    let itemLines = (c.items || []).map(it => {
       const price = it.price || 0;
       const rev = it.amount ?? (it.qty * price);
       totalAmount += rev;
@@ -881,31 +916,48 @@ function renderHistory() {
       let qtyStr = fmtQtyShort(it.qty) + (unitStr === 'T' || unitStr === 'H' ? unitStr : ' ' + unitStr);
       if (it.color) qtyStr += ` (${it.color})`;
 
-      return `<tr style="line-height: 1.6;">
-        <td style="padding-right: 12px; font-weight: normal; vertical-align: top; width: 45%;">${esc(it.productName)}</td>
-        <td style="padding: 0 8px; text-align: left; white-space: nowrap; vertical-align: top; width: 25%;">| ${esc(qtyStr)}</td>
-        <td style="padding: 0 8px; text-align: center; vertical-align: top; width: 10%;">| =</td>
-        <td style="padding-left: 8px; text-align: right; vertical-align: top; width: 20%;">| ${kAmountStr}</td>
-      </tr>`;
+      return `<div style="display: flex; justify-content: space-between; margin: 4px 0 4px 20px;">
+        <span style="flex: 1; padding-right: 15px;">${esc(it.productName)}${it.color ? ' ('+esc(it.color)+')' : ''}</span>
+        <span style="width: 90px; text-align: left; white-space: nowrap;">${esc(qtyStr)}</span>
+        <span style="width: 30px; text-align: center;">=</span>
+        <span style="width: 80px; text-align: right;">${kAmountStr}</span>
+      </div>`;
     }).join('');
 
     const totalK = totalAmount >= 1000 ? (totalAmount / 1000) : totalAmount;
     const totalKStr = Number.isInteger(totalK) ? money(totalK) : totalK.toFixed(1).replace('.', ',');
+    const discount = Number(c.discount || 0);
+    const finalAmount = Math.max(0, totalAmount - discount);
+    const finalK = finalAmount >= 1000 ? (finalAmount / 1000) : finalAmount;
+    const finalKStr = Number.isInteger(finalK) ? money(finalK) : finalK.toFixed(1).replace('.', ',');
+    const discountK = discount >= 1000 ? (discount / 1000) : discount;
+    const discountKStr = Number.isInteger(discountK) ? money(discountK) : discountK.toFixed(1).replace('.', ',');
 
     const showTotalRow = (c.items && c.items.length > 1);
 
     return `<div style="margin-bottom: 24px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
-      <div style="font-weight: bold; margin-bottom: 4px;">${idx + 1}. ${esc(c.customer)}</div>
-      <table style="border-collapse: collapse; margin-left: 0; width: 100%; max-width: 450px;">
-        ${itemRows}
-        ${showTotalRow ? `
-        <tr style="line-height: 1.6;">
-          <td></td>
-          <td style="padding: 0 8px; font-weight: normal;">| Tổng</td>
-          <td></td>
-          <td style="padding-left: 8px; text-align: right;">| ${totalKStr}</td>
-        </tr>` : ''}
-      </table>
+      <div style="font-weight: bold; margin-bottom: 6px;">${idx + 1}. ${esc(c.customer)}</div>
+      ${itemLines}
+      ${showTotalRow ? `
+      <div style="display: flex; justify-content: space-between; margin: 6px 0 4px 20px; font-weight: bold;">
+        <span style="flex: 1;">Tổng</span>
+        <span style="width: 90px;"></span>
+        <span style="width: 30px;"></span>
+        <span style="width: 80px; text-align: right;">${totalKStr}</span>
+      </div>` : ''}
+      ${discount > 0 ? `
+      <div style="display: flex; justify-content: space-between; margin: 4px 0 4px 20px; color: #b91c1c; font-style: italic;">
+        <span style="flex: 1;">Trừ ${c.discountReason ? esc(c.discountReason) : 'chiết khấu'}</span>
+        <span style="width: 90px;"></span>
+        <span style="width: 30px;"></span>
+        <span style="width: 80px; text-align: right;">-${discountKStr}</span>
+      </div>` : ''}
+      <div style="display: flex; justify-content: space-between; margin: 4px 0 4px 20px; font-weight: bold; color: #0f4c81;">
+        <span style="flex: 1;">Tiền phải thu</span>
+        <span style="width: 90px;"></span>
+        <span style="width: 30px;"></span>
+        <span style="width: 80px; text-align: right;">${finalKStr}</span>
+      </div>
     </div>`;
   }).join('');
 
@@ -1038,13 +1090,25 @@ function exportHistoryExcel() {
   const batches = history.filter(b => b.date === date);
   if (!batches.length) { alert('Không có dữ liệu trong ngày chọn!'); return; }
 
-  const rows = [['Khách hàng', 'Sản phẩm', 'Số lượng', 'Đơn vị', 'Giá Bán', 'Giá NET', 'Doanh số Bán', 'Doanh số DMS', 'Chênh lệch']];
-  batches.forEach(b => (b.customers || []).forEach(c => (c.items || []).forEach(it => {
-    rows.push([
-      c.customer, it.color ? `${it.productName} (${it.color})` : it.productName,
-      it.qty, it.unit, it.price, it.netPrice, it.amount, it.dmsAmount, it.difference
-    ]);
-  })));
+  const rows = [['Khách hàng', 'Sản phẩm', 'Số lượng', 'Đơn vị', 'Giá Bán', 'Giá NET', 'Doanh số Bán', 'Doanh số DMS', 'Chiết khấu', 'Lý do chiết khấu', 'Tiền phải thu', 'Chênh lệch']];
+  batches.forEach(b => (b.customers || []).forEach(c => {
+    const cDiscount = Number(c.discount || 0);
+    const cReason = c.discountReason || '';
+    const cTotal = (c.items || []).reduce((s, it) => s + (it.amount ?? (it.qty * (it.price || 0))), 0);
+    const cFinal = Math.max(0, cTotal - cDiscount);
+    
+    (c.items || []).forEach((it, idx) => {
+      rows.push([
+        idx === 0 ? c.customer : '', 
+        it.color ? `${it.productName} (${it.color})` : it.productName,
+        it.qty, it.unit, it.price, it.netPrice, it.amount, it.dmsAmount,
+        idx === 0 ? cDiscount : '',
+        idx === 0 ? cReason : '',
+        idx === 0 ? cFinal : '',
+        it.difference
+      ]);
+    });
+  }));
 
   if (typeof XLSX !== 'undefined') {
     const ws = XLSX.utils.aoa_to_sheet(rows);

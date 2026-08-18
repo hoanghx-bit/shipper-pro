@@ -416,7 +416,7 @@ function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return t
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 function formatQty(n) { n = Number(n||0); return Number.isInteger(n) ? String(n) : String(n.toFixed(2)).replace(/\.00$/,''); }
 
-// TAB SWITCHING LOGIC (DIRECT & RELIABLE)
+// TAB SWITCHING LOGIC
 function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -817,7 +817,7 @@ $('excelFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// TAB 3: LỊCH SỬ LOGIC (THEO MẪU FILE WORD & ẢNH 1)
+// TAB 3: LỊCH SỬ LOGIC (THEO MẪU FILE WORD & ẢNH MỚI NHẤT)
 function renderHistory() {
   const dateStr = $('historyDate').value || today();
   const batches = history.filter(b => b.date === dateStr);
@@ -828,11 +828,10 @@ function renderHistory() {
     return;
   }
 
-  // Format ngày dạng d/M (ví dụ: 7/8)
+  // Format ngày dạng d/M
   const dateParts = dateStr.split('-');
   const dayMonth = dateParts.length === 3 ? `${parseInt(dateParts[2], 10)}/${parseInt(dateParts[1], 10)}` : dateStr;
 
-  // Gom toàn bộ danh sách khách hàng trong ngày
   let allCustomers = [];
   batches.forEach(b => {
     if (b.customers && b.customers.length) {
@@ -840,13 +839,13 @@ function renderHistory() {
     }
   });
 
-  // Gom tổng sản lượng theo từng sản phẩm cho phần "Tổng ngày"
   const productTotals = {};
   let grandQty = 0;
 
   allCustomers.forEach(c => {
     (c.items || []).forEach(it => {
-      const name = it.productName || 'Sản phẩm';
+      let name = it.productName || 'Sản phẩm';
+      if (it.color) name += ` (${it.color})`;
       const qty = Number(it.qty || 0);
       productTotals[name] = (productTotals[name] || 0) + qty;
       grandQty += qty;
@@ -861,6 +860,9 @@ function renderHistory() {
   const getShortUnit = unit => {
     if (!unit) return 'T';
     if (unit.toLowerCase().startsWith('th')) return 'T';
+    if (unit.toLowerCase() === 'hộp') return 'H';
+    if (unit.toLowerCase() === 'gói') return 'gói';
+    if (unit.toLowerCase() === 'dây') return 'dây';
     return unit.charAt(0).toUpperCase();
   };
 
@@ -876,13 +878,14 @@ function renderHistory() {
       const kAmountStr = Number.isInteger(kAmount) ? money(kAmount) : kAmount.toFixed(1).replace('.', ',');
 
       const unitStr = getShortUnit(it.unit);
-      const qtyStr = fmtQtyShort(it.qty) + unitStr + (it.color ? ` (${it.color})` : '');
+      let qtyStr = fmtQtyShort(it.qty) + (unitStr === 'T' || unitStr === 'H' ? unitStr : ' ' + unitStr);
+      if (it.color) qtyStr += ` (${it.color})`;
 
-      return `<tr style="line-height: 1.8;">
-        <td style="padding-right: 12px; font-weight: 500; vertical-align: top;">${esc(it.productName)}</td>
-        <td style="padding: 0 12px; text-align: left; white-space: nowrap; vertical-align: top;">| ${esc(qtyStr)}</td>
-        <td style="padding: 0 12px; text-align: center; vertical-align: top;">| =</td>
-        <td style="padding-left: 12px; text-align: right; font-weight: 600; vertical-align: top;">| ${kAmountStr}</td>
+      return `<tr style="line-height: 1.6;">
+        <td style="padding-right: 12px; font-weight: normal; vertical-align: top; width: 45%;">${esc(it.productName)}</td>
+        <td style="padding: 0 8px; text-align: left; white-space: nowrap; vertical-align: top; width: 25%;">| ${esc(qtyStr)}</td>
+        <td style="padding: 0 8px; text-align: center; vertical-align: top; width: 10%;">| =</td>
+        <td style="padding-left: 8px; text-align: right; vertical-align: top; width: 20%;">| ${kAmountStr}</td>
       </tr>`;
     }).join('');
 
@@ -892,43 +895,42 @@ function renderHistory() {
     const showTotalRow = (c.items && c.items.length > 1);
 
     return `<div style="margin-bottom: 24px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
-      <div style="font-weight: bold; margin-bottom: 6px;">${idx + 1}. ${esc(c.customer)}</div>
-      <table style="border-collapse: collapse; margin-left: 0; width: 100%; max-width: 550px;">
+      <div style="font-weight: bold; margin-bottom: 4px;">${idx + 1}. ${esc(c.customer)}</div>
+      <table style="border-collapse: collapse; margin-left: 0; width: 100%; max-width: 450px;">
         ${itemRows}
         ${showTotalRow ? `
-        <tr style="line-height: 2;">
-          <td style="font-weight: bold; padding-right: 12px;">| Tổng</td>
+        <tr style="line-height: 1.6;">
           <td></td>
+          <td style="padding: 0 8px; font-weight: normal;">| Tổng</td>
           <td></td>
-          <td style="padding-left: 12px; text-align: right; font-weight: bold;">| ${totalKStr}</td>
+          <td style="padding-left: 8px; text-align: right;">| ${totalKStr}</td>
         </tr>` : ''}
       </table>
     </div>`;
   }).join('');
 
-  // 2. TẠO GIAO DIỆN PHẦN THỐNG KÊ TỔNG NGÀY (THEO ẢNH 1)
+  // 2. TẠO GIAO DIỆN PHẦN THỐNG KÊ TỔNG NGÀY (THEO ẢNH)
   let summaryRows = Object.entries(productTotals).map(([pName, qty]) => {
-    return `<div style="display: flex; justify-content: space-between; width: 320px; margin: 6px 0; font-size: 17px;">
-      <span>${esc(pName)}:</span>
-      <span style="font-weight: 600;">${fmtQtyShort(qty)} T</span>
+    return `<div style="display: flex; justify-content: space-between; margin: 10px 0; font-size: 16px;">
+      <span>${esc(pName)}</span>
+      <span>${fmtQtyShort(qty)} T</span>
     </div>`;
   }).join('');
 
   const grandQtyStr = fmtQtyShort(grandQty);
 
   let summaryHtml = `
-  <div style="margin-top: 50px; padding-top: 30px; border-top: 2px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif;">
-    <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">Tổng ngày ${dayMonth}</h2>
-    <div style="display: inline-block;">
+  <div style="margin-top: 50px; padding-top: 30px; border-top: 1px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; font-family: Arial, Helvetica, sans-serif; color: #000;">
+    <div style="width: 340px;">
+      <div style="font-weight: bold; font-size: 17px; text-align: center; margin-bottom: 24px;">Tổng ${dayMonth}</div>
       ${summaryRows}
-      <div style="display: flex; justify-content: space-between; width: 320px; margin-top: 14px; padding-top: 8px; font-size: 18px; font-weight: bold;">
-        <span>Tổng:</span>
-        <span>${grandQtyStr} T</span>
+      <div style="display: flex; justify-content: flex-end; margin-top: 30px; font-size: 16px;">
+        <span>Tổng: &nbsp;&nbsp; ${grandQtyStr} thùng</span>
       </div>
     </div>
   </div>`;
 
-  let deleteControls = `<div class="no-print" style="margin-top: 30px; text-align: right; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+  let deleteControls = `<div class="no-print" style="margin-top: 40px; text-align: right; border-top: 1px solid #e2e8f0; padding-top: 16px;">
     <span class="muted" style="margin-right: 12px;">Phiếu xuất ngày ${dateStr}: ${batches.length} đợt lưu</span>
     <button class="btn danger" style="padding: 6px 12px; font-size: 12px;" onclick="deleteDayBatches('${dateStr}')">🗑 Xóa tất cả đơn ngày ${dateStr}</button>
   </div>`;

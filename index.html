@@ -1,527 +1,302 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý Kho & Tính Chênh Lệch Giá</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; }
-    .table-scroll { max-height: 420px; overflow-y: auto; }
-    .table-scroll thead th { position: sticky; top: 0; background: #1e293b; z-index: 10; }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    .fade-in { animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lên Đơn & Tính Chênh Lệch</title>
+    <!-- Bootstrap CSS cho giao diện mobile -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Alpine.js để xử lý logic -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <!-- SheetJS để đọc file Excel trực tiếp trên trình duyệt -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .card { border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
+        .summary-box { background: #e9ecef; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1em; }
+        .text-profit { color: #198754; font-weight: bold; font-size: 1.2em; }
+        .table-responsive { border-radius: 10px; overflow: hidden; }
+        /* Tối ưu hiển thị cho mobile */
+        @media (max-width: 576px) {
+            .card-body { padding: 15px; }
+            h2 { font-size: 1.5rem; }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
-  <!-- Header -->
-  <header class="bg-slate-900 text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="text-xl font-bold tracking-tight">📦 Kho & Tính Chênh Lệch Giá</h1>
-        <p class="text-slate-400 text-sm">Upload bảng giá → Tạo đơn → Tính lợi nhuận</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <span id="productCount" class="bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-full">0 sản phẩm</span>
-        <button onclick="clearAllData()" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition">Xóa toàn bộ</button>
-      </div>
+<body>
+
+<div class="container my-3 my-md-5" x-data="orderApp()">
+    <h2 class="text-center text-primary mb-4 fw-bold">APP LÊN ĐƠN HÀNG</h2>
+
+    <!-- Upload File Section -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title text-secondary mb-3">1. Tải lên Bảng Giá (Excel)</h5>
+            <input type="file" class="form-control" accept=".xlsx, .xls" @change="handleFileUpload($event)">
+            <small class="text-muted mt-2 d-block" x-show="!fileLoaded">Vui lòng tải lên file "bảng giá.xlsx" để bắt đầu.</small>
+            <div class="alert alert-success mt-2 mb-0 py-2" x-show="fileLoaded" style="display: none;">
+                Đã tải thành công <strong x-text="products.length"></strong> sản phẩm!
+            </div>
+        </div>
     </div>
-  </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-    <!-- Upload Section -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 fade-in">
-      <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
-        <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">1</span>
-        Upload dữ liệu kho (Excel)
-      </h2>
-      <div class="flex flex-wrap items-center gap-4">
-        <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl transition flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          Chọn file Excel
-          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFile(event)" />
-        </label>
-        <p class="text-sm text-slate-500">Hỗ trợ .xlsx, .xls, .csv — Cột cần có: SẢN PHẨM, QC/T, GIÁ LẺ NET, GIÁ THÙNG NET, GIÁ LẺ BÁN, GIÁ THÙNG BÁN</p>
-      </div>
-      <div id="uploadStatus" class="mt-3 text-sm hidden"></div>
-    </section>
+    <!-- Form Section -->
+    <div class="card" x-show="fileLoaded" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title text-secondary mb-3">2. Thêm Sản Phẩm Vào Đơn</h5>
+            <div class="row g-2">
+                <div class="col-12">
+                    <label class="form-label small mb-1">Chọn sản phẩm</label>
+                    <select class="form-select" x-model="selectedProductId" @change="updatePreview()">
+                        <option value="">-- Tìm / Chọn sản phẩm --</option>
+                        <template x-for="p in products" :key="p.id">
+                            <option :value="p.id" x-text="p.name + ' (QC: ' + p.qc + ')'"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small mb-1">Đơn vị</label>
+                    <select class="form-select" x-model="unit" @change="updatePreview()">
+                        <option value="thùng">Thùng</option>
+                        <option value="lẻ">Lẻ</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small mb-1">Số lượng</label>
+                    <input type="number" class="form-control" x-model="quantity" min="1" @input="updatePreview()">
+                </div>
+                <div class="col-12 mt-3">
+                    <button class="btn btn-primary w-100 py-2 fw-bold" @click="addToOrder()" :disabled="!selectedProductId || quantity < 1">THÊM VÀO ĐƠN</button>
+                </div>
+            </div>
 
-    <!-- Product Table -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 fade-in">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2">
-          <span class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">2</span>
-          Dữ liệu kho
-        </h2>
-        <input type="text" id="searchInput" placeholder="🔍 Tìm sản phẩm..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="renderProducts()" />
-      </div>
-      <div class="table-scroll border border-slate-200 rounded-xl overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-800 text-white text-left">
-            <tr>
-              <th class="px-3 py-2.5">STT</th>
-              <th class="px-3 py-2.5">Sản phẩm</th>
-              <th class="px-3 py-2.5 text-center">QC/T</th>
-              <th class="px-3 py-2.5 text-right">Giá lẻ NET</th>
-              <th class="px-3 py-2.5 text-right">Giá thùng NET</th>
-              <th class="px-3 py-2.5 text-right">Giá lẻ BÁN</th>
-              <th class="px-3 py-2.5 text-right">Giá thùng BÁN</th>
-              <th class="px-3 py-2.5 text-right">Chênh lẻ</th>
-              <th class="px-3 py-2.5 text-right">Chênh thùng</th>
-              <th class="px-3 py-2.5 text-center">Thêm vào đơn</th>
-            </tr>
-          </thead>
-          <tbody id="productTableBody" class="divide-y divide-slate-100">
-            <tr><td colspan="10" class="px-4 py-8 text-center text-slate-400">Chưa có dữ liệu. Hãy upload file Excel.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Order Section -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 fade-in">
-      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span class="bg-amber-100 text-amber-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm">3</span>
-        Đơn hàng hiện tại
-      </h2>
-
-      <div id="orderEmpty" class="text-center py-8 text-slate-400">
-        Chưa có sản phẩm nào trong đơn. Nhấn "Thêm" ở bảng kho để bắt đầu.
-      </div>
-
-      <div id="orderContent" class="hidden">
-        <div class="overflow-x-auto border border-slate-200 rounded-xl">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-700 text-white">
-              <tr>
-                <th class="px-3 py-2.5 text-left">Sản phẩm</th>
-                <th class="px-3 py-2.5 text-center">Đơn vị</th>
-                <th class="px-3 py-2.5 text-center">Số lượng</th>
-                <th class="px-3 py-2.5 text-right">Giá NET / đơn vị</th>
-                <th class="px-3 py-2.5 text-right">Giá BÁN / đơn vị</th>
-                <th class="px-3 py-2.5 text-right">Thành tiền NET</th>
-                <th class="px-3 py-2.5 text-right">Thành tiền BÁN</th>
-                <th class="px-3 py-2.5 text-right">Chênh lệch</th>
-                <th class="px-3 py-2.5 text-center">Xóa</th>
-              </tr>
-            </thead>
-            <tbody id="orderTableBody" class="divide-y divide-slate-100"></tbody>
-          </table>
+            <!-- Preview Price -->
+            <div class="mt-3 p-2 bg-light rounded" x-show="selectedProductId">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">Giá Net tạm tính:</span>
+                    <strong x-text="formatCurrency(previewNet)"></strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">Giá Bán tạm tính:</span>
+                    <strong class="text-primary" x-text="formatCurrency(previewBan)"></strong>
+                </div>
+            </div>
         </div>
-
-        <!-- Summary -->
-        <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <p class="text-xs text-slate-500 uppercase font-medium">Tổng giá NET</p>
-            <p id="totalNet" class="text-2xl font-bold text-slate-700 mt-1">0</p>
-          </div>
-          <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
-            <p class="text-xs text-blue-600 uppercase font-medium">Tổng giá BÁN</p>
-            <p id="totalSell" class="text-2xl font-bold text-blue-700 mt-1">0</p>
-          </div>
-          <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-            <p class="text-xs text-emerald-600 uppercase font-medium">Tổng chênh lệch (Lợi nhuận)</p>
-            <p id="totalProfit" class="text-2xl font-bold text-emerald-700 mt-1">0</p>
-          </div>
-        </div>
-
-        <div class="mt-4 flex flex-wrap gap-3">
-          <button onclick="clearOrder()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-4 py-2 rounded-xl transition">Xóa đơn hàng</button>
-          <button onclick="exportOrder()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl transition">Xuất đơn (Excel)</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Modal thêm vào đơn -->
-  <div id="addModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 fade-in">
-      <h3 class="text-lg font-semibold mb-1" id="modalProductName">Sản phẩm</h3>
-      <p class="text-sm text-slate-500 mb-4">Chọn đơn vị và số lượng</p>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Đơn vị tính</label>
-          <div class="flex gap-3">
-            <label class="flex-1 flex items-center justify-center gap-2 border-2 border-slate-200 rounded-xl py-3 cursor-pointer hover:border-blue-400 transition has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50">
-              <input type="radio" name="unitType" value="le" checked class="accent-blue-600" onchange="updateModalPreview()" />
-              <span class="font-medium">Lẻ</span>
-            </label>
-            <label class="flex-1 flex items-center justify-center gap-2 border-2 border-slate-200 rounded-xl py-3 cursor-pointer hover:border-blue-400 transition has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50">
-              <input type="radio" name="unitType" value="thung" class="accent-blue-600" onchange="updateModalPreview()" />
-              <span class="font-medium">Thùng</span>
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Số lượng</label>
-          <input type="number" id="modalQty" value="1" min="1" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="updateModalPreview()" />
-        </div>
-
-        <div class="bg-slate-50 rounded-xl p-3 text-sm space-y-1">
-          <div class="flex justify-between"><span class="text-slate-500">Giá NET / đơn vị:</span> <span id="modalNet" class="font-medium">0</span></div>
-          <div class="flex justify-between"><span class="text-slate-500">Giá BÁN / đơn vị:</span> <span id="modalSell" class="font-medium">0</span></div>
-          <div class="flex justify-between border-t border-slate-200 pt-1 mt-1"><span class="text-slate-500">Chênh lệch / đơn vị:</span> <span id="modalDiff" class="font-semibold text-emerald-600">0</span></div>
-          <div class="flex justify-between"><span class="text-slate-500">Tổng chênh lệch:</span> <span id="modalTotalDiff" class="font-bold text-emerald-700">0</span></div>
-        </div>
-      </div>
-
-      <div class="mt-5 flex gap-3">
-        <button onclick="closeModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition">Hủy</button>
-        <button onclick="confirmAddToOrder()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition">Thêm vào đơn</button>
-      </div>
     </div>
-  </div>
 
-  <script>
-    // ========== STATE ==========
-    let products = [];
-    let order = [];
-    let currentModalProduct = null;
+    <!-- Table Section -->
+    <div class="card" x-show="orderItems.length > 0" style="display: none;">
+        <div class="card-body p-0 p-md-3">
+            <h5 class="card-title text-secondary m-3 m-md-0 mb-md-3">3. Danh Sách Đơn Hàng</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0 text-nowrap">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">Tên Hàng</th>
+                            <th class="text-center">ĐVT</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-end">Tiền Net</th>
+                            <th class="text-end">Tiền Bán</th>
+                            <th class="text-end">Lãi</th>
+                            <th class="text-center">Xoá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(item, index) in orderItems" :key="index">
+                            <tr>
+                                <td class="fw-bold" x-text="item.name"></td>
+                                <td class="text-center" x-text="item.unit === 'thùng' ? 'Thùng' : 'Lẻ'"></td>
+                                <td class="text-center">
+                                    <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 60px" x-model.number="item.quantity" min="1" @change="recalculateItem(item)">
+                                </td>
+                                <td class="text-end text-muted" x-text="formatCurrency(item.total_net)"></td>
+                                <td class="text-end fw-bold" x-text="formatCurrency(item.total_ban)"></td>
+                                <td class="text-end text-success fw-bold" x-text="formatCurrency(item.profit)"></td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-danger" @click="removeItem(index)">X</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
 
-    // Load from localStorage
-    function loadFromStorage() {
-      try {
-        const saved = localStorage.getItem('kho_products');
-        if (saved) {
-          products = JSON.parse(saved);
-          renderProducts();
-          updateProductCount();
-        }
-      } catch (e) {}
-    }
+            <!-- Summary -->
+            <div class="p-3">
+                <div class="summary-box d-flex flex-column gap-2 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Tổng Tiền Net:</span>
+                        <span x-text="formatCurrency(totalNet)"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Tổng Tiền Bán:</span>
+                        <strong class="text-primary" style="font-size: 1.1em" x-text="formatCurrency(totalBan)"></strong>
+                    </div>
+                    <hr class="my-1 border-secondary">
+                    <div class="d-flex justify-content-between text-profit">
+                        <span>TỔNG CHÊNH LỆCH:</span>
+                        <span x-text="formatCurrency(totalProfit)"></span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                     <button class="btn btn-light w-50" @click="clearOrder()">Làm Mới</button>
+                     <button class="btn btn-success w-50" @click="window.print()">In Đơn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    function saveToStorage() {
-      localStorage.setItem('kho_products', JSON.stringify(products));
-    }
-
-    // ========== UTILS ==========
-    function formatMoney(n) {
-      if (n === null || n === undefined || isNaN(n)) return '—';
-      return Math.round(n).toLocaleString('vi-VN') + ' ₫';
-    }
-
-    function parseNumber(val) {
-      if (val === null || val === undefined || val === '') return 0;
-      if (typeof val === 'number') return val;
-      // Remove dots used as thousand separators, replace comma with dot
-      let s = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^\d.-]/g, '');
-      const num = parseFloat(s);
-      return isNaN(num) ? 0 : num;
-    }
-
-    function normalizeHeader(h) {
-      return String(h || '').toUpperCase().trim()
-        .replace(/\s+/g, ' ')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    }
-
-    // ========== FILE UPLOAD ==========
-    function handleFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const status = document.getElementById('uploadStatus');
-      status.classList.remove('hidden');
-      status.innerHTML = '<span class="text-blue-600">Đang đọc file...</span>';
-
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        try {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-
-          if (!json.length) {
-            status.innerHTML = '<span class="text-red-600">File trống hoặc không đọc được.</span>';
-            return;
-          }
-
-          // Map headers flexibly
-          const rows = json.map((row, idx) => {
-            const keys = Object.keys(row);
-            const get = (...candidates) => {
-              for (const c of candidates) {
-                const found = keys.find(k => normalizeHeader(k).includes(normalizeHeader(c)));
-                if (found !== undefined) return row[found];
-              }
-              return '';
-            };
-
-            const name = get('SẢN PHẨM', 'SAN PHAM', 'TÊN', 'TEN', 'PRODUCT');
-            const qc = parseNumber(get('QC/T', 'QC', 'QUY CÁCH', 'QUY CACH'));
-            const giaLeNet = parseNumber(get('GIÁ LẺ NET', 'GIA LE NET', 'GIÁ NET LẺ'));
-            const giaThungNet = parseNumber(get('GIÁ THÙNG NET', 'GIA THUNG NET', 'GIÁ NET THÙNG'));
-            const giaLeBan = parseNumber(get('GIÁ LẺ BÁN', 'GIA LE BAN', 'GIÁ BÁN LẺ'));
-            const giaThungBan = parseNumber(get('GIÁ THÙNG BÁN', 'GIA THUNG BAN', 'GIÁ BÁN THÙNG'));
-
-            return {
-              id: Date.now() + idx,
-              stt: idx + 1,
-              name: String(name || 'Không tên').trim(),
-              qc: qc || 1,
-              giaLeNet,
-              giaThungNet,
-              giaLeBan,
-              giaThungBan
-            };
-          }).filter(p => p.name && p.name !== 'Không tên');
-
-          products = rows;
-          saveToStorage();
-          renderProducts();
-          updateProductCount();
-
-          status.innerHTML = `<span class="text-emerald-600 font-medium">✓ Đã load ${products.length} sản phẩm thành công!</span>`;
-          setTimeout(() => status.classList.add('hidden'), 4000);
-        } catch (err) {
-          console.error(err);
-          status.innerHTML = '<span class="text-red-600">Lỗi đọc file. Kiểm tra lại định dạng Excel.</span>';
-        }
-      };
-      reader.readAsArrayBuffer(file);
-      e.target.value = '';
-    }
-
-    // ========== RENDER PRODUCTS ==========
-    function renderProducts() {
-      const tbody = document.getElementById('productTableBody');
-      const keyword = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-
-      let list = products;
-      if (keyword) {
-        list = products.filter(p => p.name.toLowerCase().includes(keyword));
-      }
-
-      if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="px-4 py-8 text-center text-slate-400">${products.length ? 'Không tìm thấy sản phẩm.' : 'Chưa có dữ liệu. Hãy upload file Excel.'}</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = list.map((p, i) => {
-        const chenhLe = p.giaLeBan - p.giaLeNet;
-        const chenhThung = p.giaThungBan - p.giaThungNet;
-        return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="px-3 py-2 text-slate-500">${p.stt}</td>
-            <td class="px-3 py-2 font-medium">${escapeHtml(p.name)}</td>
-            <td class="px-3 py-2 text-center">${p.qc}</td>
-            <td class="px-3 py-2 text-right">${formatMoney(p.giaLeNet)}</td>
-            <td class="px-3 py-2 text-right">${formatMoney(p.giaThungNet)}</td>
-            <td class="px-3 py-2 text-right">${formatMoney(p.giaLeBan)}</td>
-            <td class="px-3 py-2 text-right">${formatMoney(p.giaThungBan)}</td>
-            <td class="px-3 py-2 text-right ${chenhLe >= 0 ? 'text-emerald-600' : 'text-red-600'} font-medium">${formatMoney(chenhLe)}</td>
-            <td class="px-3 py-2 text-right ${chenhThung >= 0 ? 'text-emerald-600' : 'text-red-600'} font-medium">${formatMoney(chenhThung)}</td>
-            <td class="px-3 py-2 text-center">
-              <button onclick="openAddModal(${p.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">+ Thêm</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function updateProductCount() {
-      document.getElementById('productCount').textContent = `${products.length} sản phẩm`;
-    }
-
-    // ========== MODAL ==========
-    function openAddModal(id) {
-      currentModalProduct = products.find(p => p.id === id);
-      if (!currentModalProduct) return;
-
-      document.getElementById('modalProductName').textContent = currentModalProduct.name;
-      document.getElementById('modalQty').value = 1;
-      document.querySelector('input[name="unitType"][value="le"]').checked = true;
-      updateModalPreview();
-      document.getElementById('addModal').classList.remove('hidden');
-      document.getElementById('addModal').classList.add('flex');
-    }
-
-    function closeModal() {
-      document.getElementById('addModal').classList.add('hidden');
-      document.getElementById('addModal').classList.remove('flex');
-      currentModalProduct = null;
-    }
-
-    function updateModalPreview() {
-      if (!currentModalProduct) return;
-      const unit = document.querySelector('input[name="unitType"]:checked').value;
-      const qty = Math.max(1, parseInt(document.getElementById('modalQty').value) || 1);
-
-      const net = unit === 'le' ? currentModalProduct.giaLeNet : currentModalProduct.giaThungNet;
-      const sell = unit === 'le' ? currentModalProduct.giaLeBan : currentModalProduct.giaThungBan;
-      const diff = sell - net;
-
-      document.getElementById('modalNet').textContent = formatMoney(net);
-      document.getElementById('modalSell').textContent = formatMoney(sell);
-      document.getElementById('modalDiff').textContent = formatMoney(diff);
-      document.getElementById('modalTotalDiff').textContent = formatMoney(diff * qty);
-    }
-
-    function confirmAddToOrder() {
-      if (!currentModalProduct) return;
-      const unit = document.querySelector('input[name="unitType"]:checked').value;
-      const qty = Math.max(1, parseInt(document.getElementById('modalQty').value) || 1);
-
-      const net = unit === 'le' ? currentModalProduct.giaLeNet : currentModalProduct.giaThungNet;
-      const sell = unit === 'le' ? currentModalProduct.giaLeBan : currentModalProduct.giaThungBan;
-
-      // Check if same product + same unit already in order → cộng dồn
-      const existing = order.find(o => o.productId === currentModalProduct.id && o.unit === unit);
-      if (existing) {
-        existing.qty += qty;
-      } else {
-        order.push({
-          id: Date.now(),
-          productId: currentModalProduct.id,
-          name: currentModalProduct.name,
-          unit,
-          qty,
-          net,
-          sell
-        });
-      }
-
-      closeModal();
-      renderOrder();
-    }
-
-    // ========== ORDER ==========
-    function renderOrder() {
-      const empty = document.getElementById('orderEmpty');
-      const content = document.getElementById('orderContent');
-      const tbody = document.getElementById('orderTableBody');
-
-      if (!order.length) {
-        empty.classList.remove('hidden');
-        content.classList.add('hidden');
-        return;
-      }
-
-      empty.classList.add('hidden');
-      content.classList.remove('hidden');
-
-      let totalNet = 0, totalSell = 0;
-
-      tbody.innerHTML = order.map(item => {
-        const thanhNet = item.net * item.qty;
-        const thanhSell = item.sell * item.qty;
-        const chenh = thanhSell - thanhNet;
-        totalNet += thanhNet;
-        totalSell += thanhSell;
-
-        return `
-          <tr class="hover:bg-slate-50">
-            <td class="px-3 py-2.5 font-medium">${escapeHtml(item.name)}</td>
-            <td class="px-3 py-2.5 text-center">
-              <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold ${item.unit === 'le' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">
-                ${item.unit === 'le' ? 'Lẻ' : 'Thùng'}
-              </span>
-            </td>
-            <td class="px-3 py-2.5 text-center">
-              <input type="number" min="1" value="${item.qty}" class="w-20 border border-slate-300 rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onchange="updateOrderQty(${item.id}, this.value)" />
-            </td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(item.net)}</td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(item.sell)}</td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(thanhNet)}</td>
-            <td class="px-3 py-2.5 text-right font-medium">${formatMoney(thanhSell)}</td>
-            <td class="px-3 py-2.5 text-right font-semibold ${chenh >= 0 ? 'text-emerald-600' : 'text-red-600'}">${formatMoney(chenh)}</td>
-            <td class="px-3 py-2.5 text-center">
-              <button onclick="removeFromOrder(${item.id})" class="text-red-500 hover:text-red-700 text-lg leading-none">&times;</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      document.getElementById('totalNet').textContent = formatMoney(totalNet);
-      document.getElementById('totalSell').textContent = formatMoney(totalSell);
-      document.getElementById('totalProfit').textContent = formatMoney(totalSell - totalNet);
-    }
-
-    function updateOrderQty(id, val) {
-      const item = order.find(o => o.id === id);
-      if (item) {
-        item.qty = Math.max(1, parseInt(val) || 1);
-        renderOrder();
-      }
-    }
-
-    function removeFromOrder(id) {
-      order = order.filter(o => o.id !== id);
-      renderOrder();
-    }
-
-    function clearOrder() {
-      if (!confirm('Xóa toàn bộ đơn hàng hiện tại?')) return;
-      order = [];
-      renderOrder();
-    }
-
-    function clearAllData() {
-      if (!confirm('Xóa toàn bộ dữ liệu kho và đơn hàng?')) return;
-      products = [];
-      order = [];
-      localStorage.removeItem('kho_products');
-      renderProducts();
-      renderOrder();
-      updateProductCount();
-    }
-
-    // ========== EXPORT ORDER ==========
-    function exportOrder() {
-      if (!order.length) return;
-
-      const rows = order.map((item, i) => {
-        const thanhNet = item.net * item.qty;
-        const thanhSell = item.sell * item.qty;
+<script>
+    function orderApp() {
         return {
-          'STT': i + 1,
-          'Sản phẩm': item.name,
-          'Đơn vị': item.unit === 'le' ? 'Lẻ' : 'Thùng',
-          'Số lượng': item.qty,
-          'Giá NET': item.net,
-          'Giá BÁN': item.sell,
-          'Thành tiền NET': thanhNet,
-          'Thành tiền BÁN': thanhSell,
-          'Chênh lệch': thanhSell - thanhNet
-        };
-      });
+            products: [],
+            fileLoaded: false,
+            selectedProductId: "",
+            currentProduct: null,
+            unit: "thùng",
+            quantity: 1,
+            previewNet: 0,
+            previewBan: 0,
+            orderItems: [],
 
-      // Add total row
-      const totalNet = order.reduce((s, o) => s + o.net * o.qty, 0);
-      const totalSell = order.reduce((s, o) => s + o.sell * o.qty, 0);
-      rows.push({
-        'STT': '',
-        'Sản phẩm': 'TỔNG CỘNG',
-        'Đơn vị': '',
-        'Số lượng': '',
-        'Giá NET': '',
-        'Giá BÁN': '',
-        'Thành tiền NET': totalNet,
-        'Thành tiền BÁN': totalSell,
-        'Chênh lệch': totalSell - totalNet
-      });
+            // Hàm xử lý file Excel
+            handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'DonHang');
-      XLSX.writeFile(wb, `DonHang_${new Date().toISOString().slice(0,10)}.xlsx`);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // Lấy sheet đầu tiên hoặc sheet tên 'DATA'
+                    const sheetName = workbook.SheetNames.includes('DATA') ? 'DATA' : workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json_data = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    let parsedProducts = [];
+                    json_data.forEach((row, index) => {
+                        let name = row['SẢN PHẨM'] ? String(row['SẢN PHẨM']).trim() : "";
+                        if (!name || name === "nan") return;
+
+                        let qc = parseInt(row['QC/T']) || 1;
+                        let gia_thung_net = parseFloat(row['GIÁ THÙNG NET']) || 0;
+                        let gia_le_net = (qc > 0 && gia_thung_net > 0) ? Math.round(gia_thung_net / qc) : 0;
+                        
+                        let gia_le_ban = parseFloat(row['GIÁ LẺ BÁN']) || 0;
+                        let gia_thung_ban = parseFloat(row['GIÁ THÙNG BÁN']) || 0;
+
+                        parsedProducts.push({
+                            id: index + 1,
+                            name: name,
+                            qc: qc,
+                            gia_le_net: gia_le_net,
+                            gia_thung_net: gia_thung_net,
+                            gia_le_ban: gia_le_ban,
+                            gia_thung_ban: gia_thung_ban
+                        });
+                    });
+
+                    this.products = parsedProducts;
+                    this.fileLoaded = true;
+                    // Reset đơn hàng cũ khi tải file mới
+                    this.orderItems = [];
+                    this.selectedProductId = "";
+                    this.updatePreview();
+                };
+                reader.readAsArrayBuffer(file);
+            },
+
+            updatePreview() {
+                if (!this.selectedProductId) {
+                    this.currentProduct = null;
+                    this.previewNet = 0;
+                    this.previewBan = 0;
+                    return;
+                }
+                this.currentProduct = this.products.find(p => p.id == this.selectedProductId);
+                if (this.currentProduct) {
+                    let qty = parseInt(this.quantity) || 0;
+                    if (this.unit === 'thùng') {
+                        this.previewNet = this.currentProduct.gia_thung_net * qty;
+                        this.previewBan = this.currentProduct.gia_thung_ban * qty;
+                    } else {
+                        this.previewNet = this.currentProduct.gia_le_net * qty;
+                        this.previewBan = this.currentProduct.gia_le_ban * qty;
+                    }
+                }
+            },
+
+            addToOrder() {
+                if (!this.currentProduct || this.quantity < 1) return;
+
+                let p_net = this.unit === 'thùng' ? this.currentProduct.gia_thung_net : this.currentProduct.gia_le_net;
+                let p_ban = this.unit === 'thùng' ? this.currentProduct.gia_thung_ban : this.currentProduct.gia_le_ban;
+                
+                let qty = parseInt(this.quantity);
+                let t_net = p_net * qty;
+                let t_ban = p_ban * qty;
+
+                let existing = this.orderItems.find(i => i.id === this.currentProduct.id && i.unit === this.unit);
+                if (existing) {
+                    existing.quantity += qty;
+                    this.recalculateItem(existing);
+                } else {
+                    this.orderItems.push({
+                        id: this.currentProduct.id,
+                        name: this.currentProduct.name,
+                        unit: this.unit,
+                        quantity: qty,
+                        price_net: p_net,
+                        price_ban: p_ban,
+                        total_net: t_net,
+                        total_ban: t_ban,
+                        profit: t_ban - t_net
+                    });
+                }
+                
+                this.quantity = 1;
+                this.updatePreview();
+            },
+
+            recalculateItem(item) {
+                let qty = parseInt(item.quantity) || 0;
+                item.total_net = item.price_net * qty;
+                item.total_ban = item.price_ban * qty;
+                item.profit = item.total_ban - item.total_net;
+            },
+
+            removeItem(index) {
+                this.orderItems.splice(index, 1);
+            },
+            
+            clearOrder() {
+                if (confirm("Bạn có chắc chắn muốn xoá toàn bộ đơn?")) {
+                    this.orderItems = [];
+                }
+            },
+
+            get totalNet() { return this.orderItems.reduce((sum, item) => sum + item.total_net, 0); },
+            get totalBan() { return this.orderItems.reduce((sum, item) => sum + item.total_ban, 0); },
+            get totalProfit() { return this.orderItems.reduce((sum, item) => sum + item.profit, 0); },
+
+            formatCurrency(value) {
+                if (value === 0 || !value) return "0 ₫";
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+            }
+        }
     }
+</script>
 
-    // ========== INIT ==========
-    loadFromStorage();
-    renderOrder();
-  </script>
+<style>
+    @media print {
+        .card, button, input[type="file"], td:last-child, th:last-child { display: none !important; }
+        .card:last-child { display: block !important; box-shadow: none; border: none; }
+        body { background: white; }
+    }
+</style>
+
 </body>
 </html>

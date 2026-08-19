@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Hệ thống Tính Chênh Lệch Giá - Kho</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -27,8 +27,8 @@
   </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-    body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
-    .table-scroll { max-height: 480px; overflow-y: auto; }
+    body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .table-scroll { max-height: 420px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .table-scroll thead th { position: sticky; top: 0; z-index: 10; }
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -36,212 +36,179 @@
     .fade { animation: fadeIn 0.25s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .file-btn { position: relative; overflow: hidden; }
+    .file-btn input[type=file] {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 20px;
+    }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
-  <!-- HEADER -->
   <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-lg">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-xl font-bold">K</div>
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-lg font-bold">K</div>
         <div>
-          <h1 class="text-lg font-bold leading-tight">Kho & Chênh Lệch Giá</h1>
-          <p class="text-slate-400 text-xs">Upload bảng giá → Lên đơn → Tính lợi nhuận</p>
+          <h1 class="text-base font-bold leading-tight">Kho & Chênh Lệch Giá</h1>
+          <p class="text-slate-400 text-[11px]">Upload → Lên đơn → Tính lợi nhuận</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <span id="badgeCount" class="bg-emerald-600/90 text-white text-xs font-semibold px-3 py-1 rounded-full">0 SP</span>
-        <button onclick="clearAllData()" class="text-xs bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg transition">Xóa data</button>
+        <span id="badgeCount" class="bg-emerald-600/90 text-white text-xs font-semibold px-2.5 py-1 rounded-full">0 SP</span>
+        <button onclick="clearAllData()" class="text-xs bg-red-600/80 hover:bg-red-600 px-2.5 py-1.5 rounded-lg">Xóa</button>
       </div>
     </div>
   </header>
 
-  <!-- TAB NAV -->
-  <div class="bg-white border-b border-slate-200 sticky top-[72px] z-30">
-    <div class="max-w-6xl mx-auto px-4">
+  <div class="bg-white border-b border-slate-200 sticky top-[60px] z-30">
+    <div class="max-w-6xl mx-auto px-3">
       <div class="flex gap-1 py-2">
-        <button id="tabKhoBtn" onclick="switchTab('kho')" class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-semibold transition">
-          📦 Dữ liệu Kho
-        </button>
-        <button id="tabDonBtn" onclick="switchTab('don')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
-          🛒 Lên Đơn & Tính Chênh Lệch
-        </button>
+        <button id="tabKhoBtn" onclick="switchTab('kho')" class="tab-btn active flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold transition">📦 Kho</button>
+        <button id="tabDonBtn" onclick="switchTab('don')" class="tab-btn flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">🛒 Lên Đơn</button>
       </div>
     </div>
   </div>
 
-  <main class="max-w-6xl mx-auto px-4 py-6">
-
-    <!-- ==================== TAB KHO ==================== -->
-    <div id="tabKho" class="space-y-5 fade">
-
-      <!-- Upload -->
-      <section class="card p-5">
-        <h2 class="text-base font-semibold mb-3 flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold">1</span>
+  <main class="max-w-6xl mx-auto px-3 py-4">
+    <div id="tabKho" class="space-y-4 fade">
+      <section class="card p-4">
+        <h2 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold">1</span>
           Upload bảng giá Excel
         </h2>
-        <div class="flex flex-wrap items-center gap-4">
-          <label class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+        <div class="file-btn w-full bg-brand-600 active:bg-brand-700 text-white font-semibold py-4 rounded-xl text-center relative">
+          <span class="pointer-events-none flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            Chọn file Excel
-            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFile(event)" />
-          </label>
-          <p class="text-sm text-slate-500">Hỗ trợ .xlsx / .xls / .csv</p>
+            Chọn file Excel / CSV
+          </span>
+          <input type="file" id="fileInput" accept="*/*" onchange="handleFile(event)" />
         </div>
-        <div id="uploadStatus" class="mt-3 text-sm hidden"></div>
+        <p class="text-xs text-slate-500 mt-2 text-center">Chọn file .xlsx, .xls hoặc .csv từ máy</p>
+        <div id="uploadStatus" class="mt-3 text-sm text-center hidden"></div>
       </section>
 
-      <!-- Product list -->
-      <section class="card p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 class="text-base font-semibold flex items-center gap-2">
-            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
-            Danh sách sản phẩm trong kho
+      <section class="card p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-sm font-semibold flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
+            Danh sách kho
           </h2>
-          <input type="text" id="searchInput" placeholder="Tìm sản phẩm..." class="border border-slate-300 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand-500" oninput="renderProducts()" />
+          <input type="text" id="searchInput" placeholder="Tìm SP..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-brand-500" oninput="renderProducts()" />
         </div>
         <div class="table-scroll border border-slate-200 rounded-xl overflow-hidden">
-          <table class="w-full text-sm">
+          <table class="w-full text-xs">
             <thead class="bg-slate-800 text-white text-left">
               <tr>
-                <th class="px-3 py-3">STT</th>
-                <th class="px-3 py-3">Sản phẩm</th>
-                <th class="px-3 py-3 text-center">QC/T</th>
-                <th class="px-3 py-3 text-right">Giá lẻ NET</th>
-                <th class="px-3 py-3 text-right">Giá thùng NET</th>
-                <th class="px-3 py-3 text-right">Giá lẻ BÁN</th>
-                <th class="px-3 py-3 text-right">Giá thùng BÁN</th>
-                <th class="px-3 py-3 text-right">Chênh lẻ</th>
-                <th class="px-3 py-3 text-right">Chênh thùng</th>
+                <th class="px-2 py-2.5">STT</th>
+                <th class="px-2 py-2.5">Sản phẩm</th>
+                <th class="px-2 py-2.5 text-center">QC</th>
+                <th class="px-2 py-2.5 text-right">NET lẻ</th>
+                <th class="px-2 py-2.5 text-right">NET thùng</th>
+                <th class="px-2 py-2.5 text-right">BÁN lẻ</th>
+                <th class="px-2 py-2.5 text-right">BÁN thùng</th>
+                <th class="px-2 py-2.5 text-right">Chênh lẻ</th>
+                <th class="px-2 py-2.5 text-right">Chênh thùng</th>
               </tr>
             </thead>
             <tbody id="productTableBody" class="divide-y divide-slate-100 bg-white">
-              <tr><td colspan="9" class="px-4 py-10 text-center text-slate-400">Chưa có dữ liệu. Hãy upload file Excel.</td></tr>
+              <tr><td colspan="9" class="px-3 py-8 text-center text-slate-400">Chưa có dữ liệu. Hãy upload file Excel.</td></tr>
             </tbody>
           </table>
         </div>
       </section>
     </div>
 
-    <!-- ==================== TAB LÊN ĐƠN ==================== -->
-    <div id="tabDon" class="hidden space-y-5 fade">
-
-      <!-- Form chọn sản phẩm -->
-      <section class="card p-6">
-        <h2 class="text-base font-semibold mb-5 flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">1</span>
+    <div id="tabDon" class="hidden space-y-4 fade">
+      <section class="card p-4">
+        <h2 class="text-sm font-semibold mb-4 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">1</span>
           Form lên đơn
         </h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <!-- Chọn sản phẩm -->
-          <div class="md:col-span-5">
-            <label class="block text-sm font-medium text-slate-600 mb-1.5">Sản phẩm</label>
-            <select id="selectProduct" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" onchange="onProductChange()">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Sản phẩm</label>
+            <select id="selectProduct" class="w-full border border-slate-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" onchange="onProductChange()">
               <option value="">— Chọn sản phẩm —</option>
             </select>
           </div>
-
-          <!-- Đơn vị -->
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-slate-600 mb-1.5">Đơn vị</label>
-            <div class="flex rounded-xl overflow-hidden border border-slate-300">
-              <button type="button" id="btnLe" onclick="setUnit('le')" class="flex-1 py-2.5 text-sm font-semibold bg-brand-600 text-white transition">Lẻ</button>
-              <button type="button" id="btnThung" onclick="setUnit('thung')" class="flex-1 py-2.5 text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 transition">Thùng</button>
-            </div>
-          </div>
-
-          <!-- Số lượng -->
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-slate-600 mb-1.5">Số lượng</label>
-            <input type="number" id="inputQty" value="1" min="1" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500" oninput="updatePreview()" />
-          </div>
-
-          <!-- Nút thêm -->
-          <div class="md:col-span-3">
-            <button onclick="addToOrder()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-              Thêm vào đơn
-            </button>
-          </div>
-        </div>
-
-        <!-- Preview giá -->
-        <div id="previewBox" class="mt-5 hidden bg-slate-50 border border-slate-200 rounded-xl p-4">
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <p class="text-slate-500 text-xs mb-0.5">Giá NET / đơn vị</p>
-              <p id="previewNet" class="font-semibold text-slate-800">—</p>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Đơn vị</label>
+              <div class="flex rounded-xl overflow-hidden border border-slate-300">
+                <button type="button" id="btnLe" onclick="setUnit('le')" class="flex-1 py-3 text-sm font-semibold bg-brand-600 text-white transition">Lẻ</button>
+                <button type="button" id="btnThung" onclick="setUnit('thung')" class="flex-1 py-3 text-sm font-semibold bg-white text-slate-600 transition">Thùng</button>
+              </div>
             </div>
             <div>
-              <p class="text-slate-500 text-xs mb-0.5">Giá BÁN / đơn vị</p>
-              <p id="previewSell" class="font-semibold text-slate-800">—</p>
-            </div>
-            <div>
-              <p class="text-slate-500 text-xs mb-0.5">Chênh lệch / đơn vị</p>
-              <p id="previewDiff" class="font-semibold text-emerald-600">—</p>
-            </div>
-            <div>
-              <p class="text-slate-500 text-xs mb-0.5">Tổng chênh lệch (dự kiến)</p>
-              <p id="previewTotalDiff" class="font-bold text-emerald-700 text-base">—</p>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Số lượng</label>
+              <input type="number" id="inputQty" value="1" min="1" inputmode="numeric" class="w-full border border-slate-300 rounded-xl px-3 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500" oninput="updatePreview()" />
             </div>
           </div>
+          <div id="previewBox" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><p class="text-slate-500 mb-0.5">Giá NET</p><p id="previewNet" class="font-semibold">—</p></div>
+              <div><p class="text-slate-500 mb-0.5">Giá BÁN</p><p id="previewSell" class="font-semibold">—</p></div>
+              <div><p class="text-slate-500 mb-0.5">Chênh / ĐV</p><p id="previewDiff" class="font-semibold text-emerald-600">—</p></div>
+              <div><p class="text-slate-500 mb-0.5">Tổng chênh</p><p id="previewTotalDiff" class="font-bold text-emerald-700">—</p></div>
+            </div>
+          </div>
+          <button onclick="addToOrder()" class="w-full bg-brand-600 active:bg-brand-700 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Thêm vào đơn
+          </button>
         </div>
       </section>
 
-      <!-- Đơn hàng -->
-      <section class="card p-6">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 class="text-base font-semibold flex items-center gap-2">
-            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
-            Đơn hàng hiện tại
+      <section class="card p-4">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <h2 class="text-sm font-semibold flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
+            Đơn hàng
           </h2>
-          <div class="flex gap-2">
-            <button onclick="clearOrder()" class="text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-4 py-2 rounded-xl transition">Xóa đơn</button>
-            <button onclick="exportOrder()" class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl transition">Xuất Excel</button>
+          <div class="flex gap-1.5">
+            <button onclick="clearOrder()" class="text-xs bg-slate-200 active:bg-slate-300 text-slate-700 font-medium px-3 py-1.5 rounded-lg">Xóa đơn</button>
+            <button onclick="exportOrder()" class="text-xs bg-emerald-600 active:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg">Xuất Excel</button>
           </div>
         </div>
-
-        <div id="orderEmpty" class="text-center py-12 text-slate-400 border border-dashed border-slate-300 rounded-xl">
-          <p class="text-lg mb-1">Chưa có sản phẩm nào</p>
-          <p class="text-sm">Chọn sản phẩm ở form phía trên rồi bấm “Thêm vào đơn”</p>
+        <div id="orderEmpty" class="text-center py-8 text-slate-400 border border-dashed border-slate-300 rounded-xl text-sm">
+          Chưa có sản phẩm.<br>Chọn SP ở form trên rồi thêm vào đơn.
         </div>
-
         <div id="orderContent" class="hidden">
-          <div class="overflow-x-auto border border-slate-200 rounded-xl">
-            <table class="w-full text-sm">
+          <div class="overflow-x-auto border border-slate-200 rounded-xl -mx-1">
+            <table class="w-full text-xs min-w-[600px]">
               <thead class="bg-slate-700 text-white">
                 <tr>
-                  <th class="px-3 py-3 text-left">Sản phẩm</th>
-                  <th class="px-3 py-3 text-center">Đơn vị</th>
-                  <th class="px-3 py-3 text-center">SL</th>
-                  <th class="px-3 py-3 text-right">Giá NET</th>
-                  <th class="px-3 py-3 text-right">Giá BÁN</th>
-                  <th class="px-3 py-3 text-right">Thành tiền NET</th>
-                  <th class="px-3 py-3 text-right">Thành tiền BÁN</th>
-                  <th class="px-3 py-3 text-right">Chênh lệch</th>
-                  <th class="px-3 py-3 text-center">Xóa</th>
+                  <th class="px-2 py-2.5 text-left">Sản phẩm</th>
+                  <th class="px-2 py-2.5 text-center">ĐV</th>
+                  <th class="px-2 py-2.5 text-center">SL</th>
+                  <th class="px-2 py-2.5 text-right">NET</th>
+                  <th class="px-2 py-2.5 text-right">BÁN</th>
+                  <th class="px-2 py-2.5 text-right">TT NET</th>
+                  <th class="px-2 py-2.5 text-right">TT BÁN</th>
+                  <th class="px-2 py-2.5 text-right">Chênh</th>
+                  <th class="px-2 py-2.5 text-center">Xóa</th>
                 </tr>
               </thead>
               <tbody id="orderTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
             </table>
           </div>
-
-          <!-- Tổng kết -->
-          <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-              <p class="text-xs text-slate-500 uppercase font-medium tracking-wide">Tổng giá NET</p>
-              <p id="totalNet" class="text-2xl font-bold text-slate-700 mt-1">0 ₫</p>
+          <div class="mt-4 grid grid-cols-1 gap-2">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex justify-between items-center">
+              <p class="text-xs text-slate-500 uppercase font-medium">Tổng NET</p>
+              <p id="totalNet" class="text-lg font-bold text-slate-700">0 ₫</p>
             </div>
-            <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <p class="text-xs text-blue-600 uppercase font-medium tracking-wide">Tổng giá BÁN</p>
-              <p id="totalSell" class="text-2xl font-bold text-blue-700 mt-1">0 ₫</p>
+            <div class="bg-blue-50 rounded-xl p-3 border border-blue-200 flex justify-between items-center">
+              <p class="text-xs text-blue-600 uppercase font-medium">Tổng BÁN</p>
+              <p id="totalSell" class="text-lg font-bold text-blue-700">0 ₫</p>
             </div>
-            <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-              <p class="text-xs text-emerald-600 uppercase font-medium tracking-wide">Tổng chênh lệch</p>
-              <p id="totalProfit" class="text-2xl font-bold text-emerald-700 mt-1">0 ₫</p>
+            <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-200 flex justify-between items-center">
+              <p class="text-xs text-emerald-600 uppercase font-medium">Tổng chênh lệch</p>
+              <p id="totalProfit" class="text-xl font-bold text-emerald-700">0 ₫</p>
             </div>
           </div>
         </div>
@@ -250,19 +217,16 @@
   </main>
 
   <script>
-    // ========== STATE ==========
     let products = [];
     let order = [];
-    let currentUnit = 'le'; // 'le' | 'thung'
+    let currentUnit = 'le';
 
-    // ========== INIT ==========
     loadFromStorage();
     fillProductSelect();
     renderProducts();
     renderOrder();
     updateBadge();
 
-    // ========== TAB ==========
     function switchTab(tab) {
       document.getElementById('tabKho').classList.toggle('hidden', tab !== 'kho');
       document.getElementById('tabDon').classList.toggle('hidden', tab !== 'don');
@@ -271,7 +235,6 @@
       if (tab === 'don') fillProductSelect();
     }
 
-    // ========== STORAGE ==========
     function loadFromStorage() {
       try {
         const saved = localStorage.getItem('kho_products_v2');
@@ -282,7 +245,6 @@
       localStorage.setItem('kho_products_v2', JSON.stringify(products));
     }
 
-    // ========== UTILS ==========
     function formatMoney(n) {
       if (n === null || n === undefined || isNaN(n)) return '—';
       return Math.round(n).toLocaleString('vi-VN') + ' ₫';
@@ -295,15 +257,12 @@
       return isNaN(num) ? 0 : num;
     }
     function normalizeHeader(h) {
-      return String(h || '').toUpperCase().trim()
-        .replace(/\s+/g, ' ')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return String(h || '').toUpperCase().trim().replace(/\s+/g, ' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
     function escapeHtml(str) {
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ========== UPLOAD ==========
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -352,44 +311,45 @@
           fillProductSelect();
           updateBadge();
 
-          status.innerHTML = `<span class="text-emerald-600 font-medium">✓ Đã load ${products.length} sản phẩm thành công!</span>`;
-          setTimeout(() => status.classList.add('hidden'), 4000);
+          status.innerHTML = '<span class="text-emerald-600 font-medium">✓ Đã load ' + products.length + ' sản phẩm!</span>';
+          setTimeout(function(){ status.classList.add('hidden'); }, 4000);
         } catch (err) {
           console.error(err);
-          status.innerHTML = '<span class="text-red-600">Lỗi đọc file. Kiểm tra lại định dạng.</span>';
+          status.innerHTML = '<span class="text-red-600">Lỗi đọc file. Thử lại hoặc chọn file khác.</span>';
         }
+      };
+      reader.onerror = function() {
+        status.innerHTML = '<span class="text-red-600">Không đọc được file. Thử lại.</span>';
       };
       reader.readAsArrayBuffer(file);
       e.target.value = '';
     }
 
-    // ========== RENDER KHO ==========
     function renderProducts() {
       const tbody = document.getElementById('productTableBody');
-      const keyword = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+      const keyword = (document.getElementById('searchInput') && document.getElementById('searchInput').value || '').toLowerCase().trim();
       let list = products;
-      if (keyword) list = products.filter(p => p.name.toLowerCase().includes(keyword));
+      if (keyword) list = products.filter(function(p){ return p.name.toLowerCase().includes(keyword); });
 
       if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-10 text-center text-slate-400">${products.length ? 'Không tìm thấy sản phẩm.' : 'Chưa có dữ liệu. Hãy upload file Excel.'}</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="9" class="px-3 py-8 text-center text-slate-400">' + (products.length ? 'Không tìm thấy.' : 'Chưa có dữ liệu. Hãy upload file Excel.') + '</td></tr>';
         return;
       }
 
-      tbody.innerHTML = list.map(p => {
-        const chenhLe = p.giaLeBan - p.giaLeNet;
-        const chenhThung = p.giaThungBan - p.giaThungNet;
-        return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="px-3 py-2.5 text-slate-500">${p.stt}</td>
-            <td class="px-3 py-2.5 font-medium">${escapeHtml(p.name)}</td>
-            <td class="px-3 py-2.5 text-center">${p.qc}</td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaLeNet)}</td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaThungNet)}</td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaLeBan)}</td>
-            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaThungBan)}</td>
-            <td class="px-3 py-2.5 text-right font-medium ${chenhLe >= 0 ? 'text-emerald-600' : 'text-red-600'}">${formatMoney(chenhLe)}</td>
-            <td class="px-3 py-2.5 text-right font-medium ${chenhThung >= 0 ? 'text-emerald-600' : 'text-red-600'}">${formatMoney(chenhThung)}</td>
-          </tr>`;
+      tbody.innerHTML = list.map(function(p) {
+        var chenhLe = p.giaLeBan - p.giaLeNet;
+        var chenhThung = p.giaThungBan - p.giaThungNet;
+        return '<tr class="hover:bg-slate-50">' +
+          '<td class="px-2 py-2 text-slate-500">' + p.stt + '</td>' +
+          '<td class="px-2 py-2 font-medium">' + escapeHtml(p.name) + '</td>' +
+          '<td class="px-2 py-2 text-center">' + p.qc + '</td>' +
+          '<td class="px-2 py-2 text-right">' + formatMoney(p.giaLeNet) + '</td>' +
+          '<td class="px-2 py-2 text-right">' + formatMoney(p.giaThungNet) + '</td>' +
+          '<td class="px-2 py-2 text-right">' + formatMoney(p.giaLeBan) + '</td>' +
+          '<td class="px-2 py-2 text-right">' + formatMoney(p.giaThungBan) + '</td>' +
+          '<td class="px-2 py-2 text-right font-medium ' + (chenhLe >= 0 ? 'text-emerald-600' : 'text-red-600') + '">' + formatMoney(chenhLe) + '</td>' +
+          '<td class="px-2 py-2 text-right font-medium ' + (chenhThung >= 0 ? 'text-emerald-600' : 'text-red-600') + '">' + formatMoney(chenhThung) + '</td>' +
+          '</tr>';
       }).join('');
     }
 
@@ -397,22 +357,38 @@
       document.getElementById('badgeCount').textContent = products.length + ' SP';
     }
 
-    // ========== FORM LÊN ĐƠN ==========
     function fillProductSelect() {
-      const sel = document.getElementById('selectProduct');
-      const current = sel.value;
+      var sel = document.getElementById('selectProduct');
+      var current = sel.value;
       sel.innerHTML = '<option value="">— Chọn sản phẩm —</option>' +
-        products.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        products.map(function(p){ return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>'; }).join('');
       if (current) sel.value = current;
       updatePreview();
     }
 
     function setUnit(unit) {
       currentUnit = unit;
-      const btnLe = document.getElementById('btnLe');
-      const btnThung = document.getElementById('btnThung');
+      var btnLe = document.getElementById('btnLe');
+      var btnThung = document.getElementById('btnThung');
       if (unit === 'le') {
-        btnLe.className = 'flex-1 py-2.5 text-sm font-semibold bg-brand-600 text-white transition';
-        btnThung.className = 'flex-1 py-2.5 text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 transition';
+        btnLe.className = 'flex-1 py-3 text-sm font-semibold bg-brand-600 text-white transition';
+        btnThung.className = 'flex-1 py-3 text-sm font-semibold bg-white text-slate-600 transition';
       } else {
-        btnThung.className = 'flex-1 py-2.5 
+        btnThung.className = 'flex-1 py-3 text-sm font-semibold bg-brand-600 text-white transition';
+        btnLe.className = 'flex-1 py-3 text-sm font-semibold bg-white text-slate-600 transition';
+      }
+      updatePreview();
+    }
+
+    function onProductChange() { updatePreview(); }
+
+    function updatePreview() {
+      var id = document.getElementById('selectProduct').value;
+      var box = document.getElementById('previewBox');
+      if (!id) { box.classList.add('hidden'); return; }
+      var p = products.find(function(x){ return x.id == id; });
+      if (!p) { box.classList.add('hidden'); return; }
+
+      var qty = Math.max(1, parseInt(document.getElementById('inputQty').value) || 1);
+      var net = currentUnit === 'le' ? p.giaLeNet : p.giaThungNet;
+      var sell = currentUni

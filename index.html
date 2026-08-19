@@ -1,434 +1,418 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hệ Thống Quản Lý Phân Phối (DMS)</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-  --primary: #0f4c81;
-  --primary-hover: #0a365c;
-  --secondary: #f8fafc;
-  --accent: #3b82f6;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --purple: #8b5cf6;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --bg-body: #f1f5f9;
-  --bg-card: #ffffff;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --radius: 10px;
-}
-
-* { box-sizing: border-box; }
-body { 
-  margin: 0; 
-  font-family: 'Inter', Arial, sans-serif; 
-  background: var(--bg-body); 
-  color: var(--text-main); 
-  font-size: 14px;
-}
-
-button, input, select { font: inherit; }
-button { cursor: pointer; transition: all 0.2s ease; }
-
-/* HEADER & TABS */
-.header {
-  background: var(--primary);
-  color: #fff;
-  padding: 20px 30px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  box-shadow: var(--shadow-md);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.header h1 { margin: 0; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.header small { color: #cbd5e1; font-weight: 400; }
-
-.nav-tabs {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.tab-btn {
-  border: none;
-  border-radius: 8px 8px 0 0;
-  padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
-  font-weight: 600;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.tab-btn:hover { background: rgba(255, 255, 255, 0.25); }
-.tab-btn.active {
-  background: var(--bg-body);
-  color: var(--primary);
-  border-bottom: 3px solid var(--accent);
-}
-
-/* LAYOUT */
-.container { max-width: 1440px; margin: 24px auto; padding: 0 20px; }
-.tab-content { display: none; animation: fadeIn 0.25s ease; }
-.tab-content.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-sm);
-}
-.section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-
-/* GRID & FORMS */
-.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-.col-12 { grid-column: span 12; }
-.col-9 { grid-column: span 9; }
-.col-8 { grid-column: span 8; }
-.col-6 { grid-column: span 6; }
-.col-4 { grid-column: span 4; }
-.col-3 { grid-column: span 3; }
-.col-2 { grid-column: span 2; }
-
-label { font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px; color: var(--text-muted); }
-input, select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #f8fafc;
-  color: var(--text-main);
-  transition: border 0.2s, box-shadow 0.2s;
-}
-input:focus, select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: #fff;
-}
-
-/* BUTTONS */
-.btn { border: none; border-radius: 6px; padding: 10px 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
-.primary { background: var(--primary); color: #fff; }
-.primary:hover { background: var(--primary-hover); }
-.success { background: var(--success); color: #fff; }
-.danger { background: var(--danger); color: #fff; }
-.light { background: var(--secondary); color: var(--text-main); border: 1px solid var(--border); }
-.light:hover { background: #e2e8f0; }
-.warning { background: var(--warning); color: #fff; }
-.toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-bottom: 16px; }
-
-/* TABLES */
-.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
-table { border-collapse: collapse; width: 100%; background: #fff; text-align: left; }
-th { background: #f8fafc; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; border-bottom: 2px solid var(--border); white-space: nowrap; }
-td { border-bottom: 1px solid var(--border); padding: 12px 16px; vertical-align: middle; }
-tr:hover td { background: #f8fafc; }
-tr:last-child td { border-bottom: none; }
-.right { text-align: right; }
-.center { text-align: center; }
-.muted { color: var(--text-muted); font-size: 13px; }
-
-/* METRICS */
-.kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.kpi .box { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 8px; padding: 16px 20px; box-shadow: var(--shadow-sm); }
-.kpi .box.dms { border-left-color: var(--purple); }
-.kpi .box.diff { border-left-color: var(--success); }
-.kpi .box.cum { border-left-color: var(--warning); }
-.kpi .box-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-.kpi .num { font-size: 22px; font-weight: 800; color: var(--primary); margin-top: 8px; }
-.kpi .box.dms .num { color: var(--purple); }
-.kpi .box.diff .num { color: var(--success); }
-.kpi .box.cum .num { color: var(--warning); }
-
-/* DRAFT ORDER LIST */
-.customer { border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; background: #fff; overflow: hidden; box-shadow: var(--shadow-sm); }
-.customer-head { padding: 14px 18px; background: #f8fafc; font-weight: 700; font-size: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.order-row { display: grid; grid-template-columns: 2fr 100px 120px 60px 150px 40px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
-.order-row:last-child { border-bottom: none; }
-.order-row input, .order-row select { height: 38px; padding: 6px 10px; }
-.total-row { display: flex; flex-direction: column; gap: 8px; padding: 14px 18px; font-weight: 700; background: #f8fafc; border-top: 1px solid var(--border); font-size: 14px; color: var(--primary); }
-.total-line { display: flex; justify-content: flex-end; gap: 30px; flex-wrap: wrap; }
-.discount-box { display: flex; gap: 12px; padding: 12px 18px; background: #fff; border-top: 1px dashed var(--border); align-items: center; flex-wrap: wrap; }
-
-/* MODAL & REPORT */
-.modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
-.modal.show { display: flex; }
-.modal-box { background: #fff; border-radius: 12px; width: min(800px, 100%); max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-.history-a4 { background: #fff; color: #000; max-width: 850px; margin: 0 auto; padding: 40px; box-shadow: var(--shadow-md); border-radius: 8px; font-family: 'Times New Roman', Times, serif; font-size: 16px; line-height: 1.4; }
-
-@media (max-width: 992px) {
-  .grid { grid-template-columns: repeat(6, 1fr); }
-  .col-3, .col-2 { grid-column: span 3; }
-  .col-8, .col-9 { grid-column: span 6; }
-}
-@media (max-width: 600px) {
-  .grid { grid-template-columns: 1fr; }
-  .col-1, .col-2, .col-3, .col-4, .col-6, .col-8, .col-9, .col-12 { grid-column: span 1; }
-  .order-row { grid-template-columns: 1fr; gap: 8px; background: #f8fafc; margin: 8px; border-radius: 6px; padding: 12px; }
-}
-@media print {
-  body { background: #fff; }
-  .header, .no-print { display: none !important; }
-  .container { margin: 0; padding: 0; max-width: 100%; }
-  .card { border: none; box-shadow: none; padding: 0; }
-  .history-a4 { box-shadow: none; padding: 0; max-width: 100%; }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hệ thống Tính Chênh Lệch Giá - Kho</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+    body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+    .table-scroll { max-height: 480px; overflow-y: auto; }
+    .table-scroll thead th { position: sticky; top: 0; z-index: 10; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .tab-btn.active { background: #0284c7; color: white; box-shadow: 0 4px 14px rgba(2,132,199,0.35); }
+    .fade { animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen text-slate-800">
 
-<div class="header no-print">
-  <div class="header-top">
-    <h1>📦 Hệ Thống DMS</h1>
-    <small>Quản lý Đơn hàng - Tồn kho - Doanh số & Doanh số DMS</small>
-  </div>
-  <div class="nav-tabs">
-    <button class="tab-btn active" data-target="orders" onclick="switchTab('orders')">📝 Lên đơn</button>
-    <button class="tab-btn" data-target="warehouse" onclick="switchTab('warehouse')">🏪 Kho hàng</button>
-    <button class="tab-btn" data-target="history" onclick="switchTab('history')">🕘 Lịch sử</button>
-    <button class="tab-btn" data-target="stats" onclick="switchTab('stats')">📊 Thống kê</button>
-  </div>
-</div>
-
-<div class="container">
-
-  <!-- TAB 1: LÊN ĐƠN -->
-  <section id="orders" class="tab-content active">
-    <div class="card no-print">
-      <div class="section-title">Khởi tạo Đơn hàng (Sales Order)</div>
-      <div class="grid">
-        <div class="col-2"><label>Ngày chứng từ</label><input id="orderDate" type="date"></div>
-        <div class="col-4"><label>Khách hàng / Đại lý</label><input id="entryCustomer" placeholder="Nhập tên khách hàng..."></div>
-        <div class="col-4"><label>Sản phẩm xuất</label><select id="entryProduct"></select></div>
-        <div class="col-2"><label>Phân loại/Màu</label><input id="entryColor" placeholder="Vd: Đỏ, Xanh..."></div>
-        
-        <div class="col-2"><label>Số lượng</label><input id="entryQty" type="number" min="0.5" step="0.5" value="1"></div>
-        <div class="col-2"><label>Đơn vị tính</label>
-          <select id="entryUnit"><option>Thùng</option><option>Hộp</option><option>Gói</option><option>Dây</option></select>
-        </div>
-        <div class="col-2" style="display:flex;align-items:end">
-          <button class="btn primary" style="width:100%; height:40px" onclick="recordOrderLine()">Thêm vào Đơn</button>
-        </div>
-        <div class="col-6" style="display:flex;align-items:end">
-           <div id="entryPriceHint" class="muted" style="padding-bottom:10px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
-      <div class="toolbar" style="justify-content: space-between; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-        <h3 style="margin:0; color: var(--primary)">Giỏ hàng tạm tính</h3>
+  <!-- HEADER -->
+  <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-lg">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-xl font-bold">K</div>
         <div>
-          <button class="btn light" onclick="clearDraft()">Làm mới</button>
-          <button class="btn success" onclick="saveBatch()">💾 Lưu Phiếu Xuất</button>
+          <h1 class="text-lg font-bold leading-tight">Kho & Chênh Lệch Giá</h1>
+          <p class="text-slate-400 text-xs">Upload bảng giá → Lên đơn → Tính lợi nhuận</p>
         </div>
       </div>
-      <div id="saveMsg" class="muted" style="margin-bottom:8px; font-weight:600; color: var(--success)"></div>
-      <div id="customers"></div>
+      <div class="flex items-center gap-2">
+        <span id="badgeCount" class="bg-emerald-600/90 text-white text-xs font-semibold px-3 py-1 rounded-full">0 SP</span>
+        <button onclick="clearAllData()" class="text-xs bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg transition">Xóa data</button>
+      </div>
     </div>
-  </section>
+  </header>
 
-  <!-- TAB 2: KHO HÀNG -->
-  <section id="warehouse" class="tab-content">
-    <div class="card no-print">
-      <div class="section-title">Danh mục Sản phẩm & Bảng giá Master Data</div>
-      <div class="grid">
-        <div class="col-3"><label>Tên sản phẩm</label><input id="pName"></div>
-        <div class="col-2"><label>Mã / SKU</label><input id="pCode"></div>
-        <div class="col-2"><label>Nhóm Danh mục</label>
-          <select id="pCategory">
-            <option value="Hàng thường">Hàng thường</option>
-            <option value="Hàng tết">Hàng tết</option>
-            <option value="Bánh mì">Bánh mì</option>
-          </select>
-        </div>
-        <div class="col-2"><label>QC/Thùng</label><input id="pQct" type="number" step="0.01" min="0"></div>
-        <div class="col-3"><label>Đơn giá gốc</label><input id="pBase" type="number" step="0.01" min="0"></div>
-        
-        <div class="col-3"><label>Giá NET</label><input id="pNet" type="number" step="0.01" min="0"></div>
-        <div class="col-3"><label>Giá Bán (Thùng)</label><input id="pCarton" type="number" step="0.01" min="0"></div>
-        <div class="col-3"><label>Giá Bán (Lẻ/Gói)</label><input id="pPack" type="number" step="0.01" min="0"></div>
-        <div class="col-3"><label>Giá Quy đổi (Thùng)</label><input id="pCartonPack" type="number" step="0.01" min="0" readonly style="background:#e2e8f0"></div>
-        
-        <div class="col-12" style="display:flex; justify-content:flex-end; gap:12px; margin-top: 8px;">
-          <label class="btn warning" style="cursor:pointer">⬆ Nhập từ Excel (Lấy toàn bộ data)
-            <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden>
+  <!-- TAB NAV -->
+  <div class="bg-white border-b border-slate-200 sticky top-[72px] z-30">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex gap-1 py-2">
+        <button id="tabKhoBtn" onclick="switchTab('kho')" class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+          📦 Dữ liệu Kho
+        </button>
+        <button id="tabDonBtn" onclick="switchTab('don')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          🛒 Lên Đơn & Tính Chênh Lệch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- ==================== TAB KHO ==================== -->
+    <div id="tabKho" class="space-y-5 fade">
+
+      <!-- Upload -->
+      <section class="card p-5">
+        <h2 class="text-base font-semibold mb-3 flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold">1</span>
+          Upload bảng giá Excel
+        </h2>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Chọn file Excel
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFile(event)" />
           </label>
-          <button class="btn primary" onclick="addProductManually()">+ Thêm Sản Phẩm</button>
+          <p class="text-sm text-slate-500">Hỗ trợ .xlsx / .xls / .csv</p>
         </div>
-      </div>
-    </div>
+        <div id="uploadStatus" class="mt-3 text-sm hidden"></div>
+      </section>
 
-    <div class="card">
-      <div class="toolbar no-print">
-        <input id="warehouseSearch" placeholder="🔍 Tìm theo Tên hoặc Mã SKU..." style="width: 300px" oninput="renderWarehouse()">
-        <select id="warehouseFilter" class="btn light" style="max-width: 200px; height: 39px;" onchange="renderWarehouse()">
-          <option value="">Tất cả danh mục</option>
-          <option value="Hàng thường">Hàng thường</option>
-          <option value="Hàng tết">Hàng tết</option>
-          <option value="Bánh mì">Bánh mì</option>
-        </select>
-        <button class="btn danger" onclick="resetWarehouse()" style="margin-left:auto">Làm sạch Data Kho</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Mã SKU</th>
-              <th>Tên Sản Phẩm</th>
-              <th class="right">QC/T</th>
-              <th class="right">Giá Gốc</th>
-              <th class="right" style="color:var(--purple)">Giá NET</th>
-              <th class="right" style="color:var(--primary)">Giá Bán Thùng</th>
-              <th class="right">Giá Lẻ</th>
-              <th class="right">Quy Đổi</th>
-              <th class="center">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody id="warehouseBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- TAB 3: LỊCH SỬ -->
-  <section id="history" class="tab-content">
-    <div class="card no-print">
-      <div class="toolbar" style="margin: 0; justify-content: space-between;">
-        <div style="display:flex; gap: 12px; align-items:center;">
-          <label style="margin:0">Tra cứu ngày:</label>
-          <input id="historyDate" type="date" style="width:auto" onchange="renderHistory()">
+      <!-- Product list -->
+      <section class="card p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="text-base font-semibold flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
+            Danh sách sản phẩm trong kho
+          </h2>
+          <input type="text" id="searchInput" placeholder="Tìm sản phẩm..." class="border border-slate-300 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand-500" oninput="renderProducts()" />
         </div>
-        <div style="display:flex; gap: 8px;">
-          <button class="btn primary" onclick="exportHistoryWord()">📝 Kết xuất Word</button>
-          <button class="btn success" onclick="exportHistoryExcel()">📗 Kết xuất Excel</button>
+        <div class="table-scroll border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-800 text-white text-left">
+              <tr>
+                <th class="px-3 py-3">STT</th>
+                <th class="px-3 py-3">Sản phẩm</th>
+                <th class="px-3 py-3 text-center">QC/T</th>
+                <th class="px-3 py-3 text-right">Giá lẻ NET</th>
+                <th class="px-3 py-3 text-right">Giá thùng NET</th>
+                <th class="px-3 py-3 text-right">Giá lẻ BÁN</th>
+                <th class="px-3 py-3 text-right">Giá thùng BÁN</th>
+                <th class="px-3 py-3 text-right">Chênh lẻ</th>
+                <th class="px-3 py-3 text-right">Chênh thùng</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody" class="divide-y divide-slate-100 bg-white">
+              <tr><td colspan="9" class="px-4 py-10 text-center text-slate-400">Chưa có dữ liệu. Hãy upload file Excel.</td></tr>
+            </tbody>
+          </table>
         </div>
-      </div>
+      </section>
     </div>
-    <div id="historyA4" class="history-a4"></div>
-  </section>
 
-  <!-- TAB 4: THỐNG KÊ -->
-  <section id="stats" class="tab-content">
-    <div class="card no-print">
-      <div class="toolbar" style="margin:0;">
-        <div style="display:flex; gap:16px; align-items:end; flex-wrap:wrap">
-          <div><label>Lọc Ngày</label><input id="statsDate" type="date" onchange="renderStats()"></div>
-          <div><label>Lọc Tháng</label><input id="statsMonth" type="month" onchange="renderStats()"></div>
-          <button class="btn light" onclick="clearStatFilter()" style="height:39px">Hủy lọc</button>
-          <button class="btn primary" onclick="exportStatsWord()" style="height:39px; margin-left:auto">📝 Báo cáo Word</button>
+    <!-- ==================== TAB LÊN ĐƠN ==================== -->
+    <div id="tabDon" class="hidden space-y-5 fade">
+
+      <!-- Form chọn sản phẩm -->
+      <section class="card p-6">
+        <h2 class="text-base font-semibold mb-5 flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">1</span>
+          Form lên đơn
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          <!-- Chọn sản phẩm -->
+          <div class="md:col-span-5">
+            <label class="block text-sm font-medium text-slate-600 mb-1.5">Sản phẩm</label>
+            <select id="selectProduct" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" onchange="onProductChange()">
+              <option value="">— Chọn sản phẩm —</option>
+            </select>
+          </div>
+
+          <!-- Đơn vị -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-600 mb-1.5">Đơn vị</label>
+            <div class="flex rounded-xl overflow-hidden border border-slate-300">
+              <button type="button" id="btnLe" onclick="setUnit('le')" class="flex-1 py-2.5 text-sm font-semibold bg-brand-600 text-white transition">Lẻ</button>
+              <button type="button" id="btnThung" onclick="setUnit('thung')" class="flex-1 py-2.5 text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 transition">Thùng</button>
+            </div>
+          </div>
+
+          <!-- Số lượng -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-600 mb-1.5">Số lượng</label>
+            <input type="number" id="inputQty" value="1" min="1" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500" oninput="updatePreview()" />
+          </div>
+
+          <!-- Nút thêm -->
+          <div class="md:col-span-3">
+            <button onclick="addToOrder()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Thêm vào đơn
+            </button>
+          </div>
         </div>
-      </div>
+
+        <!-- Preview giá -->
+        <div id="previewBox" class="mt-5 hidden bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p class="text-slate-500 text-xs mb-0.5">Giá NET / đơn vị</p>
+              <p id="previewNet" class="font-semibold text-slate-800">—</p>
+            </div>
+            <div>
+              <p class="text-slate-500 text-xs mb-0.5">Giá BÁN / đơn vị</p>
+              <p id="previewSell" class="font-semibold text-slate-800">—</p>
+            </div>
+            <div>
+              <p class="text-slate-500 text-xs mb-0.5">Chênh lệch / đơn vị</p>
+              <p id="previewDiff" class="font-semibold text-emerald-600">—</p>
+            </div>
+            <div>
+              <p class="text-slate-500 text-xs mb-0.5">Tổng chênh lệch (dự kiến)</p>
+              <p id="previewTotalDiff" class="font-bold text-emerald-700 text-base">—</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Đơn hàng -->
+      <section class="card p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="text-base font-semibold flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">2</span>
+            Đơn hàng hiện tại
+          </h2>
+          <div class="flex gap-2">
+            <button onclick="clearOrder()" class="text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-4 py-2 rounded-xl transition">Xóa đơn</button>
+            <button onclick="exportOrder()" class="text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl transition">Xuất Excel</button>
+          </div>
+        </div>
+
+        <div id="orderEmpty" class="text-center py-12 text-slate-400 border border-dashed border-slate-300 rounded-xl">
+          <p class="text-lg mb-1">Chưa có sản phẩm nào</p>
+          <p class="text-sm">Chọn sản phẩm ở form phía trên rồi bấm “Thêm vào đơn”</p>
+        </div>
+
+        <div id="orderContent" class="hidden">
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-700 text-white">
+                <tr>
+                  <th class="px-3 py-3 text-left">Sản phẩm</th>
+                  <th class="px-3 py-3 text-center">Đơn vị</th>
+                  <th class="px-3 py-3 text-center">SL</th>
+                  <th class="px-3 py-3 text-right">Giá NET</th>
+                  <th class="px-3 py-3 text-right">Giá BÁN</th>
+                  <th class="px-3 py-3 text-right">Thành tiền NET</th>
+                  <th class="px-3 py-3 text-right">Thành tiền BÁN</th>
+                  <th class="px-3 py-3 text-right">Chênh lệch</th>
+                  <th class="px-3 py-3 text-center">Xóa</th>
+                </tr>
+              </thead>
+              <tbody id="orderTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+            </table>
+          </div>
+
+          <!-- Tổng kết -->
+          <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <p class="text-xs text-slate-500 uppercase font-medium tracking-wide">Tổng giá NET</p>
+              <p id="totalNet" class="text-2xl font-bold text-slate-700 mt-1">0 ₫</p>
+            </div>
+            <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <p class="text-xs text-blue-600 uppercase font-medium tracking-wide">Tổng giá BÁN</p>
+              <p id="totalSell" class="text-2xl font-bold text-blue-700 mt-1">0 ₫</p>
+            </div>
+            <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+              <p class="text-xs text-emerald-600 uppercase font-medium tracking-wide">Tổng chênh lệch</p>
+              <p id="totalProfit" class="text-2xl font-bold text-emerald-700 mt-1">0 ₫</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-    
-    <div class="kpi">
-      <div class="box"><div class="box-title">Doanh số bán (Giá Bán)</div><div id="kpiRevenue" class="num">0 ₫</div></div>
-      <div class="box dms"><div class="box-title">Doanh số DMS (Giá NET)</div><div id="kpiDmsRevenue" class="num">0 ₫</div></div>
-      <div class="box diff"><div class="box-title">Chênh lệch (Kỳ chọn)</div><div id="kpiDifference" class="num">0 ₫</div></div>
-      <div class="box cum"><div class="box-title">Chênh lệch (Cộng dồn)</div><div id="kpiCumulative" class="num">0 ₫</div></div>
-      <div class="box"><div class="box-title">Số điểm bán (KH)</div><div id="kpiCustomers" class="num">0</div></div>
-      <div class="box"><div class="box-title">Tổng sản lượng bán</div><div id="kpiItems" class="num">0</div></div>
-    </div>
+  </main>
 
-    <div class="card" style="margin-top:24px">
-      <div class="section-title">Phân tích Bán hàng theo Sản phẩm (Sales & DMS Analytics)</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Sản Phẩm</th>
-              <th>Đơn Vị Phân Phối</th>
-              <th class="right">Sản Lượng</th>
-              <th class="right">Doanh Số Bán</th>
-              <th class="right" style="color:var(--purple)">Doanh Số DMS</th>
-              <th class="right" style="color:var(--success)">Chênh Lệch</th>
-            </tr>
-          </thead>
-          <tbody id="statsBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+  <script>
+    // ========== STATE ==========
+    let products = [];
+    let order = [];
+    let currentUnit = 'le'; // 'le' | 'thung'
 
-</div>
+    // ========== INIT ==========
+    loadFromStorage();
+    fillProductSelect();
+    renderProducts();
+    renderOrder();
+    updateBadge();
 
-<!-- EDIT PRODUCT MODAL -->
-<div id="editModal" class="modal">
-  <div class="modal-box">
-    <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:12px;">Cập nhật Thông tin Sản phẩm</h3>
-    <div class="grid">
-      <div class="col-6"><label>Tên sản phẩm</label><input id="eName"></div>
-      <div class="col-3"><label>Mã / SKU</label><input id="eCode"></div>
-      <div class="col-3"><label>Nhóm Danh mục</label>
-        <select id="eCategory">
-          <option value="Hàng thường">Hàng thường</option>
-          <option value="Hàng tết">Hàng tết</option>
-          <option value="Bánh mì">Bánh mì</option>
-        </select>
-      </div>
-      <div class="col-4"><label>QC/T</label><input id="eQct" type="number" step="0.01"></div>
-      <div class="col-4"><label>Đơn giá gốc</label><input id="eBase" type="number" step="0.01"></div>
-      <div class="col-4"><label>Giá NET</label><input id="eNet" type="number" step="0.01"></div>
-      <div class="col-4"><label>Giá Bán Thùng</label><input id="eCarton" type="number" step="0.01"></div>
-      <div class="col-4"><label>Giá Lẻ</label><input id="ePack" type="number" step="0.01"></div>
-      <div class="col-4"><label>Giá Quy đổi</label><input id="eCartonPack" type="number" step="0.01"></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px">
-      <button class="btn light" onclick="closeModal()">Đóng</button>
-      <button class="btn primary" onclick="saveEdit()">Lưu Hệ Thống</button>
-    </div>
-  </div>
-</div>
+    // ========== TAB ==========
+    function switchTab(tab) {
+      document.getElementById('tabKho').classList.toggle('hidden', tab !== 'kho');
+      document.getElementById('tabDon').classList.toggle('hidden', tab !== 'don');
+      document.getElementById('tabKhoBtn').classList.toggle('active', tab === 'kho');
+      document.getElementById('tabDonBtn').classList.toggle('active', tab === 'don');
+      if (tab === 'don') fillProductSelect();
+    }
 
-<!-- EDIT HISTORY MODAL -->
-<div id="historyEditModal" class="modal">
-  <div class="modal-box" style="width: min(900px, 100%);">
-    <h3 style="margin-top:0; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:12px;">Sửa Chứng Từ / Đơn Hàng Lịch Sử</h3>
-    <div id="historyEditFormContent"></div>
-    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px">
-      <button class="btn light" onclick="closeHistoryEditModal()">Đóng</button>
-      <button class="btn primary" onclick="saveHistoryEdit()">Lưu Thay Đổi</button>
-    </div>
-  </div>
-</div>
+    // ========== STORAGE ==========
+    function loadFromStorage() {
+      try {
+        const saved = localStorage.getItem('kho_products_v2');
+        if (saved) products = JSON.parse(saved);
+      } catch (e) {}
+    }
+    function saveToStorage() {
+      localStorage.setItem('kho_products_v2', JSON.stringify(products));
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
-// UTILITIES & STATE
-const KEY_PRODUCTS = 'order_app_products_v1';
-const KEY_HISTORY  = 'order_app_history_v1';
+    // ========== UTILS ==========
+    function formatMoney(n) {
+      if (n === null || n === undefined || isNaN(n)) return '—';
+      return Math.round(n).toLocaleString('vi-VN') + ' ₫';
+    }
+    function parseNumber(val) {
+      if (val === null || val === undefined || val === '') return 0;
+      if (typeof val === 'number') return val;
+      let s = String(val).replace(/\./g, '').replace(/,/g, '.').replace(/[^\d.-]/g, '');
+      const num = parseFloat(s);
+      return isNaN(num) ? 0 : num;
+    }
+    function normalizeHeader(h) {
+      return String(h || '').toUpperCase().trim()
+        .replace(/\s+/g, ' ')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+    function escapeHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-let products = load(KEY_PRODUCTS, []);
-let history  = load(KEY_HISTORY, []);
-let draft    = [];
-let editIndex = -1;
+    // ========== UPLOAD ==========
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const status = document.getElementById('uploadStatus');
+      status.classList.remove('hidden');
+      status.innerHTML = '<span class="text-brand-600">Đang đọc file...</span>';
 
-let editingBatchId = null;
-let editingCustomerIndex = null;
-let currentEditCustomerData = null;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
 
-const $ = id => document.getElementById(id);
-const money = n => Number(n||0).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
-const today = () => new Date().toISOString().slice(0,10);
+          if (!json.length) {
+            status.innerHTML = '<span class="text-red-600">File trống hoặc không đọc được.</span>';
+            return;
+          }
 
-function load(k, f) { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch(e) { return f; } }
-function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e) { console.error(e); alert('Lỗi lưu dữ liệu!'); return false; } }
-function esc(s) { return String(s ?? '').replace(/&/
+          const rows = json.map((row, idx) => {
+            const keys = Object.keys(row);
+            const get = (...candidates) => {
+              for (const c of candidates) {
+                const found = keys.find(k => normalizeHeader(k).includes(normalizeHeader(c)));
+                if (found !== undefined) return row[found];
+              }
+              return '';
+            };
+            const name = get('SẢN PHẨM', 'SAN PHAM', 'TÊN', 'TEN', 'PRODUCT');
+            return {
+              id: Date.now() + idx,
+              stt: idx + 1,
+              name: String(name || '').trim() || 'Không tên',
+              qc: parseNumber(get('QC/T', 'QC', 'QUY CÁCH', 'QUY CACH')) || 1,
+              giaLeNet: parseNumber(get('GIÁ LẺ NET', 'GIA LE NET', 'GIÁ NET LẺ')),
+              giaThungNet: parseNumber(get('GIÁ THÙNG NET', 'GIA THUNG NET', 'GIÁ NET THÙNG')),
+              giaLeBan: parseNumber(get('GIÁ LẺ BÁN', 'GIA LE BAN', 'GIÁ BÁN LẺ')),
+              giaThungBan: parseNumber(get('GIÁ THÙNG BÁN', 'GIA THUNG BAN', 'GIÁ BÁN THÙNG'))
+            };
+          }).filter(p => p.name && p.name !== 'Không tên');
+
+          products = rows;
+          saveToStorage();
+          renderProducts();
+          fillProductSelect();
+          updateBadge();
+
+          status.innerHTML = `<span class="text-emerald-600 font-medium">✓ Đã load ${products.length} sản phẩm thành công!</span>`;
+          setTimeout(() => status.classList.add('hidden'), 4000);
+        } catch (err) {
+          console.error(err);
+          status.innerHTML = '<span class="text-red-600">Lỗi đọc file. Kiểm tra lại định dạng.</span>';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      e.target.value = '';
+    }
+
+    // ========== RENDER KHO ==========
+    function renderProducts() {
+      const tbody = document.getElementById('productTableBody');
+      const keyword = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+      let list = products;
+      if (keyword) list = products.filter(p => p.name.toLowerCase().includes(keyword));
+
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-10 text-center text-slate-400">${products.length ? 'Không tìm thấy sản phẩm.' : 'Chưa có dữ liệu. Hãy upload file Excel.'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => {
+        const chenhLe = p.giaLeBan - p.giaLeNet;
+        const chenhThung = p.giaThungBan - p.giaThungNet;
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="px-3 py-2.5 text-slate-500">${p.stt}</td>
+            <td class="px-3 py-2.5 font-medium">${escapeHtml(p.name)}</td>
+            <td class="px-3 py-2.5 text-center">${p.qc}</td>
+            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaLeNet)}</td>
+            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaThungNet)}</td>
+            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaLeBan)}</td>
+            <td class="px-3 py-2.5 text-right">${formatMoney(p.giaThungBan)}</td>
+            <td class="px-3 py-2.5 text-right font-medium ${chenhLe >= 0 ? 'text-emerald-600' : 'text-red-600'}">${formatMoney(chenhLe)}</td>
+            <td class="px-3 py-2.5 text-right font-medium ${chenhThung >= 0 ? 'text-emerald-600' : 'text-red-600'}">${formatMoney(chenhThung)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function updateBadge() {
+      document.getElementById('badgeCount').textContent = products.length + ' SP';
+    }
+
+    // ========== FORM LÊN ĐƠN ==========
+    function fillProductSelect() {
+      const sel = document.getElementById('selectProduct');
+      const current = sel.value;
+      sel.innerHTML = '<option value="">— Chọn sản phẩm —</option>' +
+        products.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+      if (current) sel.value = current;
+      updatePreview();
+    }
+
+    function setUnit(unit) {
+      currentUnit = unit;
+      const btnLe = document.getElementById('btnLe');
+      const btnThung = document.getElementById('btnThung');
+      if (unit === 'le') {
+        btnLe.className = 'flex-1 py-2.5 text-sm font-semibold bg-brand-600 text-white transition';
+        btnThung.className = 'flex-1 py-2.5 text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 transition';
+      } else {
+        btnThung.className = 'flex-1 py-2.5 

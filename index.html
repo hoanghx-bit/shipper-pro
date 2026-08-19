@@ -2,301 +2,321 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lên Đơn & Tính Chênh Lệch</title>
-    <!-- Bootstrap CSS cho giao diện mobile -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Alpine.js để xử lý logic -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-    <!-- SheetJS để đọc file Excel trực tiếp trên trình duyệt -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quản Lý Đơn Hàng</title>
     <style>
-        body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        .card { border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
-        .summary-box { background: #e9ecef; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1em; }
-        .text-profit { color: #198754; font-weight: bold; font-size: 1.2em; }
-        .table-responsive { border-radius: 10px; overflow: hidden; }
-        /* Tối ưu hiển thị cho mobile */
-        @media (max-width: 576px) {
-            .card-body { padding: 15px; }
-            h2 { font-size: 1.5rem; }
-        }
+        /* Giao diện tối ưu cho điện thoại */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #f4f6f9; color: #333; }
+        .header { background: #007bff; color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; }
+        
+        /* Cấu trúc Tab dạng thẻ nằm ở trang chủ */
+        .tab-container { display: flex; background: #fff; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 10; }
+        .tab-btn { flex: 1; padding: 15px 5px; text-align: center; background: none; border: none; font-size: 15px; font-weight: bold; color: #6c757d; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .tab-btn.active { color: #007bff; border-bottom: 3px solid #007bff; }
+        
+        /* Nội dung Tab - Chỉ hiển thị tab được chọn */
+        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Form & Thẻ Card */
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        h3 { margin-top: 0; font-size: 18px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .form-control:focus { outline: none; border-color: #007bff; }
+        
+        /* Nút bấm */
+        .btn { padding: 12px 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        .btn-primary { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; width: auto; padding: 8px 12px; font-size: 14px; }
+
+        /* Bảng hiển thị */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 300px; }
+        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: left; vertical-align: middle; }
+        th { background-color: #f8f9fa; white-space: nowrap; }
+        
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
+        .badge-thuong { background: #17a2b8; }
+        .badge-tet { background: #e83e8c; }
+        .badge-banhmi { background: #fd7e14; }
+        
+        .history-date { background: #e9ecef; padding: 8px; font-weight: bold; margin-top: 15px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container my-3 my-md-5" x-data="orderApp()">
-    <h2 class="text-center text-primary mb-4 fw-bold">APP LÊN ĐƠN HÀNG</h2>
+    <div class="header">Hệ Thống Lên Đơn DMS</div>
 
-    <!-- Upload File Section -->
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title text-secondary mb-3">1. Tải lên Bảng Giá (Excel)</h5>
-            <input type="file" class="form-control" accept=".xlsx, .xls" @change="handleFileUpload($event)">
-            <small class="text-muted mt-2 d-block" x-show="!fileLoaded">Vui lòng tải lên file "bảng giá.xlsx" để bắt đầu.</small>
-            <div class="alert alert-success mt-2 mb-0 py-2" x-show="fileLoaded" style="display: none;">
-                Đã tải thành công <strong x-text="products.length"></strong> sản phẩm!
+    <!-- Thanh Điều Hướng Tab -->
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="openTab('tab-order')">Lên Đơn</button>
+        <button class="tab-btn" onclick="openTab('tab-inventory')">Kho Hàng</button>
+        <button class="tab-btn" onclick="openTab('tab-history')">Lịch Sử</button>
+    </div>
+
+    <!-- TAB 1: LÊN ĐƠN HÀNG -->
+    <div id="tab-order" class="tab-content active">
+        <div class="card">
+            <h3>Tạo Đơn Mới</h3>
+            <div class="form-group">
+                <label>Khách Hàng</label>
+                <input type="text" id="order-customer" class="form-control" placeholder="Tên hoặc địa chỉ (VD: Chợ Cam Lộ...)" list="customer-list">
+                <datalist id="customer-list">
+                    <option value="Chị Nậm">
+                </datalist>
             </div>
+            <div class="form-group">
+                <label>Sản Phẩm</label>
+                <select id="order-product" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label>Số Lượng (Thùng/Hộp)</label>
+                <input type="number" id="order-qty" class="form-control" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Ghi Chú / Khuyến Mãi</label>
+                <input type="text" id="order-promo" class="form-control" placeholder="VD: Tặng 4 gói, chiết khấu...">
+            </div>
+            <button class="btn btn-primary" onclick="saveOrder()">Lưu Đơn Hàng</button>
         </div>
     </div>
 
-    <!-- Form Section -->
-    <div class="card" x-show="fileLoaded" style="display: none;">
-        <div class="card-body">
-            <h5 class="card-title text-secondary mb-3">2. Thêm Sản Phẩm Vào Đơn</h5>
-            <div class="row g-2">
-                <div class="col-12">
-                    <label class="form-label small mb-1">Chọn sản phẩm</label>
-                    <select class="form-select" x-model="selectedProductId" @change="updatePreview()">
-                        <option value="">-- Tìm / Chọn sản phẩm --</option>
-                        <template x-for="p in products" :key="p.id">
-                            <option :value="p.id" x-text="p.name + ' (QC: ' + p.qc + ')'"></option>
-                        </template>
-                    </select>
-                </div>
-                <div class="col-6">
-                    <label class="form-label small mb-1">Đơn vị</label>
-                    <select class="form-select" x-model="unit" @change="updatePreview()">
-                        <option value="thùng">Thùng</option>
-                        <option value="lẻ">Lẻ</option>
-                    </select>
-                </div>
-                <div class="col-6">
-                    <label class="form-label small mb-1">Số lượng</label>
-                    <input type="number" class="form-control" x-model="quantity" min="1" @input="updatePreview()">
-                </div>
-                <div class="col-12 mt-3">
-                    <button class="btn btn-primary w-100 py-2 fw-bold" @click="addToOrder()" :disabled="!selectedProductId || quantity < 1">THÊM VÀO ĐƠN</button>
-                </div>
+    <!-- TAB 2: QUẢN LÝ KHO HÀNG (Phân loại nằm tại đây) -->
+    <div id="tab-inventory" class="tab-content">
+        <div class="card">
+            <h3>Thêm Sản Phẩm Mới</h3>
+            <div class="form-group">
+                <label>Tên SP (Mã vạch nếu có)</label>
+                <input type="text" id="inv-name" class="form-control" placeholder="Nhập tên sản phẩm...">
             </div>
-
-            <!-- Preview Price -->
-            <div class="mt-3 p-2 bg-light rounded" x-show="selectedProductId">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small">Giá Net tạm tính:</span>
-                    <strong x-text="formatCurrency(previewNet)"></strong>
-                </div>
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small">Giá Bán tạm tính:</span>
-                    <strong class="text-primary" x-text="formatCurrency(previewBan)"></strong>
-                </div>
+            <div class="form-group">
+                <label>Phân Loại Hàng Hóa</label>
+                <select id="inv-category" class="form-control">
+                    <option value="Hàng thường">Hàng thường</option>
+                    <option value="Hàng tết">Hàng tết</option>
+                    <option value="Bánh mì">Bánh mì</option>
+                </select>
             </div>
+            <div class="form-group">
+                <label>Đơn Giá (VNĐ)</label>
+                <input type="number" id="inv-price" class="form-control" placeholder="Nhập giá bán...">
+            </div>
+            <button class="btn btn-primary" onclick="addProduct()">Cập Nhật Kho</button>
         </div>
-    </div>
 
-    <!-- Table Section -->
-    <div class="card" x-show="orderItems.length > 0" style="display: none;">
-        <div class="card-body p-0 p-md-3">
-            <h5 class="card-title text-secondary m-3 m-md-0 mb-md-3">3. Danh Sách Đơn Hàng</h5>
-            
+        <div class="card">
+            <h3>Danh Sách Kho</h3>
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle mb-0 text-nowrap">
-                    <thead class="table-light">
+                <table>
+                    <thead>
                         <tr>
-                            <th class="text-center">Tên Hàng</th>
-                            <th class="text-center">ĐVT</th>
-                            <th class="text-center">SL</th>
-                            <th class="text-end">Tiền Net</th>
-                            <th class="text-end">Tiền Bán</th>
-                            <th class="text-end">Lãi</th>
-                            <th class="text-center">Xoá</th>
+                            <th>Sản Phẩm</th>
+                            <th>Giá (đ)</th>
+                            <th>Xóa</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <template x-for="(item, index) in orderItems" :key="index">
-                            <tr>
-                                <td class="fw-bold" x-text="item.name"></td>
-                                <td class="text-center" x-text="item.unit === 'thùng' ? 'Thùng' : 'Lẻ'"></td>
-                                <td class="text-center">
-                                    <input type="number" class="form-control form-control-sm text-center mx-auto" style="width: 60px" x-model.number="item.quantity" min="1" @change="recalculateItem(item)">
-                                </td>
-                                <td class="text-end text-muted" x-text="formatCurrency(item.total_net)"></td>
-                                <td class="text-end fw-bold" x-text="formatCurrency(item.total_ban)"></td>
-                                <td class="text-end text-success fw-bold" x-text="formatCurrency(item.profit)"></td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-danger" @click="removeItem(index)">X</button>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
+                    <tbody id="inventory-list"></tbody>
                 </table>
-            </div>
-
-            <!-- Summary -->
-            <div class="p-3">
-                <div class="summary-box d-flex flex-column gap-2 mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Tổng Tiền Net:</span>
-                        <span x-text="formatCurrency(totalNet)"></span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Tổng Tiền Bán:</span>
-                        <strong class="text-primary" style="font-size: 1.1em" x-text="formatCurrency(totalBan)"></strong>
-                    </div>
-                    <hr class="my-1 border-secondary">
-                    <div class="d-flex justify-content-between text-profit">
-                        <span>TỔNG CHÊNH LỆCH:</span>
-                        <span x-text="formatCurrency(totalProfit)"></span>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                     <button class="btn btn-light w-50" @click="clearOrder()">Làm Mới</button>
-                     <button class="btn btn-success w-50" @click="window.print()">In Đơn</button>
-                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    function orderApp() {
-        return {
-            products: [],
-            fileLoaded: false,
-            selectedProductId: "",
-            currentProduct: null,
-            unit: "thùng",
-            quantity: 1,
-            previewNet: 0,
-            previewBan: 0,
-            orderItems: [],
+    <!-- TAB 3: LỊCH SỬ ĐƠN HÀNG -->
+    <div id="tab-history" class="tab-content">
+        <div class="card">
+            <h3>Tổng Hợp Doanh Số</h3>
+            <button class="btn btn-secondary" onclick="exportData()">Xuất Báo Cáo (CSV)</button>
+            <div id="history-container"></div>
+        </div>
+    </div>
 
-            // Hàm xử lý file Excel
-            handleFileUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+    <script>
+        // --- 1. LƯU TRỮ DỮ LIỆU (LOCAL STORAGE) ---
+        let inventory = JSON.parse(localStorage.getItem('dms_khohang')) || [
+            { id: 1, name: 'Bánh Tipo 115g', category: 'Hàng thường', price: 25000 }
+        ];
+        let orders = JSON.parse(localStorage.getItem('dms_donhang')) || [];
 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    
-                    // Lấy sheet đầu tiên hoặc sheet tên 'DATA'
-                    const sheetName = workbook.SheetNames.includes('DATA') ? 'DATA' : workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const json_data = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        // --- 2. LOGIC ĐIỀU HƯỚNG TAB ---
+        function openTab(tabId) {
+            // Ẩn tất cả tab
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // Hiển thị tab được chọn
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
 
-                    let parsedProducts = [];
-                    json_data.forEach((row, index) => {
-                        let name = row['SẢN PHẨM'] ? String(row['SẢN PHẨM']).trim() : "";
-                        if (!name || name === "nan") return;
+        // --- 3. LOGIC KHO HÀNG ---
+        function getBadgeClass(category) {
+            if(category === 'Hàng tết') return 'badge-tet';
+            if(category === 'Bánh mì') return 'badge-banhmi';
+            return 'badge-thuong';
+        }
 
-                        let qc = parseInt(row['QC/T']) || 1;
-                        let gia_thung_net = parseFloat(row['GIÁ THÙNG NET']) || 0;
-                        let gia_le_net = (qc > 0 && gia_thung_net > 0) ? Math.round(gia_thung_net / qc) : 0;
-                        
-                        let gia_le_ban = parseFloat(row['GIÁ LẺ BÁN']) || 0;
-                        let gia_thung_ban = parseFloat(row['GIÁ THÙNG BÁN']) || 0;
-
-                        parsedProducts.push({
-                            id: index + 1,
-                            name: name,
-                            qc: qc,
-                            gia_le_net: gia_le_net,
-                            gia_thung_net: gia_thung_net,
-                            gia_le_ban: gia_le_ban,
-                            gia_thung_ban: gia_thung_ban
-                        });
-                    });
-
-                    this.products = parsedProducts;
-                    this.fileLoaded = true;
-                    // Reset đơn hàng cũ khi tải file mới
-                    this.orderItems = [];
-                    this.selectedProductId = "";
-                    this.updatePreview();
-                };
-                reader.readAsArrayBuffer(file);
-            },
-
-            updatePreview() {
-                if (!this.selectedProductId) {
-                    this.currentProduct = null;
-                    this.previewNet = 0;
-                    this.previewBan = 0;
-                    return;
-                }
-                this.currentProduct = this.products.find(p => p.id == this.selectedProductId);
-                if (this.currentProduct) {
-                    let qty = parseInt(this.quantity) || 0;
-                    if (this.unit === 'thùng') {
-                        this.previewNet = this.currentProduct.gia_thung_net * qty;
-                        this.previewBan = this.currentProduct.gia_thung_ban * qty;
-                    } else {
-                        this.previewNet = this.currentProduct.gia_le_net * qty;
-                        this.previewBan = this.currentProduct.gia_le_ban * qty;
-                    }
-                }
-            },
-
-            addToOrder() {
-                if (!this.currentProduct || this.quantity < 1) return;
-
-                let p_net = this.unit === 'thùng' ? this.currentProduct.gia_thung_net : this.currentProduct.gia_le_net;
-                let p_ban = this.unit === 'thùng' ? this.currentProduct.gia_thung_ban : this.currentProduct.gia_le_ban;
-                
-                let qty = parseInt(this.quantity);
-                let t_net = p_net * qty;
-                let t_ban = p_ban * qty;
-
-                let existing = this.orderItems.find(i => i.id === this.currentProduct.id && i.unit === this.unit);
-                if (existing) {
-                    existing.quantity += qty;
-                    this.recalculateItem(existing);
-                } else {
-                    this.orderItems.push({
-                        id: this.currentProduct.id,
-                        name: this.currentProduct.name,
-                        unit: this.unit,
-                        quantity: qty,
-                        price_net: p_net,
-                        price_ban: p_ban,
-                        total_net: t_net,
-                        total_ban: t_ban,
-                        profit: t_ban - t_net
-                    });
-                }
-                
-                this.quantity = 1;
-                this.updatePreview();
-            },
-
-            recalculateItem(item) {
-                let qty = parseInt(item.quantity) || 0;
-                item.total_net = item.price_net * qty;
-                item.total_ban = item.price_ban * qty;
-                item.profit = item.total_ban - item.total_net;
-            },
-
-            removeItem(index) {
-                this.orderItems.splice(index, 1);
-            },
+        function renderInventory() {
+            const list = document.getElementById('inventory-list');
+            const select = document.getElementById('order-product');
+            list.innerHTML = '';
+            select.innerHTML = '';
             
-            clearOrder() {
-                if (confirm("Bạn có chắc chắn muốn xoá toàn bộ đơn?")) {
-                    this.orderItems = [];
-                }
-            },
+            inventory.forEach((item, index) => {
+                // Đổ dữ liệu vào bảng Kho
+                list.innerHTML += `
+                    <tr>
+                        <td>
+                            <strong>${item.name}</strong><br>
+                            <span class="badge ${getBadgeClass(item.category)}">${item.category}</span>
+                        </td>
+                        <td>${item.price.toLocaleString('vi-VN')}</td>
+                        <td style="text-align:center;">
+                            <button class="btn btn-danger" onclick="deleteProduct(${index})">X</button>
+                        </td>
+                    </tr>
+                `;
+                // Đổ dữ liệu vào dropdown Lên đơn
+                select.innerHTML += `<option value="${index}">${item.name} - ${item.price.toLocaleString('vi-VN')}đ</option>`;
+            });
+        }
 
-            get totalNet() { return this.orderItems.reduce((sum, item) => sum + item.total_net, 0); },
-            get totalBan() { return this.orderItems.reduce((sum, item) => sum + item.total_ban, 0); },
-            get totalProfit() { return this.orderItems.reduce((sum, item) => sum + item.profit, 0); },
+        function addProduct() {
+            const name = document.getElementById('inv-name').value.trim();
+            const category = document.getElementById('inv-category').value;
+            const price = Number(document.getElementById('inv-price').value);
 
-            formatCurrency(value) {
-                if (value === 0 || !value) return "0 ₫";
-                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+            if (!name || !price) {
+                alert("Vui lòng nhập đầy đủ tên và giá sản phẩm!");
+                return;
+            }
+            
+            inventory.push({ id: Date.now(), name, category, price });
+            localStorage.setItem('dms_khohang', JSON.stringify(inventory));
+            
+            document.getElementById('inv-name').value = '';
+            document.getElementById('inv-price').value = '';
+            renderInventory();
+            alert("Đã cập nhật sản phẩm vào kho!");
+        }
+
+        function deleteProduct(index) {
+            if(confirm("Bạn có chắc muốn xóa sản phẩm này khỏi kho?")) {
+                inventory.splice(index, 1);
+                localStorage.setItem('dms_khohang', JSON.stringify(inventory));
+                renderInventory();
             }
         }
-    }
-</script>
 
-<style>
-    @media print {
-        .card, button, input[type="file"], td:last-child, th:last-child { display: none !important; }
-        .card:last-child { display: block !important; box-shadow: none; border: none; }
-        body { background: white; }
-    }
-</style>
+        // --- 4. LOGIC LÊN ĐƠN HÀNG ---
+        function saveOrder() {
+            const customer = document.getElementById('order-customer').value.trim();
+            const productIndex = document.getElementById('order-product').value;
+            const qty = Number(document.getElementById('order-qty').value);
+            const promo = document.getElementById('order-promo').value.trim();
+            
+            if (!customer || !inventory[productIndex] || qty < 1) {
+                alert("Vui lòng nhập tên khách hàng và số lượng hợp lệ!");
+                return;
+            }
 
+            const product = inventory[productIndex];
+            const totalAmount = product.price * qty;
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('vi-VN');
+
+            const newOrder = {
+                id: Date.now(),
+                date: dateStr,
+                time: today.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
+                customer: customer,
+                productName: product.name,
+                category: product.category,
+                qty: qty,
+                total: totalAmount,
+                promo: promo || 'Không có'
+            };
+
+            orders.push(newOrder);
+            localStorage.setItem('dms_donhang', JSON.stringify(orders));
+            
+            // Reset form
+            document.getElementById('order-customer').value = '';
+            document.getElementById('order-qty').value = '1';
+            document.getElementById('order-promo').value = '';
+            
+            renderHistory();
+            alert("Lưu đơn hàng thành công!");
+        }
+
+        // --- 5. LOGIC LỊCH SỬ & NHÓM ĐƠN ---
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = '';
+            
+            // Nhóm đơn hàng theo ngày
+            const groupedOrders = {};
+            orders.forEach(order => {
+                if (!groupedOrders[order.date]) groupedOrders[order.date] = [];
+                groupedOrders[order.date].push(order);
+            });
+
+            // Hiển thị từ ngày mới nhất tới cũ nhất
+            for (const [date, orderList] of Object.entries(groupedOrders).reverse()) {
+                let html = `<div class="history-date">📅 Ngày: ${date}</div>
+                            <div class="table-responsive"><table>
+                            <thead><tr><th>Khách</th><th>SP / SL</th><th>Tổng Tiền</th><th>KM</th></tr></thead><tbody>`;
+                
+                let dayTotal = 0;
+                orderList.forEach(o => {
+                    dayTotal += o.total;
+                    html += `<tr>
+                        <td><strong>${o.customer}</strong><br><small>${o.time}</small></td>
+                        <td>${o.productName}<br><em>x${o.qty}</em></td>
+                        <td style="color:#28a745; font-weight:bold;">${o.total.toLocaleString('vi-VN')}đ</td>
+                        <td>${o.promo}</td>
+                    </tr>`;
+                });
+                
+                html += `</tbody></table></div>
+                         <div style="text-align:right; font-weight:bold; margin-top:5px; color:#dc3545;">
+                            Tổng doanh thu ngày: ${dayTotal.toLocaleString('vi-VN')}đ
+                         </div>`;
+                container.innerHTML += html;
+            }
+        }
+
+        // --- 6. XUẤT DỮ LIỆU ---
+        function exportData() {
+            if(orders.length === 0) return alert("Chưa có dữ liệu để xuất!");
+            
+            let csv = "Ngay,Gio,Khach Hang,San Pham,Phan Loai,So Luong,Tong Tien,Khuyen Mai\n";
+            orders.forEach(o => {
+                // Xử lý chuỗi để tránh lỗi CSV nếu có dấu phẩy
+                const safeCustomer = `"${o.customer.replace(/"/g, '""')}"`;
+                const safeProduct = `"${o.productName.replace(/"/g, '""')}"`;
+                const safePromo = `"${o.promo.replace(/"/g, '""')}"`;
+                csv += `${o.date},${o.time},${safeCustomer},${safeProduct},${o.category},${o.qty},${o.total},${safePromo}\n`;
+            });
+            
+            // Hỗ trợ tiếng Việt UTF-8 cho Excel
+            const bom = "\uFEFF"; 
+            const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "lich_su_dms.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- KHỞI TẠO ỨNG DỤNG ---
+        renderInventory();
+        renderHistory();
+    </script>
 </body>
 </html>

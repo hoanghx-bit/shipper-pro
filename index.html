@@ -575,11 +575,13 @@ function renderDraft() {
       <div class="discount-box">
         <div style="flex: 1; min-width: 200px;">
           <label style="font-size: 11px; margin-bottom: 2px;">Chiết khấu (Trừ tiền ₫)</label>
-          <input type="number" min="0" step="5" value="${c.discount || 0}" oninput="changeDraftMeta(${ci}, 'discount', this.value)" placeholder="Nhập số tiền chiết khấu...">
+          <!-- Đã chuyển oninput thành onchange tại đây để không mất trỏ chuột khi nhập -->
+          <input type="number" min="0" step="1000" value="${c.discount || 0}" onchange="changeDraftMeta(${ci}, 'discount', this.value)" placeholder="Nhập số tiền chiết khấu...">
         </div>
         <div style="flex: 2; min-width: 250px;">
           <label style="font-size: 11px; margin-bottom: 2px;">Lý do chiết khấu</label>
-          <input type="text" value="${esc(c.discountReason || '')}" oninput="changeDraftMeta(${ci}, 'discountReason', this.value)" placeholder="Vd: Trừ 1 hộp tảo biển hết date...">
+          <!-- Đã chuyển oninput thành onchange tại đây để không mất trỏ chuột khi nhập -->
+          <input type="text" value="${esc(c.discountReason || '')}" onchange="changeDraftMeta(${ci}, 'discountReason', this.value)" placeholder="Vd: Trừ 1 hộp tảo biển hết date...">
         </div>
       </div>
 
@@ -872,7 +874,7 @@ $('excelFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 
-// TAB 3: LỊCH SỬ LOGIC (DẠNG VĂN BẢN THUẦN TÚY, CĂN CHỈNH THẲNG HÀNG, KHÔNG TRÀN DÒNG, SỐ ĐẦY ĐỦ KHÔNG DÙNG DẤU PHẨY, CÓ NÚT SỬA/XÓA)
+// TAB 3: LỊCH SỬ LOGIC
 function renderHistory() {
   const dateStr = $('historyDate').value || today();
   const batches = history.filter(b => b.date === dateStr);
@@ -920,7 +922,7 @@ function renderHistory() {
     return unit.charAt(0).toUpperCase();
   };
 
-  // 1. TẠO GIAO DIỆN PHẦN ĐƠN HÀNG DẠNG VĂN BẢN (HÀNG NGANG, KHÔNG TRÀN DÒNG, KHÔNG DẤU PHẨY SỐ TIỀN, CÓ NÚT SỬA/XÓA)
+  // Đã căn chỉnh lại layout: word-break cho phép tên dài xuống dòng tự nhiên, trong khi cột giá tiền cố định.
   let ordersHtml = allCustomers.map((c, idx) => {
     let totalAmount = 0;
     let itemLines = (c.items || []).map(it => {
@@ -934,11 +936,13 @@ function renderHistory() {
       const unitStr = getShortUnit(it.unit);
       let qtyStr = fmtQtyShort(it.qty) + (unitStr === 'T' || unitStr === 'H' ? unitStr : ' ' + unitStr);
 
-      return `<div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 4px 0 4px 20px;">
-        <span style="flex: 1; padding-right: 15px; overflow: hidden; text-overflow: ellipsis;">${esc(pName)}${it.color ? ' ('+esc(it.color)+')' : ''}</span>
-        <span style="width: 100px; text-align: left; white-space: nowrap;">${esc(qtyStr)}</span>
-        <span style="width: 30px; text-align: center;">=</span>
-        <span style="width: 110px; text-align: right; white-space: nowrap;">${fullAmountStr}</span>
+      return `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 4px 0 4px 20px;">
+        <span style="flex: 1; padding-right: 15px; word-break: break-word;">${esc(pName)}${it.color ? ' ('+esc(it.color)+')' : ''}</span>
+        <div style="display: flex; min-width: 240px; justify-content: flex-end;">
+          <span style="width: 100px; text-align: left; white-space: nowrap;">${esc(qtyStr)}</span>
+          <span style="width: 30px; text-align: center;">=</span>
+          <span style="width: 110px; text-align: right; white-space: nowrap;">${fullAmountStr}</span>
+        </div>
       </div>`;
     }).join('');
 
@@ -960,33 +964,39 @@ function renderHistory() {
       </div>
       ${itemLines}
       ${showTotalRow ? `
-      <div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 6px 0 4px 20px; font-weight: bold;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 6px 0 4px 20px; font-weight: bold;">
         <span style="flex: 1;">Tổng</span>
-        <span style="width: 100px;"></span>
-        <span style="width: 30px;"></span>
-        <span style="width: 110px; text-align: right;">${totalStr}</span>
+        <div style="display: flex; min-width: 240px; justify-content: flex-end;">
+          <span style="width: 100px;"></span>
+          <span style="width: 30px;"></span>
+          <span style="width: 110px; text-align: right;">${totalStr}</span>
+        </div>
       </div>` : ''}
       ${discount > 0 ? `
-      <div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 4px 0 4px 20px; color: #b91c1c; font-style: italic;">
-        <span style="flex: 1;">Trừ ${c.discountReason ? esc(c.discountReason) : 'chiết khấu'}</span>
-        <span style="width: 100px;"></span>
-        <span style="width: 30px;"></span>
-        <span style="width: 110px; text-align: right;">-${discountStr}</span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 4px 0 4px 20px; color: #b91c1c; font-style: italic;">
+        <span style="flex: 1; word-break: break-word;">Trừ ${c.discountReason ? esc(c.discountReason) : 'chiết khấu'}</span>
+        <div style="display: flex; min-width: 240px; justify-content: flex-end;">
+          <span style="width: 100px;"></span>
+          <span style="width: 30px;"></span>
+          <span style="width: 110px; text-align: right;">-${discountStr}</span>
+        </div>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 4px 0 4px 20px; font-weight: bold; color: #0f4c81;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 4px 0 4px 20px; font-weight: bold; color: #0f4c81;">
         <span style="flex: 1;">Tiền phải thu</span>
-        <span style="width: 100px;"></span>
-        <span style="width: 30px;"></span>
-        <span style="width: 110px; text-align: right;">${finalStr}</span>
+        <div style="display: flex; min-width: 240px; justify-content: flex-end;">
+          <span style="width: 100px;"></span>
+          <span style="width: 30px;"></span>
+          <span style="width: 110px; text-align: right;">${finalStr}</span>
+        </div>
       </div>` : ''}
     </div>`;
   }).join('');
 
   // 2. TẠO GIAO DIỆN PHẦN THỐNG KÊ TỔNG NGÀY
   let summaryRows = Object.entries(productTotals).map(([pName, qty]) => {
-    return `<div style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; margin: 10px 0; font-size: 16px;">
-      <span>${esc(pName)}</span>
-      <span>${fmtQtyShort(qty)} T</span>
+    return `<div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 16px;">
+      <span style="word-break: break-word; padding-right: 15px;">${esc(pName)}</span>
+      <span style="white-space: nowrap;">${fmtQtyShort(qty)} T</span>
     </div>`;
   }).join('');
 
@@ -994,7 +1004,7 @@ function renderHistory() {
 
   let summaryHtml = `
   <div style="margin-top: 50px; padding-top: 30px; border-top: 1px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; font-family: Arial, Helvetica, sans-serif; color: #000;">
-    <div style="width: 340px;">
+    <div style="width: 340px; max-width: 100%;">
       <div style="font-weight: bold; font-size: 17px; text-align: center; margin-bottom: 24px; white-space: nowrap;">Tổng ${dayMonth}</div>
       ${summaryRows}
       <div style="display: flex; justify-content: flex-end; margin-top: 30px; font-size: 16px; white-space: nowrap;">
@@ -1242,9 +1252,28 @@ function clearStatFilter() {
 // EXPORTS
 function exportHistoryWord() {
   const date = $('historyDate').value || today();
-  const text = $('historyA4').innerText;
-  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><div style="font-family:'Times New Roman',serif;line-height:1.6;white-space:pre-wrap">${esc(text)}</div></body></html>`;
-  downloadBlob(new Blob([html], { type: 'application/msword;charset=utf-8' }), `lich-su-${date}.doc`);
+  
+  // Clone element để loại bỏ các nút chức năng (class "no-print") trước khi lưu
+  const printArea = $('historyA4').cloneNode(true);
+  const buttons = printArea.querySelectorAll('.no-print');
+  buttons.forEach(btn => btn.remove());
+  
+  // Lấy innerHTML thay vì innerText để giữ nguyên khung lưới giao diện
+  const contentHTML = printArea.innerHTML;
+  
+  // Đóng gói HTML vào cấu trúc được MS Word hỗ trợ đọc tốt, khai báo font chữ và UTF-8
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head>
+    <meta charset='utf-8'>
+    <title>Xuất Lịch Sử Đơn Hàng</title>
+  </head>
+  <body style="font-family: 'Times New Roman', serif; font-size: 16px; color: #000;">
+    ${contentHTML}
+  </body>
+  </html>`;
+  
+  // Thêm ký tự BOM '\ufeff' để Microsoft Word nhận diện đúng mã hóa tiếng Việt
+  downloadBlob(new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' }), `lich-su-${date}.doc`);
 }
 
 function exportHistoryExcel() {

@@ -25,19 +25,19 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* Sidebar Navigation */
-        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
-        .brand { padding: 20px; font-size: 20px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
-        .nav-list { list-style: none; padding: 15px 10px; display: flex; flex-direction: column; gap: 5px; }
-        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; color: #94a3b8; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+        /* Sidebar Navigation - Menu ngang ở trên */
+        .sidebar { width: 100%; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .brand { padding: 15px; font-size: 18px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; justify-content: center; gap: 10px; border-bottom: 1px solid #334155; }
+        .nav-list { list-style: none; padding: 10px; display: flex; flex-direction: row; gap: 5px; overflow-x: auto; white-space: nowrap; }
+        .nav-item { padding: 10px 15px; border-radius: 8px; cursor: pointer; color: #94a3b8; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; flex: 1; text-align: center; font-size: 13px; }
         .nav-item:hover, .nav-item.active { background: var(--sidebar-hover); color: #fff; }
         .nav-item.active { background: var(--primary); color: #fff; }
 
         /* Main Content */
         .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-header { height: 60px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
+        .top-header { height: 60px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; flex-shrink: 0;}
         .header-title { font-size: 18px; font-weight: 600; color: #1e293b; }
         .user-badge { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text-muted); background: #f1f5f9; padding: 6px 12px; border-radius: 20px; }
 
@@ -83,15 +83,17 @@
         .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .history-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
         .history-card-title { font-weight: 700; font-size: 15px; color: #0f172a; }
-        .history-text-body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: #1e293b; }
+        
+        /* Font chữ đơn hàng đồng bộ font chữ hệ thống */
+        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; }
 
         /* Modal */
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 600px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
         
-        .summary-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
-        .summary-metrics { display: flex; gap: 20px; align-items: center; }
+        .summary-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 15px; }
+        .summary-metrics { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
         .metric-item { display: flex; flex-direction: column; }
         .metric-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
         .metric-val { font-size: 16px; font-weight: 700; color: #0f172a; }
@@ -109,16 +111,16 @@
         </div>
         <ul class="nav-list">
             <li class="nav-item active" onclick="switchTab('tab-order', this)">
-                <i data-lucide="shopping-cart"></i> 1. Lên đơn hàng
+                <i data-lucide="shopping-cart"></i> 1. Lên đơn
             </li>
             <li class="nav-item" onclick="switchTab('tab-inventory', this)">
-                <i data-lucide="package"></i> 2. Kho hàng & Dữ liệu
+                <i data-lucide="package"></i> 2. Kho hàng
             </li>
             <li class="nav-item" onclick="switchTab('tab-history', this)">
-                <i data-lucide="file-text"></i> 3. Lịch sử đơn hàng
+                <i data-lucide="file-text"></i> 3. Lịch sử
             </li>
             <li class="nav-item" onclick="switchTab('tab-stats', this)">
-                <i data-lucide="bar-chart-2"></i> 4. Thống kê báo cáo
+                <i data-lucide="bar-chart-2"></i> 4. Thống kê
             </li>
         </ul>
     </div>
@@ -128,7 +130,7 @@
         <div class="top-header">
             <div class="header-title" id="page-title">1. Quản lý Lên đơn hàng</div>
             <div class="user-badge">
-                <i data-lucide="user"></i> Nhân viên Bán Hàng
+                <i data-lucide="user"></i> Lê Hoàng
             </div>
         </div>
 
@@ -158,13 +160,9 @@
                                 <option value="Lẻ">Lẻ / Gói</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" style="grid-column: span 2;">
                             <label>Màu sắc / Ghi chú:</label>
-                            <input type="text" id="order-color" class="form-control" placeholder="Ví dụ: Đỏ, Xanh...">
-                        </div>
-                        <div class="form-group">
-                            <label>Chiết Khấu Mặt Hàng (VNĐ):</label>
-                            <input type="number" id="order-discount" class="form-control" value="0" step="any">
+                            <input type="text" id="order-color" class="form-control" placeholder="Ví dụ: trộn màu, Đỏ, Xanh...">
                         </div>
                     </div>
                     <div style="margin-top: 15px; text-align: right;">
@@ -188,14 +186,12 @@
                                     <th>Đơn Giá Bán</th>
                                     <th>Đơn Giá Net</th>
                                     <th>Tiền Hàng</th>
-                                    <th>Chiết Khấu</th>
-                                    <th>Tiền Phải Thu</th>
                                     <th>Chênh Lệch (Lãi)</th>
                                     <th>Thao Tác</th>
                                 </tr>
                             </thead>
                             <tbody id="temp-order-table">
-                                <tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Chưa có sản phẩm nào trong đơn tạm</td></tr>
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có sản phẩm nào trong đơn tạm</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -208,8 +204,8 @@
                                 <span class="metric-val" id="temp-total-raw">0 đ</span>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">TỔNG CHIẾT KHẤU:</span>
-                                <span class="metric-val loss" id="temp-total-discount">-0 đ</span>
+                                <span class="metric-label">CHIẾT KHẤU ĐƠN (VNĐ):</span>
+                                <input type="number" id="temp-order-discount" class="form-control" value="0" min="0" step="any" style="width: 130px; font-weight: bold; margin-top: 2px;" oninput="renderTempOrder()" placeholder="0">
                             </div>
                             <div class="metric-item">
                                 <span class="metric-label">TIỀN PHẢI THU:</span>
@@ -263,7 +259,7 @@
             <div id="tab-history" class="tab-panel">
                 <div class="card">
                     <div class="card-header">
-                        <span>Lịch Sử Đơn Hàng Dạng Văn Bản (Xem & Xuất Word)</span>
+                        <span>Lịch Sử Đơn Hàng (Xem & Xuất Word)</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="history-date-filter" class="form-control" onchange="renderHistory()">
                             <button class="btn btn-success btn-sm" onclick="exportHistoryToWord()"><i data-lucide="file-text"></i> Xuất File Word</button>
@@ -278,15 +274,19 @@
             <div id="tab-stats" class="tab-panel">
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <div class="kpi-label">DOANH SỐ BÁN (TIỀN PHẢI THU)</div>
+                        <div class="kpi-label">DOANH SỐ BÁN (TIỀN THU)</div>
                         <div class="kpi-value" id="stats-total-sell">0 đ</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">DOANH SỐ THEO GIÁ NET</div>
+                        <div class="kpi-value" style="color: var(--primary);" id="stats-total-net">0 đ</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-label">TỔNG CHIẾT KHẤU</div>
                         <div class="kpi-value" style="color: var(--danger);" id="stats-total-discount">0 đ</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-label">CHÊNH LỆCH (LÃI THUỀN)</div>
+                        <div class="kpi-label">CHÊNH LỆCH (LÃI THUẦN)</div>
                         <div class="kpi-value" style="color: var(--success);" id="stats-total-diff">0 đ</div>
                     </div>
                 </div>
@@ -358,13 +358,13 @@
         </div>
     </div>
 
-    <!-- MODAL CHỈNH SỬA ĐƠN HÀNG (MỚI) -->
+    <!-- MODAL CHỈNH SỬA ĐƠN HÀNG -->
     <div class="modal" id="edit-order-modal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="card-header">Chỉnh Sửa Chi Tiết Đơn Hàng</div>
             <input type="hidden" id="edit-order-id">
             
-            <div class="form-grid" style="grid-template-columns: 2fr 1fr; margin-bottom: 15px;">
+            <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr; margin-bottom: 15px;">
                 <div class="form-group">
                     <label>Tên Khách Hàng:</label>
                     <input type="text" id="edit-order-customer" class="form-control">
@@ -372,6 +372,10 @@
                 <div class="form-group">
                     <label>Ngày Lên Đơn:</label>
                     <input type="date" id="edit-order-date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Chiết Khấu Đơn (đ):</label>
+                    <input type="number" id="edit-order-discount" class="form-control" value="0" step="any">
                 </div>
             </div>
 
@@ -383,7 +387,6 @@
                             <th style="width: 100px;">Số Lượng</th>
                             <th style="width: 100px;">Đơn Vị</th>
                             <th>Màu/Ghi chú</th>
-                            <th style="width: 130px;">Chiết Khấu (đ)</th>
                             <th style="width: 60px;">Xóa</th>
                         </tr>
                     </thead>
@@ -403,7 +406,7 @@
         let inventoryData = JSON.parse(localStorage.getItem('dms_inventory')) || [];
         let ordersData = JSON.parse(localStorage.getItem('dms_orders')) || [];
         let tempItems = [];
-        let editingOrderItems = []; // Lưu tạm items khi sửa đơn
+        let editingOrderItems = []; 
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -427,9 +430,9 @@
 
             const titles = {
                 'tab-order': '1. Quản lý Lên đơn hàng',
-                'tab-inventory': '2. Quản lý Kho & Dữ liệu sản phẩm',
+                'tab-inventory': '2. Quản lý Kho hàng',
                 'tab-history': '3. Lịch sử đơn hàng',
-                'tab-stats': '4. Báo cáo thống kê doanh số'
+                'tab-stats': '4. Báo cáo thống kê'
             };
             document.getElementById('page-title').innerText = titles[tabId];
 
@@ -438,7 +441,7 @@
             if(tabId === 'tab-stats') renderStats();
         }
 
-        // ---- XỬ LÝ SỐ VÀ DẤU PHẨY (,) DẤU CHẤM (.) ----
+        // ---- XỬ LÝ SỐ VÀ LÀM TRÒN ----
         function parseVnNum(val) {
             if (val === null || val === undefined || val === '') return 0;
             if (typeof val === 'number') return val;
@@ -453,8 +456,11 @@
         }
 
         function formatDisplayNum(val) {
-            if (val === 0 || !val) return "0";
-            let str = val.toString().replace('.', ',');
+            if (val === 0 || val === null || val === undefined) return "0";
+            let num = Number(val);
+            if (isNaN(num)) return "0";
+            num = Math.round(num * 10) / 10;
+            let str = num.toString().replace('.', ',');
             return str;
         }
 
@@ -511,7 +517,7 @@
                     <tr>
                         <td>${index + 1}</td>
                         <td><strong>${item.name}</strong></td>
-                        <td>${item.qct}</td>
+                        <td>${formatDisplayNum(item.qct)}</td>
                         <td>${formatDisplayNum(item.netLe)}</td>
                         <td>${formatDisplayNum(item.netThung)}</td>
                         <td>${formatDisplayNum(item.banLe)}</td>
@@ -558,7 +564,7 @@
             document.getElementById('modal-product-title').innerText = "Chỉnh Sửa Sản Phẩm Kho";
             document.getElementById('edit-prod-id').value = prod.id;
             document.getElementById('edit-prod-name').value = prod.name;
-            document.getElementById('edit-prod-qct').value = prod.qct;
+            document.getElementById('edit-prod-qct').value = formatDisplayNum(prod.qct);
             document.getElementById('edit-prod-netle').value = formatDisplayNum(prod.netLe);
             document.getElementById('edit-prod-netthung').value = formatDisplayNum(prod.netThung);
             document.getElementById('edit-prod-banle').value = formatDisplayNum(prod.banLe);
@@ -613,7 +619,6 @@
             const qty = parseVnNum(document.getElementById('order-qty').value);
             const unit = document.getElementById('order-unit').value;
             const color = document.getElementById('order-color').value.trim();
-            const discount = parseVnNum(document.getElementById('order-discount').value);
 
             if (!customer) return alert("Vui lòng nhập tên khách hàng!");
             if (!prodId) return alert("Vui lòng chọn sản phẩm!");
@@ -626,8 +631,7 @@
             let giaNet = (unit === 'Thùng') ? prod.netThung : prod.netLe;
 
             let tienHangGoc = giaBan * qty;
-            let tienPhaiThu = tienHangGoc - discount;
-            let chenhLech = ((giaBan - giaNet) * qty) - discount;
+            let chenhLech = (giaBan - giaNet) * qty;
 
             tempItems.push({
                 customer,
@@ -636,11 +640,9 @@
                 qty,
                 unit,
                 color,
-                discount,
                 giaBan,
                 giaNet,
                 tienHangGoc,
-                tienPhaiThu,
                 chenhLech
             });
 
@@ -653,14 +655,12 @@
             tbody.innerHTML = '';
             
             let totalRaw = 0;
-            let totalDiscount = 0;
-            let totalPay = 0;
             let totalDiff = 0;
+            const discount = parseVnNum(document.getElementById('temp-order-discount').value);
 
             if (tempItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Chưa có sản phẩm nào trong đơn tạm</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có sản phẩm nào trong đơn tạm</td></tr>`;
                 document.getElementById('temp-total-raw').innerText = "0 đ";
-                document.getElementById('temp-total-discount').innerText = "-0 đ";
                 document.getElementById('temp-total-pay').innerText = "0 đ";
                 document.getElementById('temp-total-diff').innerText = "0 đ";
                 return;
@@ -668,8 +668,6 @@
 
             tempItems.forEach((item, index) => {
                 totalRaw += item.tienHangGoc;
-                totalDiscount += item.discount;
-                totalPay += item.tienPhaiThu;
                 totalDiff += item.chenhLech;
 
                 tbody.innerHTML += `
@@ -679,8 +677,6 @@
                         <td>${formatDisplayNum(item.giaBan)}</td>
                         <td>${formatDisplayNum(item.giaNet)}</td>
                         <td>${formatDisplayNum(item.tienHangGoc)}</td>
-                        <td style="color: var(--danger);">${formatDisplayNum(item.discount)}</td>
-                        <td><strong>${formatDisplayNum(item.tienPhaiThu)}</strong></td>
                         <td style="color: var(--success);"><strong>${formatDisplayNum(item.chenhLech)}</strong></td>
                         <td>
                             <button class="btn btn-danger btn-sm" onclick="removeTempItem(${index})"><i data-lucide="x"></i> Xóa</button>
@@ -689,10 +685,12 @@
                 `;
             });
 
+            let totalPay = totalRaw - discount;
+            let finalDiff = totalDiff - discount;
+
             document.getElementById('temp-total-raw').innerText = `${formatDisplayNum(totalRaw)} đ`;
-            document.getElementById('temp-total-discount').innerText = `-${formatDisplayNum(totalDiscount)} đ`;
             document.getElementById('temp-total-pay').innerText = `${formatDisplayNum(totalPay)} đ`;
-            document.getElementById('temp-total-diff').innerText = `${formatDisplayNum(totalDiff)} đ`;
+            document.getElementById('temp-total-diff').innerText = `${formatDisplayNum(finalDiff)} đ`;
             lucide.createIcons();
         }
 
@@ -705,11 +703,24 @@
             if (tempItems.length === 0) return alert("Đơn hàng trống!");
 
             const today = new Date().toISOString().split('T')[0];
+            const discount = parseVnNum(document.getElementById('temp-order-discount').value);
+
+            let totalRaw = 0;
+            let totalDiff = 0;
+            tempItems.forEach(item => {
+                totalRaw += item.tienHangGoc;
+                totalDiff += item.chenhLech;
+            });
+
             const newOrder = {
                 id: Date.now(),
                 date: today,
                 customer: tempItems[0].customer,
-                items: [...tempItems]
+                items: [...tempItems],
+                discount: discount,
+                totalRaw: totalRaw,
+                totalPay: totalRaw - discount,
+                totalDiff: totalDiff - discount
             };
 
             ordersData.push(newOrder);
@@ -718,12 +729,80 @@
             tempItems = [];
             document.getElementById('order-customer').value = "";
             document.getElementById('temp-customer-name').innerText = "";
+            document.getElementById('temp-order-discount').value = "0";
             renderTempOrder();
 
             alert("Đã ghi đơn thành công vào Lịch Sử!");
         }
 
-        // ---- TAB 3: LỊCH SỬ ĐƠN HÀNG (CÓ XÓA VÀ CHỈNH SỬA) ----
+        // ---- TẠO BẢNG HIỂN THỊ ĐƠN HÀNG (SỬ DỤNG HTML TABLE ĐỂ CĂN CHỈNH THẲNG HÀNG 100% VỚI FONT HỆ THỐNG) ----
+        function generateOrderHtml(order, index) {
+            let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 6px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
+            html += `<table style="width: 100%; max-width: 550px; border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5;">`;
+            
+            let totalRaw = 0;
+            order.items.forEach(item => {
+                let qtyFormatted = formatDisplayNum(item.qty);
+                let unitStr = (item.unit === 'Thùng' || item.unit === 'T') ? `${qtyFormatted}T` : `${qtyFormatted} gói`;
+                let colorStr = item.color ? ` (${item.color})` : '';
+                let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
+                
+                totalRaw += lineTotal;
+
+                html += `
+                    <tr>
+                        <td style="padding: 2px 8px 2px 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
+                        <td style="padding: 2px 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
+                        <td style="padding: 2px 4px; border: none; text-align: center; width: 15px;">=</td>
+                        <td style="padding: 2px 0 2px 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
+                    </tr>
+                `;
+            });
+
+            let discount = order.discount !== undefined ? order.discount : 0;
+            if (!discount && order.items) {
+                discount = order.items.reduce((sum, it) => sum + (it.discount || 0), 0);
+            }
+
+            let totalPay = totalRaw - discount;
+
+            if (discount > 0) {
+                html += `
+                    <tr>
+                        <td style="padding: 4px 8px 2px 0; border: none;"></td>
+                        <td style="padding: 4px 8px 2px 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                        <td style="padding: 4px 4px 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
+                        <td style="padding: 4px 0 2px 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 8px 2px 0; border: none;"></td>
+                        <td style="padding: 2px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
+                        <td style="padding: 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #dc2626;">=</td>
+                        <td style="padding: 2px 0 2px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 8px 2px 0; border: none;"></td>
+                        <td style="padding: 2px 8px; border: none; text-align: left; font-weight: bold; color: #2563eb;">Tiền phải thu</td>
+                        <td style="padding: 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #2563eb;">=</td>
+                        <td style="padding: 2px 0 2px 8px; border: none; text-align: right; font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
+                    </tr>
+                `;
+            } else if (order.items.length > 1) {
+                html += `
+                    <tr>
+                        <td style="padding: 4px 8px 2px 0; border: none;"></td>
+                        <td style="padding: 4px 8px 2px 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                        <td style="padding: 4px 4px 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
+                        <td style="padding: 4px 0 2px 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    </tr>
+                `;
+            }
+
+            html += `</table>`;
+            return html;
+        }
+
+        // ---- TAB 3: LỊCH SỬ ĐƠN HÀNG ----
         function renderHistory() {
             const filterDate = document.getElementById('history-date-filter').value;
             const container = document.getElementById('history-display-container');
@@ -740,31 +819,8 @@
             }
 
             filtered.forEach((order, index) => {
-                let orderText = `${index + 1}. ${order.customer}\n`;
-                let totalRaw = 0;
-                let totalDiscount = 0;
-                let totalPay = 0;
+                let orderHtml = generateOrderHtml(order, index);
 
-                order.items.forEach(item => {
-                    let unitStr = (item.unit === 'Thùng' || item.unit === 'T') ? `${formatDisplayNum(item.qty)}T` : `${formatDisplayNum(item.qty)} gói`;
-                    orderText += `${item.productName} | ${unitStr} | = | ${formatDisplayNum(item.tienHangGoc)}\n`;
-                    
-                    totalRaw += item.tienHangGoc;
-                    totalDiscount += item.discount;
-                    totalPay += item.tienPhaiThu;
-                });
-
-                if (totalDiscount > 0) {
-                    orderText += `  Tổng tiền hàng: ${formatDisplayNum(totalRaw)}\n`;
-                    orderText += `  Chiết khấu: -${formatDisplayNum(totalDiscount)}\n`;
-                    orderText += `  TIỀN PHẢI THU: ${formatDisplayNum(totalPay)}\n`;
-                } else if (order.items.length > 1) {
-                    orderText += `  Tổng tiền: ${formatDisplayNum(totalPay)}\n`;
-                }
-
-                orderText += `-----------------------------------------`;
-
-                // Render Card đơn hàng có nút Xóa & Sửa
                 container.innerHTML += `
                     <div class="history-card">
                         <div class="history-card-header">
@@ -774,7 +830,7 @@
                                 <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})"><i data-lucide="trash-2"></i> Xóa</button>
                             </div>
                         </div>
-                        <div class="history-text-body">${orderText}</div>
+                        <div class="history-text-body">${orderHtml}</div>
                     </div>
                 `;
             });
@@ -782,7 +838,6 @@
             lucide.createIcons();
         }
 
-        // Xóa đơn hàng
         function deleteOrder(orderId) {
             if (confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) {
                 ordersData = ordersData.filter(o => o.id != orderId);
@@ -792,7 +847,6 @@
             }
         }
 
-        // Mở Modal Chỉnh Sửa Đơn Hàng
         function openEditOrderModal(orderId) {
             const order = ordersData.find(o => o.id == orderId);
             if (!order) return;
@@ -800,8 +854,8 @@
             document.getElementById('edit-order-id').value = order.id;
             document.getElementById('edit-order-customer').value = order.customer;
             document.getElementById('edit-order-date').value = order.date;
+            document.getElementById('edit-order-discount').value = order.discount || 0;
 
-            // Deep clone items
             editingOrderItems = JSON.parse(JSON.stringify(order.items));
             renderEditOrderTable();
 
@@ -813,7 +867,7 @@
             tbody.innerHTML = '';
 
             if (editingOrderItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Đơn hàng trống sản phẩm.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Đơn hàng trống sản phẩm.</td></tr>`;
                 return;
             }
 
@@ -829,7 +883,6 @@
                             </select>
                         </td>
                         <td><input type="text" class="form-control" value="${item.color || ''}" onchange="updateEditItem(${idx}, 'color', this.value)"></td>
-                        <td><input type="number" class="form-control" value="${item.discount || 0}" step="any" onchange="updateEditItem(${idx}, 'discount', this.value)"></td>
                         <td><button class="btn btn-danger btn-sm" onclick="removeEditItem(${idx})"><i data-lucide="x"></i></button></td>
                     </tr>
                 `;
@@ -842,9 +895,7 @@
             if (field === 'qty') item.qty = parseVnNum(val);
             if (field === 'unit') item.unit = val;
             if (field === 'color') item.color = val.trim();
-            if (field === 'discount') item.discount = parseVnNum(val);
 
-            // Tính toán lại giá theo kho nếu thay đổi số lượng hoặc đơn vị
             const prod = inventoryData.find(p => p.id == item.prodId || p.name == item.productName);
             if (prod) {
                 item.giaBan = (item.unit === 'Thùng') ? prod.banThung : prod.banLe;
@@ -852,8 +903,7 @@
             }
 
             item.tienHangGoc = item.giaBan * item.qty;
-            item.tienPhaiThu = item.tienHangGoc - item.discount;
-            item.chenhLech = ((item.giaBan - item.giaNet) * item.qty) - item.discount;
+            item.chenhLech = (item.giaBan - item.giaNet) * item.qty;
         }
 
         function removeEditItem(idx) {
@@ -869,6 +919,7 @@
             const orderId = document.getElementById('edit-order-id').value;
             const customer = document.getElementById('edit-order-customer').value.trim();
             const date = document.getElementById('edit-order-date').value;
+            const discount = parseVnNum(document.getElementById('edit-order-discount').value);
 
             if (!customer) return alert("Vui lòng nhập tên khách hàng!");
             if (editingOrderItems.length === 0) return alert("Đơn hàng phải có ít nhất 1 sản phẩm!");
@@ -877,9 +928,20 @@
             if (order) {
                 order.customer = customer;
                 order.date = date;
-                // Cập nhật lại tên khách hàng cho từng item
-                editingOrderItems.forEach(it => it.customer = customer);
+                order.discount = discount;
+                
+                let totalRaw = 0;
+                let totalDiff = 0;
+                editingOrderItems.forEach(it => {
+                    it.customer = customer;
+                    totalRaw += it.tienHangGoc;
+                    totalDiff += it.chenhLech;
+                });
+
                 order.items = JSON.parse(JSON.stringify(editingOrderItems));
+                order.totalRaw = totalRaw;
+                order.totalPay = totalRaw - discount;
+                order.totalDiff = totalDiff - discount;
 
                 localStorage.setItem('dms_orders', JSON.stringify(ordersData));
                 closeEditOrderModal();
@@ -889,7 +951,6 @@
             }
         }
 
-        // Xuất Word tự động ẩn nút bấm
         function exportHistoryToWord() {
             const filterDate = document.getElementById('history-date-filter').value;
             let filtered = ordersData;
@@ -901,32 +962,12 @@
 
             let docText = "";
             filtered.forEach((order, index) => {
-                docText += `${index + 1}. ${order.customer}\n`;
-                let totalRaw = 0;
-                let totalDiscount = 0;
-                let totalPay = 0;
-
-                order.items.forEach(item => {
-                    let unitStr = (item.unit === 'Thùng' || item.unit === 'T') ? `${formatDisplayNum(item.qty)}T` : `${formatDisplayNum(item.qty)} gói`;
-                    docText += `${item.productName} | ${unitStr} | = | ${formatDisplayNum(item.tienHangGoc)}\n`;
-                    
-                    totalRaw += item.tienHangGoc;
-                    totalDiscount += item.discount;
-                    totalPay += item.tienPhaiThu;
-                });
-
-                if (totalDiscount > 0) {
-                    docText += `  Tổng tiền hàng: ${formatDisplayNum(totalRaw)}\n`;
-                    docText += `  Chiết khấu: -${formatDisplayNum(totalDiscount)}\n`;
-                    docText += `  TIỀN PHẢI THU: ${formatDisplayNum(totalPay)}\n`;
-                } else if (order.items.length > 1) {
-                    docText += `  Tổng tiền: ${formatDisplayNum(totalPay)}\n`;
-                }
-
-                docText += `-----------------------------------------\n\n`;
+                docText += generateOrderHtml(order, index);
+                docText += `<div style="margin: 15px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
             });
 
-            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; white-space: pre-wrap; }</style></head><body>`;
+            // Xuất File Word với font hệ thống Arial/Segoe UI giữ nguyên 100% định dạng hiển thị như trên màn hình
+            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.4; color: #1e293b; }</style></head><body>`;
             const htmlFooter = `</body></html>`;
             
             const blob = new Blob(['\ufeff', htmlHeader + docText + htmlFooter], { type: 'application/msword' });
@@ -960,13 +1001,22 @@
             let totalSellPay = 0;
             let totalDiscount = 0;
             let totalDiff = 0;
+            let totalNet = 0;
             let productSummary = {};
 
             filtered.forEach(order => {
+                let orderRaw = 0;
+                let orderItemDiff = 0;
+                let orderItemNet = 0;
+
                 order.items.forEach(item => {
-                    totalSellPay += item.tienPhaiThu;
-                    totalDiscount += item.discount;
-                    totalDiff += item.chenhLech;
+                    let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
+                    let lineDiff = item.chenhLech !== undefined ? item.chenhLech : ((item.giaBan - item.giaNet) * item.qty);
+                    let lineNet = (item.giaNet || 0) * item.qty;
+                    
+                    orderRaw += lineTotal;
+                    orderItemDiff += lineDiff;
+                    orderItemNet += lineNet;
 
                     let key = item.productName + "_" + item.unit;
                     if (!productSummary[key]) {
@@ -978,9 +1028,20 @@
                     }
                     productSummary[key].qty += item.qty;
                 });
+
+                let discount = order.discount !== undefined ? order.discount : 0;
+                if (!discount && order.items) {
+                    discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
+                }
+
+                totalDiscount += discount;
+                totalSellPay += (orderRaw - discount);
+                totalDiff += (orderItemDiff - discount);
+                totalNet += orderItemNet;
             });
 
             document.getElementById('stats-total-sell').innerText = formatDisplayNum(totalSellPay) + " đ";
+            document.getElementById('stats-total-net').innerText = formatDisplayNum(totalNet) + " đ";
             document.getElementById('stats-total-discount').innerText = "-" + formatDisplayNum(totalDiscount) + " đ";
             document.getElementById('stats-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
 

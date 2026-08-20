@@ -67,6 +67,7 @@
         .btn-success { background: var(--success); color: #fff; }
         .btn-success:hover { background: #059669; }
         .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
         .btn-warning { background: var(--warning); color: #fff; }
         .btn-secondary { background: #e2e8f0; color: #334155; }
         .btn-sm { padding: 5px 10px; font-size: 12px; }
@@ -78,13 +79,16 @@
         td { padding: 12px; border-bottom: 1px solid var(--border-color); color: #334155; }
         tr:hover { background: #f1f5f9; }
 
-        /* History View Layout - Compact Horizontal Style */
-        .history-doc { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; white-space: pre-wrap; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); color: #1e293b; }
+        /* History Cards Layout */
+        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .history-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
+        .history-card-title { font-weight: 700; font-size: 15px; color: #0f172a; }
+        .history-text-body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: #1e293b; }
 
         /* Modal */
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
-        .modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 550px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 600px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
         
         .summary-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
         .summary-metrics { display: flex; gap: 20px; align-items: center; }
@@ -124,7 +128,7 @@
         <div class="top-header">
             <div class="header-title" id="page-title">1. Quản lý Lên đơn hàng</div>
             <div class="user-badge">
-                <i data-lucide="user"></i> Lê Hoàng
+                <i data-lucide="user"></i> Nhân viên Bán Hàng
             </div>
         </div>
 
@@ -196,7 +200,7 @@
                         </table>
                     </div>
 
-                    <!-- SUMMARY BOX MỚI (RÕ RÀNG CHIẾT KHẨU & TIỀN PHẢI THU) -->
+                    <!-- SUMMARY BOX -->
                     <div class="summary-box">
                         <div class="summary-metrics">
                             <div class="metric-item">
@@ -259,7 +263,7 @@
             <div id="tab-history" class="tab-panel">
                 <div class="card">
                     <div class="card-header">
-                        <span>Lịch Sử Đơn Hàng Dạng Văn Bản (Xuất Word)</span>
+                        <span>Lịch Sử Đơn Hàng Dạng Văn Bản (Xem & Xuất Word)</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="history-date-filter" class="form-control" onchange="renderHistory()">
                             <button class="btn btn-success btn-sm" onclick="exportHistoryToWord()"><i data-lucide="file-text"></i> Xuất File Word</button>
@@ -316,7 +320,7 @@
         </div>
     </div>
 
-    <!-- MODAL SỬA/THÊM SẢN PHẨM -->
+    <!-- MODAL SỬA/THÊM SẢN PHẨM KHO -->
     <div class="modal" id="product-modal">
         <div class="modal-content">
             <div class="card-header" id="modal-product-title">Chỉnh Sửa Sản Phẩm</div>
@@ -354,11 +358,52 @@
         </div>
     </div>
 
+    <!-- MODAL CHỈNH SỬA ĐƠN HÀNG (MỚI) -->
+    <div class="modal" id="edit-order-modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="card-header">Chỉnh Sửa Chi Tiết Đơn Hàng</div>
+            <input type="hidden" id="edit-order-id">
+            
+            <div class="form-grid" style="grid-template-columns: 2fr 1fr; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label>Tên Khách Hàng:</label>
+                    <input type="text" id="edit-order-customer" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Ngày Lên Đơn:</label>
+                    <input type="date" id="edit-order-date" class="form-control">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sản Phẩm</th>
+                            <th style="width: 100px;">Số Lượng</th>
+                            <th style="width: 100px;">Đơn Vị</th>
+                            <th>Màu/Ghi chú</th>
+                            <th style="width: 130px;">Chiết Khấu (đ)</th>
+                            <th style="width: 60px;">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="edit-order-items-body"></tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeEditOrderModal()">Hủy Bỏ</button>
+                <button class="btn btn-primary" onclick="saveEditedOrder()"><i data-lucide="check"></i> Cập Nhật Đơn Hàng</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ---- DATA LOCAL STORAGE ----
         let inventoryData = JSON.parse(localStorage.getItem('dms_inventory')) || [];
         let ordersData = JSON.parse(localStorage.getItem('dms_orders')) || [];
         let tempItems = [];
+        let editingOrderItems = []; // Lưu tạm items khi sửa đơn
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -678,7 +723,7 @@
             alert("Đã ghi đơn thành công vào Lịch Sử!");
         }
 
-        // ---- TAB 3: LỊCH SỬ ĐƠN HÀNG (TRÌNH BÀY NẰM NGANG TIẾT KIỆM GIẤY) ----
+        // ---- TAB 3: LỊCH SỬ ĐƠN HÀNG (CÓ XÓA VÀ CHỈNH SỬA) ----
         function renderHistory() {
             const filterDate = document.getElementById('history-date-filter').value;
             const container = document.getElementById('history-display-container');
@@ -694,8 +739,167 @@
                 return;
             }
 
-            let docText = "";
+            filtered.forEach((order, index) => {
+                let orderText = `${index + 1}. ${order.customer}\n`;
+                let totalRaw = 0;
+                let totalDiscount = 0;
+                let totalPay = 0;
 
+                order.items.forEach(item => {
+                    let unitStr = (item.unit === 'Thùng' || item.unit === 'T') ? `${formatDisplayNum(item.qty)}T` : `${formatDisplayNum(item.qty)} gói`;
+                    orderText += `${item.productName} | ${unitStr} | = | ${formatDisplayNum(item.tienHangGoc)}\n`;
+                    
+                    totalRaw += item.tienHangGoc;
+                    totalDiscount += item.discount;
+                    totalPay += item.tienPhaiThu;
+                });
+
+                if (totalDiscount > 0) {
+                    orderText += `  Tổng tiền hàng: ${formatDisplayNum(totalRaw)}\n`;
+                    orderText += `  Chiết khấu: -${formatDisplayNum(totalDiscount)}\n`;
+                    orderText += `  TIỀN PHẢI THU: ${formatDisplayNum(totalPay)}\n`;
+                } else if (order.items.length > 1) {
+                    orderText += `  Tổng tiền: ${formatDisplayNum(totalPay)}\n`;
+                }
+
+                orderText += `-----------------------------------------`;
+
+                // Render Card đơn hàng có nút Xóa & Sửa
+                container.innerHTML += `
+                    <div class="history-card">
+                        <div class="history-card-header">
+                            <span class="history-card-title"><i data-lucide="user"></i> ${order.customer} <small style="color:var(--text-muted); font-weight:normal;">(${order.date})</small></span>
+                            <div>
+                                <button class="btn btn-warning btn-sm" onclick="openEditOrderModal(${order.id})"><i data-lucide="edit"></i> Sửa</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})"><i data-lucide="trash-2"></i> Xóa</button>
+                            </div>
+                        </div>
+                        <div class="history-text-body">${orderText}</div>
+                    </div>
+                `;
+            });
+
+            lucide.createIcons();
+        }
+
+        // Xóa đơn hàng
+        function deleteOrder(orderId) {
+            if (confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) {
+                ordersData = ordersData.filter(o => o.id != orderId);
+                localStorage.setItem('dms_orders', JSON.stringify(ordersData));
+                renderHistory();
+                renderStats();
+            }
+        }
+
+        // Mở Modal Chỉnh Sửa Đơn Hàng
+        function openEditOrderModal(orderId) {
+            const order = ordersData.find(o => o.id == orderId);
+            if (!order) return;
+
+            document.getElementById('edit-order-id').value = order.id;
+            document.getElementById('edit-order-customer').value = order.customer;
+            document.getElementById('edit-order-date').value = order.date;
+
+            // Deep clone items
+            editingOrderItems = JSON.parse(JSON.stringify(order.items));
+            renderEditOrderTable();
+
+            document.getElementById('edit-order-modal').classList.add('active');
+        }
+
+        function renderEditOrderTable() {
+            const tbody = document.getElementById('edit-order-items-body');
+            tbody.innerHTML = '';
+
+            if (editingOrderItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Đơn hàng trống sản phẩm.</td></tr>`;
+                return;
+            }
+
+            editingOrderItems.forEach((item, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.productName}</strong></td>
+                        <td><input type="number" class="form-control" value="${item.qty}" min="0.1" step="any" onchange="updateEditItem(${idx}, 'qty', this.value)"></td>
+                        <td>
+                            <select class="form-control" onchange="updateEditItem(${idx}, 'unit', this.value)">
+                                <option value="Thùng" ${item.unit === 'Thùng' ? 'selected' : ''}>Thùng</option>
+                                <option value="Lẻ" ${item.unit === 'Lẻ' ? 'selected' : ''}>Lẻ</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="form-control" value="${item.color || ''}" onchange="updateEditItem(${idx}, 'color', this.value)"></td>
+                        <td><input type="number" class="form-control" value="${item.discount || 0}" step="any" onchange="updateEditItem(${idx}, 'discount', this.value)"></td>
+                        <td><button class="btn btn-danger btn-sm" onclick="removeEditItem(${idx})"><i data-lucide="x"></i></button></td>
+                    </tr>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function updateEditItem(idx, field, val) {
+            let item = editingOrderItems[idx];
+            if (field === 'qty') item.qty = parseVnNum(val);
+            if (field === 'unit') item.unit = val;
+            if (field === 'color') item.color = val.trim();
+            if (field === 'discount') item.discount = parseVnNum(val);
+
+            // Tính toán lại giá theo kho nếu thay đổi số lượng hoặc đơn vị
+            const prod = inventoryData.find(p => p.id == item.prodId || p.name == item.productName);
+            if (prod) {
+                item.giaBan = (item.unit === 'Thùng') ? prod.banThung : prod.banLe;
+                item.giaNet = (item.unit === 'Thùng') ? prod.netThung : prod.netLe;
+            }
+
+            item.tienHangGoc = item.giaBan * item.qty;
+            item.tienPhaiThu = item.tienHangGoc - item.discount;
+            item.chenhLech = ((item.giaBan - item.giaNet) * item.qty) - item.discount;
+        }
+
+        function removeEditItem(idx) {
+            editingOrderItems.splice(idx, 1);
+            renderEditOrderTable();
+        }
+
+        function closeEditOrderModal() {
+            document.getElementById('edit-order-modal').classList.remove('active');
+        }
+
+        function saveEditedOrder() {
+            const orderId = document.getElementById('edit-order-id').value;
+            const customer = document.getElementById('edit-order-customer').value.trim();
+            const date = document.getElementById('edit-order-date').value;
+
+            if (!customer) return alert("Vui lòng nhập tên khách hàng!");
+            if (editingOrderItems.length === 0) return alert("Đơn hàng phải có ít nhất 1 sản phẩm!");
+
+            const order = ordersData.find(o => o.id == orderId);
+            if (order) {
+                order.customer = customer;
+                order.date = date;
+                // Cập nhật lại tên khách hàng cho từng item
+                editingOrderItems.forEach(it => it.customer = customer);
+                order.items = JSON.parse(JSON.stringify(editingOrderItems));
+
+                localStorage.setItem('dms_orders', JSON.stringify(ordersData));
+                closeEditOrderModal();
+                renderHistory();
+                renderStats();
+                alert("Đã cập nhật đơn hàng thành công!");
+            }
+        }
+
+        // Xuất Word tự động ẩn nút bấm
+        function exportHistoryToWord() {
+            const filterDate = document.getElementById('history-date-filter').value;
+            let filtered = ordersData;
+            if (filterDate) {
+                filtered = ordersData.filter(o => o.date === filterDate);
+            }
+
+            if (filtered.length === 0) return alert("Không có dữ liệu đơn hàng để xuất!");
+
+            let docText = "";
             filtered.forEach((order, index) => {
                 docText += `${index + 1}. ${order.customer}\n`;
                 let totalRaw = 0;
@@ -704,8 +908,6 @@
 
                 order.items.forEach(item => {
                     let unitStr = (item.unit === 'Thùng' || item.unit === 'T') ? `${formatDisplayNum(item.qty)}T` : `${formatDisplayNum(item.qty)} gói`;
-                    
-                    // HIỂN THỊ NẰM NGANG TRÊN 1 DÒNG DỄ ĐỌC & TIẾT KIỆM GIẤY
                     docText += `${item.productName} | ${unitStr} | = | ${formatDisplayNum(item.tienHangGoc)}\n`;
                     
                     totalRaw += item.tienHangGoc;
@@ -724,22 +926,14 @@
                 docText += `-----------------------------------------\n\n`;
             });
 
-            container.innerHTML = `<div class="history-doc" id="history-doc-text">${docText}</div>`;
-        }
-
-        function exportHistoryToWord() {
-            const docElement = document.getElementById('history-doc-text');
-            if (!docElement) return alert("Không có dữ liệu để xuất!");
-
-            const dateStr = document.getElementById('history-date-filter').value || 'ALL';
             const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; white-space: pre-wrap; }</style></head><body>`;
             const htmlFooter = `</body></html>`;
             
-            const blob = new Blob(['\ufeff', htmlHeader + docElement.innerText + htmlFooter], { type: 'application/msword' });
+            const blob = new Blob(['\ufeff', htmlHeader + docText + htmlFooter], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `Lich_Su_Don_Hang_${dateStr}.doc`;
+            a.download = `Lich_Su_Don_Hang_${filterDate || 'ALL'}.doc`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

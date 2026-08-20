@@ -2,321 +2,294 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quản Lý Đơn Hàng</title>
-    <style>
-        /* Giao diện tối ưu cho điện thoại */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #f4f6f9; color: #333; }
-        .header { background: #007bff; color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; }
-        
-        /* Cấu trúc Tab dạng thẻ nằm ở trang chủ */
-        .tab-container { display: flex; background: #fff; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 10; }
-        .tab-btn { flex: 1; padding: 15px 5px; text-align: center; background: none; border: none; font-size: 15px; font-weight: bold; color: #6c757d; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
-        .tab-btn.active { color: #007bff; border-bottom: 3px solid #007bff; }
-        
-        /* Nội dung Tab - Chỉ hiển thị tab được chọn */
-        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* Form & Thẻ Card */
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        h3 { margin-top: 0; font-size: 18px; color: #444; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .form-control:focus { outline: none; border-color: #007bff; }
-        
-        /* Nút bấm */
-        .btn { padding: 12px 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
-        .btn-primary { background: #28a745; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-danger { background: #dc3545; color: white; width: auto; padding: 8px 12px; font-size: 14px; }
-
-        /* Bảng hiển thị */
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 300px; }
-        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: left; vertical-align: middle; }
-        th { background-color: #f8f9fa; white-space: nowrap; }
-        
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
-        .badge-thuong { background: #17a2b8; }
-        .badge-tet { background: #e83e8c; }
-        .badge-banhmi { background: #fd7e14; }
-        
-        .history-date { background: #e9ecef; padding: 8px; font-weight: bold; margin-top: 15px; border-radius: 5px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web App Quản Lý Đơn Hàng</title>
+    <!-- Thư viện giao diện & Logic -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Thư viện đọc Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
-<body>
+<body class="bg-gray-100 p-6">
+    <div id="root"></div>
 
-    <div class="header">Hệ Thống Lên Đơn DMS</div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    <!-- Thanh Điều Hướng Tab -->
-    <div class="tab-container">
-        <button class="tab-btn active" onclick="openTab('tab-order')">Lên Đơn</button>
-        <button class="tab-btn" onclick="openTab('tab-inventory')">Kho Hàng</button>
-        <button class="tab-btn" onclick="openTab('tab-history')">Lịch Sử</button>
-    </div>
-
-    <!-- TAB 1: LÊN ĐƠN HÀNG -->
-    <div id="tab-order" class="tab-content active">
-        <div class="card">
-            <h3>Tạo Đơn Mới</h3>
-            <div class="form-group">
-                <label>Khách Hàng</label>
-                <input type="text" id="order-customer" class="form-control" placeholder="Tên hoặc địa chỉ (VD: Chợ Cam Lộ...)" list="customer-list">
-                <datalist id="customer-list">
-                    <option value="Chị Nậm">
-                </datalist>
-            </div>
-            <div class="form-group">
-                <label>Sản Phẩm</label>
-                <select id="order-product" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label>Số Lượng (Thùng/Hộp)</label>
-                <input type="number" id="order-qty" class="form-control" value="1" min="1">
-            </div>
-            <div class="form-group">
-                <label>Ghi Chú / Khuyến Mãi</label>
-                <input type="text" id="order-promo" class="form-control" placeholder="VD: Tặng 4 gói, chiết khấu...">
-            </div>
-            <button class="btn btn-primary" onclick="saveOrder()">Lưu Đơn Hàng</button>
-        </div>
-    </div>
-
-    <!-- TAB 2: QUẢN LÝ KHO HÀNG (Phân loại nằm tại đây) -->
-    <div id="tab-inventory" class="tab-content">
-        <div class="card">
-            <h3>Thêm Sản Phẩm Mới</h3>
-            <div class="form-group">
-                <label>Tên SP (Mã vạch nếu có)</label>
-                <input type="text" id="inv-name" class="form-control" placeholder="Nhập tên sản phẩm...">
-            </div>
-            <div class="form-group">
-                <label>Phân Loại Hàng Hóa</label>
-                <select id="inv-category" class="form-control">
-                    <option value="Hàng thường">Hàng thường</option>
-                    <option value="Hàng tết">Hàng tết</option>
-                    <option value="Bánh mì">Bánh mì</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Đơn Giá (VNĐ)</label>
-                <input type="number" id="inv-price" class="form-control" placeholder="Nhập giá bán...">
-            </div>
-            <button class="btn btn-primary" onclick="addProduct()">Cập Nhật Kho</button>
-        </div>
-
-        <div class="card">
-            <h3>Danh Sách Kho</h3>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Sản Phẩm</th>
-                            <th>Giá (đ)</th>
-                            <th>Xóa</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-list"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 3: LỊCH SỬ ĐƠN HÀNG -->
-    <div id="tab-history" class="tab-content">
-        <div class="card">
-            <h3>Tổng Hợp Doanh Số</h3>
-            <button class="btn btn-secondary" onclick="exportData()">Xuất Báo Cáo (CSV)</button>
-            <div id="history-container"></div>
-        </div>
-    </div>
-
-    <script>
-        // --- 1. LƯU TRỮ DỮ LIỆU (LOCAL STORAGE) ---
-        let inventory = JSON.parse(localStorage.getItem('dms_khohang')) || [
-            { id: 1, name: 'Bánh Tipo 115g', category: 'Hàng thường', price: 25000 }
-        ];
-        let orders = JSON.parse(localStorage.getItem('dms_donhang')) || [];
-
-        // --- 2. LOGIC ĐIỀU HƯỚNG TAB ---
-        function openTab(tabId) {
-            // Ẩn tất cả tab
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            // Hiển thị tab được chọn
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // --- 3. LOGIC KHO HÀNG ---
-        function getBadgeClass(category) {
-            if(category === 'Hàng tết') return 'badge-tet';
-            if(category === 'Bánh mì') return 'badge-banhmi';
-            return 'badge-thuong';
-        }
-
-        function renderInventory() {
-            const list = document.getElementById('inventory-list');
-            const select = document.getElementById('order-product');
-            list.innerHTML = '';
-            select.innerHTML = '';
+        function App() {
+            const [activeTab, setActiveTab] = useState('Lên đơn');
             
-            inventory.forEach((item, index) => {
-                // Đổ dữ liệu vào bảng Kho
-                list.innerHTML += `
-                    <tr>
-                        <td>
-                            <strong>${item.name}</strong><br>
-                            <span class="badge ${getBadgeClass(item.category)}">${item.category}</span>
-                        </td>
-                        <td>${item.price.toLocaleString('vi-VN')}</td>
-                        <td style="text-align:center;">
-                            <button class="btn btn-danger" onclick="deleteProduct(${index})">X</button>
-                        </td>
-                    </tr>
-                `;
-                // Đổ dữ liệu vào dropdown Lên đơn
-                select.innerHTML += `<option value="${index}">${item.name} - ${item.price.toLocaleString('vi-VN')}đ</option>`;
-            });
-        }
+            // State quản lý dữ liệu (Lưu vào LocalStorage để không mất khi f5)
+            const [inventory, setInventory] = useState(() => JSON.parse(localStorage.getItem('db_inv')) || []);
+            const [tempOrder, setTempOrder] = useState(() => JSON.parse(localStorage.getItem('db_temp')) || []);
+            const [history, setHistory] = useState(() => JSON.parse(localStorage.getItem('db_hist')) || []);
 
-        function addProduct() {
-            const name = document.getElementById('inv-name').value.trim();
-            const category = document.getElementById('inv-category').value;
-            const price = Number(document.getElementById('inv-price').value);
+            useEffect(() => localStorage.setItem('db_inv', JSON.stringify(inventory)), [inventory]);
+            useEffect(() => localStorage.setItem('db_temp', JSON.stringify(tempOrder)), [tempOrder]);
+            useEffect(() => localStorage.setItem('db_hist', JSON.stringify(history)), [history]);
 
-            if (!name || !price) {
-                alert("Vui lòng nhập đầy đủ tên và giá sản phẩm!");
-                return;
-            }
-            
-            inventory.push({ id: Date.now(), name, category, price });
-            localStorage.setItem('dms_khohang', JSON.stringify(inventory));
-            
-            document.getElementById('inv-name').value = '';
-            document.getElementById('inv-price').value = '';
-            renderInventory();
-            alert("Đã cập nhật sản phẩm vào kho!");
-        }
+            // Form States
+            const [khachHang, setKhachHang] = useState('');
+            const [sp, setSp] = useState('');
+            const [sl, setSl] = useState(1);
+            const [dv, setDv] = useState('Thùng');
+            const [mau, setMau] = useState('');
+            const [ck, setCk] = useState(0);
 
-        function deleteProduct(index) {
-            if(confirm("Bạn có chắc muốn xóa sản phẩm này khỏi kho?")) {
-                inventory.splice(index, 1);
-                localStorage.setItem('dms_khohang', JSON.stringify(inventory));
-                renderInventory();
-            }
-        }
-
-        // --- 4. LOGIC LÊN ĐƠN HÀNG ---
-        function saveOrder() {
-            const customer = document.getElementById('order-customer').value.trim();
-            const productIndex = document.getElementById('order-product').value;
-            const qty = Number(document.getElementById('order-qty').value);
-            const promo = document.getElementById('order-promo').value.trim();
-            
-            if (!customer || !inventory[productIndex] || qty < 1) {
-                alert("Vui lòng nhập tên khách hàng và số lượng hợp lệ!");
-                return;
-            }
-
-            const product = inventory[productIndex];
-            const totalAmount = product.price * qty;
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('vi-VN');
-
-            const newOrder = {
-                id: Date.now(),
-                date: dateStr,
-                time: today.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
-                customer: customer,
-                productName: product.name,
-                category: product.category,
-                qty: qty,
-                total: totalAmount,
-                promo: promo || 'Không có'
+            // Hàm xử lý file Excel
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const bstr = evt.target.result;
+                    const wb = XLSX.read(bstr, { type: 'binary' });
+                    const wsname = wb.SheetNames[0];
+                    const data = XLSX.utils.sheet_to_json(wb.Sheets[wsname]);
+                    setInventory(data);
+                    alert("Cập nhật kho thành công!");
+                };
+                reader.readAsBinaryString(file);
             };
 
-            orders.push(newOrder);
-            localStorage.setItem('dms_donhang', JSON.stringify(orders));
-            
-            // Reset form
-            document.getElementById('order-customer').value = '';
-            document.getElementById('order-qty').value = '1';
-            document.getElementById('order-promo').value = '';
-            
-            renderHistory();
-            alert("Lưu đơn hàng thành công!");
-        }
+            // Hàm tính tiền & thêm đơn
+            const handleAddTemp = () => {
+                const item = inventory.find(i => i['SẢN PHẨM'] === sp);
+                if (!item) return alert("Vui lòng chọn sản phẩm hợp lệ từ kho!");
 
-        // --- 5. LOGIC LỊCH SỬ & NHÓM ĐƠN ---
-        function renderHistory() {
-            const container = document.getElementById('history-container');
-            container.innerHTML = '';
-            
-            // Nhóm đơn hàng theo ngày
-            const groupedOrders = {};
-            orders.forEach(order => {
-                if (!groupedOrders[order.date]) groupedOrders[order.date] = [];
-                groupedOrders[order.date].push(order);
-            });
-
-            // Hiển thị từ ngày mới nhất tới cũ nhất
-            for (const [date, orderList] of Object.entries(groupedOrders).reverse()) {
-                let html = `<div class="history-date">📅 Ngày: ${date}</div>
-                            <div class="table-responsive"><table>
-                            <thead><tr><th>Khách</th><th>SP / SL</th><th>Tổng Tiền</th><th>KM</th></tr></thead><tbody>`;
+                const giaBan = dv === 'Thùng' ? item['GIÁ THÙNG BÁN'] : item['GIÁ LẺ BÁN'];
+                const giaNet = dv === 'Thùng' ? item['GIÁ THÙNG NET'] : item['GIÁ LẺ NET'];
                 
-                let dayTotal = 0;
-                orderList.forEach(o => {
-                    dayTotal += o.total;
-                    html += `<tr>
-                        <td><strong>${o.customer}</strong><br><small>${o.time}</small></td>
-                        <td>${o.productName}<br><em>x${o.qty}</em></td>
-                        <td style="color:#28a745; font-weight:bold;">${o.total.toLocaleString('vi-VN')}đ</td>
-                        <td>${o.promo}</td>
-                    </tr>`;
-                });
-                
-                html += `</tbody></table></div>
-                         <div style="text-align:right; font-weight:bold; margin-top:5px; color:#dc3545;">
-                            Tổng doanh thu ngày: ${dayTotal.toLocaleString('vi-VN')}đ
-                         </div>`;
-                container.innerHTML += html;
-            }
+                const thanhTien = (giaBan * sl) - ck;
+                const chenhLech = ((giaBan - giaNet) * sl) - ck;
+
+                setTempOrder([...tempOrder, {
+                    id: Date.now(), khachHang, sp, sl, dv, mau, ck, giaBan, giaNet, thanhTien, chenhLech
+                }]);
+            };
+
+            // Hàm lưu đơn
+            const handleSaveOrder = () => {
+                const dateStr = new Date().toISOString().split('T')[0];
+                const newOrders = tempOrder.map(o => ({ ...o, ngay: dateStr }));
+                setHistory([...history, ...newOrders]);
+                setTempOrder([]);
+                setKhachHang('');
+                alert("Đã lưu vào lịch sử!");
+            };
+
+            // Xuất file Word cơ bản (Sử dụng Blob HTML)
+            const exportWord = (elementId, filename) => {
+                const content = document.getElementById(elementId).innerHTML;
+                const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'></head><body>${content}</body></html>`;
+                const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename + '.doc';
+                link.click();
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6">
+                    {/* Thanh Navigation Dạng Thẻ */}
+                    <div className="flex space-x-2 border-b mb-6">
+                        {['Lên đơn', 'Kho', 'Lịch sử', 'Thống kê'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-6 py-2 rounded-t-lg font-semibold transition-colors ${activeTab === tab ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* NỘI DUNG CÁC TAB */}
+                    
+                    {/* Tab 1: Lên Đơn */}
+                    {activeTab === 'Lên đơn' && (
+                        <div>
+                            <h2 className="text-xl font-bold mb-4">Lên Đơn Hàng</h2>
+                            <div className="grid grid-cols-6 gap-4 mb-4">
+                                <input placeholder="Tên Khách Hàng" className="border p-2 col-span-2" value={khachHang} onChange={e => setKhachHang(e.target.value)} />
+                                <select className="border p-2 col-span-2" value={sp} onChange={e => setSp(e.target.value)}>
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                    {inventory.map((i, idx) => <option key={idx} value={i['SẢN PHẨM']}>{i['SẢN PHẨM']}</option>)}
+                                </select>
+                                <input type="number" placeholder="Số lượng" className="border p-2" value={sl} onChange={e => setSl(Number(e.target.value))} min="1" />
+                                <select className="border p-2" value={dv} onChange={e => setDv(e.target.value)}>
+                                    <option value="Thùng">Thùng</option>
+                                    <option value="Lẻ">Lẻ</option>
+                                </select>
+                                <input placeholder="Màu sắc" className="border p-2 col-span-2" value={mau} onChange={e => setMau(e.target.value)} />
+                                <input type="number" placeholder="Chiết khấu (VNĐ)" className="border p-2 col-span-2" value={ck} onChange={e => setCk(Number(e.target.value))} />
+                                <button onClick={handleAddTemp} className="bg-green-500 text-white p-2 rounded col-span-2 font-bold">Thêm Vào Đơn</button>
+                            </div>
+
+                            {tempOrder.length > 0 && (
+                                <div className="mt-8 border-t pt-4">
+                                    <h3 className="font-bold text-lg mb-2">Đơn tạm tính</h3>
+                                    <table className="w-full text-left border-collapse mb-4">
+                                        <thead>
+                                            <tr className="bg-gray-100">
+                                                <th className="border p-2">Khách Hàng</th>
+                                                <th className="border p-2">Sản Phẩm</th>
+                                                <th className="border p-2">SL</th>
+                                                <th className="border p-2">Chiết khấu</th>
+                                                <th className="border p-2">Thành Tiền</th>
+                                                <th className="border p-2">Chênh lệch (Lãi)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tempOrder.map(o => (
+                                                <tr key={o.id}>
+                                                    <td className="border p-2">{o.khachHang}</td>
+                                                    <td className="border p-2">{o.sp}</td>
+                                                    <td className="border p-2">{o.sl} {o.dv}</td>
+                                                    <td className="border p-2">{o.ck.toLocaleString()} ₫</td>
+                                                    <td className="border p-2">{o.thanhTien.toLocaleString()} ₫</td>
+                                                    <td className="border p-2 text-green-600">{o.chenhLech.toLocaleString()} ₫</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div className="font-bold text-xl mb-4">Tổng tiền: {tempOrder.reduce((acc, curr) => acc + curr.thanhTien, 0).toLocaleString()} VNĐ</div>
+                                    <button onClick={handleSaveOrder} className="bg-blue-600 text-white px-6 py-2 rounded font-bold">Lưu Đơn Hàng</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Tab 2: Kho */}
+                    {activeTab === 'Kho' && (
+                        <div>
+                            <h2 className="text-xl font-bold mb-4">Quản Lý Kho Dữ Liệu</h2>
+                            <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 border p-2 w-full" />
+                            <div className="overflow-auto max-h-[500px]">
+                                <table className="w-full border text-sm">
+                                    <thead className="bg-gray-100 sticky top-0">
+                                        <tr>
+                                            <th className="border p-2">SẢN PHẨM</th>
+                                            <th className="border p-2">GIÁ THÙNG NET</th>
+                                            <th className="border p-2">GIÁ THÙNG BÁN</th>
+                                            <th className="border p-2">GIÁ LẺ BÁN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {inventory.map((item, idx) => (
+                                            <tr key={idx}>
+                                                <td className="border p-2">{item['SẢN PHẨM']}</td>
+                                                <td className="border p-2">{item['GIÁ THÙNG NET']}</td>
+                                                <td className="border p-2">{item['GIÁ THÙNG BÁN']}</td>
+                                                <td className="border p-2">{item['GIÁ LẺ BÁN']}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tab 3: Lịch Sử */}
+                    {activeTab === 'Lịch sử' && (
+                        <div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Lịch Sử Lên Đơn</h2>
+                                <button onClick={() => exportWord('export-history', 'Lich_Su_Don_Hang')} className="bg-indigo-500 text-white px-4 py-2 rounded">Xuất File Word</button>
+                            </div>
+                            <div id="export-history" className="bg-white p-4 border min-h-[300px]">
+                                {Array.from(new Set(history.map(h => h.ngay))).map(date => (
+                                    <div key={date} className="mb-6">
+                                        <h3 className="font-bold text-lg border-b pb-2">Ngày: {date}</h3>
+                                        {Array.from(new Set(history.filter(h => h.ngay === date).map(h => h.khachHang))).map((kh, idx) => {
+                                            const orders = history.filter(h => h.ngay === date && h.khachHang === kh);
+                                            const tongTien = orders.reduce((sum, o) => sum + o.thanhTien, 0);
+                                            return (
+                                                <div key={kh} className="mt-4 mb-2">
+                                                    <p className="font-bold">{idx + 1}. {kh}</p>
+                                                    {orders.map((o, i) => (
+                                                        <p key={i} className="ml-4">- {o.sp}: {o.sl} {o.dv} = {o.thanhTien.toLocaleString()} ₫</p>
+                                                    ))}
+                                                    {orders.length > 1 && <p className="ml-4 font-semibold mt-1">Tổng tiền: {tongTien.toLocaleString()} ₫</p>}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tab 4: Thống Kê */}
+                    {activeTab === 'Thống kê' && (
+                        <div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Thống Kê Bán Hàng</h2>
+                                <button onClick={() => exportWord('export-stats', 'Thong_Ke_Ban_Hang')} className="bg-indigo-500 text-white px-4 py-2 rounded">Xuất Bảng Word</button>
+                            </div>
+                            
+                            <div id="export-stats">
+                                <table className="w-full text-left border-collapse border mb-8">
+                                    <caption className="font-bold text-lg mb-2 text-left">Tổng Hợp Sản Phẩm Đã Bán</caption>
+                                    <thead>
+                                        <tr className="bg-gray-100">
+                                            <th className="border p-2">Sản Phẩm</th>
+                                            <th className="border p-2">Đơn Vị</th>
+                                            <th className="border p-2">Tổng Số Lượng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {/* Gom nhóm sản phẩm */}
+                                        {Object.values(history.reduce((acc, curr) => {
+                                            const key = curr.sp + '_' + curr.dv;
+                                            if (!acc[key]) acc[key] = { sp: curr.sp, dv: curr.dv, sl: 0 };
+                                            acc[key].sl += curr.sl;
+                                            return acc;
+                                        }, {})).map((item, i) => (
+                                            <tr key={i}>
+                                                <td className="border p-2">{item.sp}</td>
+                                                <td className="border p-2">{item.dv}</td>
+                                                <td className="border p-2">{item.sl}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                <table className="w-full text-left border-collapse border">
+                                    <caption className="font-bold text-lg mb-2 text-left">Doanh Thu Theo Ngày</caption>
+                                    <thead>
+                                        <tr className="bg-gray-100">
+                                            <th className="border p-2">Ngày</th>
+                                            <th className="border p-2">Doanh Số Bán</th>
+                                            <th className="border p-2">Lãi (Chênh Lệch)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {Object.values(history.reduce((acc, curr) => {
+                                            if (!acc[curr.ngay]) acc[curr.ngay] = { ngay: curr.ngay, doanhSo: 0, lai: 0 };
+                                            acc[curr.ngay].doanhSo += curr.thanhTien;
+                                            acc[curr.ngay].lai += curr.chenhLech;
+                                            return acc;
+                                        }, {})).map((item, i) => (
+                                            <tr key={i}>
+                                                <td className="border p-2">{item.ngay}</td>
+                                                <td className="border p-2">{item.doanhSo.toLocaleString()} ₫</td>
+                                                <td className="border p-2 text-green-600 font-bold">{item.lai.toLocaleString()} ₫</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
         }
 
-        // --- 6. XUẤT DỮ LIỆU ---
-        function exportData() {
-            if(orders.length === 0) return alert("Chưa có dữ liệu để xuất!");
-            
-            let csv = "Ngay,Gio,Khach Hang,San Pham,Phan Loai,So Luong,Tong Tien,Khuyen Mai\n";
-            orders.forEach(o => {
-                // Xử lý chuỗi để tránh lỗi CSV nếu có dấu phẩy
-                const safeCustomer = `"${o.customer.replace(/"/g, '""')}"`;
-                const safeProduct = `"${o.productName.replace(/"/g, '""')}"`;
-                const safePromo = `"${o.promo.replace(/"/g, '""')}"`;
-                csv += `${o.date},${o.time},${safeCustomer},${safeProduct},${o.category},${o.qty},${o.total},${safePromo}\n`;
-            });
-            
-            // Hỗ trợ tiếng Việt UTF-8 cho Excel
-            const bom = "\uFEFF"; 
-            const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", "lich_su_dms.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // --- KHỞI TẠO ỨNG DỤNG ---
-        renderInventory();
-        renderHistory();
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>

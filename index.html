@@ -100,6 +100,35 @@
         .metric-val.highlight { color: var(--primary); font-size: 18px; }
         .metric-val.gain { color: var(--success); }
         .metric-val.loss { color: var(--danger); }
+
+        /* Monthly Diff Highlight Card */
+        .month-diff-card {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .month-diff-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #065f46;
+        }
+        .month-diff-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #059669;
+        }
+        .month-diff-sub {
+            font-size: 13px;
+            color: #047857;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -272,6 +301,18 @@
 
             <!-- TAB 4: THỐNG KÊ -->
             <div id="tab-stats" class="tab-panel">
+                <!-- PHẦN TỔNG CHÊNH LỆCH TRONG THÁNG HIỆN TẠI -->
+                <div class="month-diff-card">
+                    <div>
+                        <div class="month-diff-label">TỔNG CHÊNH LỆCH TRONG THÁNG HIỆN TẠI</div>
+                        <div class="month-diff-sub" id="current-month-label">Tháng --/--</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="month-diff-value" id="stats-month-total-diff">0 đ</div>
+                        <div class="month-diff-sub">Lãi thuần (Bán − Net − Chiết khấu)</div>
+                    </div>
+                </div>
+
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-label">DOANH SỐ BÁN (TIỀN THU)</div>
@@ -419,6 +460,7 @@
             updateProductSelect();
             renderHistory();
             renderStats();
+            renderCurrentMonthDiff();
         });
 
         function switchTab(tabId, el) {
@@ -438,7 +480,10 @@
 
             if(tabId === 'tab-order') updateProductSelect();
             if(tabId === 'tab-history') renderHistory();
-            if(tabId === 'tab-stats') renderStats();
+            if(tabId === 'tab-stats') {
+                renderStats();
+                renderCurrentMonthDiff();
+            }
         }
 
         // ---- XỬ LÝ SỐ VÀ LÀM TRÒN ----
@@ -732,10 +777,13 @@
             document.getElementById('temp-order-discount').value = "0";
             renderTempOrder();
 
+            renderStats();
+            renderCurrentMonthDiff();
+
             alert("Đã ghi đơn thành công vào Lịch Sử!");
         }
 
-        // ---- TẠO BẢNG HIỂN THỊ ĐƠN HÀNG (SỬ DỤNG HTML TABLE ĐỂ CĂN CHỈNH THẲNG HÀNG 100% VỚI FONT HỆ THỐNG) ----
+        // ---- TẠO BẢNG HIỂN THỊ ĐƠN HÀNG ----
         function generateOrderHtml(order, index) {
             let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 6px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
             html += `<table style="width: 100%; max-width: 550px; border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5;">`;
@@ -844,6 +892,7 @@
                 localStorage.setItem('dms_orders', JSON.stringify(ordersData));
                 renderHistory();
                 renderStats();
+                renderCurrentMonthDiff();
             }
         }
 
@@ -947,6 +996,7 @@
                 closeEditOrderModal();
                 renderHistory();
                 renderStats();
+                renderCurrentMonthDiff();
                 alert("Đã cập nhật đơn hàng thành công!");
             }
         }
@@ -966,7 +1016,6 @@
                 docText += `<div style="margin: 15px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
             });
 
-            // Xuất File Word với font hệ thống Arial/Segoe UI giữ nguyên 100% định dạng hiển thị như trên màn hình
             const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.4; color: #1e293b; }</style></head><body>`;
             const htmlFooter = `</body></html>`;
             
@@ -985,6 +1034,39 @@
             if (type === 'date') document.getElementById('stats-month').value = "";
             if (type === 'month') document.getElementById('stats-date').value = "";
             renderStats();
+        }
+
+        // ===== TỔNG CHÊNH LỆCH TRONG THÁNG HIỆN TẠI =====
+        function renderCurrentMonthDiff() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const monthKey = `${currentYear}-${currentMonth}`;
+
+            document.getElementById('current-month-label').innerText = `Tháng ${currentMonth}/${currentYear}`;
+
+            let totalDiff = 0;
+
+            ordersData.forEach(order => {
+                if (order.date && order.date.startsWith(monthKey)) {
+                    let orderItemDiff = 0;
+                    order.items.forEach(item => {
+                        let lineDiff = item.chenhLech !== undefined 
+                            ? item.chenhLech 
+                            : ((item.giaBan - item.giaNet) * item.qty);
+                        orderItemDiff += lineDiff;
+                    });
+
+                    let discount = order.discount !== undefined ? order.discount : 0;
+                    if (!discount && order.items) {
+                        discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
+                    }
+
+                    totalDiff += (orderItemDiff - discount);
+                }
+            });
+
+            document.getElementById('stats-month-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
         }
 
         function renderStats() {

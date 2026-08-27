@@ -93,6 +93,12 @@
         .month-diff-value { font-size: 28px; font-weight: 800; color: #059669; }
         .month-diff-sub { font-size: 13px; color: #047857; margin-top: 4px; }
         .month-diff-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        /* Dòng tổng thùng */
+        .stats-total-row td {
+            background: #f1f5f9;
+            font-weight: 700;
+            border-top: 2px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -866,32 +872,45 @@
             let filtered = ordersData;
             if (dateFilter) filtered = ordersData.filter(o => o.date === dateFilter);
             else if (monthFilter) filtered = ordersData.filter(o => o.date.startsWith(monthFilter));
+
             let totalSellPay = 0, totalDiscount = 0, totalDiff = 0, totalNet = 0;
             let productSummary = {};
+            let totalThung = 0; // Tổng số thùng (chỉ đếm đơn vị Thùng)
+
             filtered.forEach(order => {
                 let orderRaw = 0, orderItemDiff = 0, orderItemNet = 0;
                 order.items.forEach(item => {
                     let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                     let lineDiff = item.chenhLech !== undefined ? item.chenhLech : ((item.giaBan - item.giaNet) * item.qty);
+                    // DOANH SỐ THEO GIÁ NET: chỉ tính theo giá net đã upload, KHÔNG trừ chiết khấu
                     let lineNet = (item.giaNet || 0) * item.qty;
                     orderRaw += lineTotal;
                     orderItemDiff += lineDiff;
                     orderItemNet += lineNet;
+
+                    // Tổng hợp sản phẩm
                     let key = item.productName + "_" + item.unit;
                     if (!productSummary[key]) productSummary[key] = { name: item.productName, unit: item.unit, qty: 0 };
                     productSummary[key].qty += item.qty;
+
+                    // Cộng tổng thùng (chỉ khi đơn vị là Thùng)
+                    if (item.unit === 'Thùng' || item.unit === 'T') {
+                        totalThung += item.qty;
+                    }
                 });
                 let discount = order.discount !== undefined ? order.discount : 0;
                 if (!discount && order.items) discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
                 totalDiscount += discount;
                 totalSellPay += (orderRaw - discount);
                 totalDiff += (orderItemDiff - discount);
-                totalNet += orderItemNet;
+                totalNet += orderItemNet; // Không trừ chiết khấu
             });
+
             document.getElementById('stats-total-sell').innerText = formatDisplayNum(totalSellPay) + " đ";
             document.getElementById('stats-total-net').innerText = formatDisplayNum(totalNet) + " đ";
             document.getElementById('stats-total-discount').innerText = "-" + formatDisplayNum(totalDiscount) + " đ";
             document.getElementById('stats-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
+
             const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '';
             let stt = 1;
@@ -899,7 +918,16 @@
                 let sp = productSummary[k];
                 tbody.innerHTML += `<tr><td>${stt++}</td><td><strong>${sp.name}</strong></td><td>${formatDisplayNum(sp.qty)}</td><td>${sp.unit}</td></tr>`;
             }
-            if (Object.keys(productSummary).length === 0) {
+
+            // Dòng tổng thùng dưới bảng
+            if (Object.keys(productSummary).length > 0) {
+                tbody.innerHTML += `
+                    <tr class="stats-total-row">
+                        <td colspan="2" style="text-align: right;">TỔNG THÙNG:</td>
+                        <td><strong>${formatDisplayNum(totalThung)}</strong></td>
+                        <td><strong>Thùng</strong></td>
+                    </tr>`;
+            } else {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
             }
         }

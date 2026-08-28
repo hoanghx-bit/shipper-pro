@@ -62,10 +62,10 @@
         th { background: #f8fafc; padding: 12px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); }
         td { padding: 12px; border-bottom: 1px solid var(--border-color); color: #334155; }
         tr:hover { background: #f1f5f9; }
-        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
         .history-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
         .history-card-title { font-weight: 700; font-size: 15px; color: #0f172a; }
-        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: #1e293b; }
+        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2; color: #1e293b; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 600px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
@@ -84,15 +84,13 @@
             padding: 20px;
             margin-bottom: 25px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 15px;
         }
-        .month-diff-label { font-size: 14px; font-weight: 600; color: #065f46; }
-        .month-diff-value { font-size: 28px; font-weight: 800; color: #059669; }
+        .month-diff-label { font-size: 13px; font-weight: 700; color: #065f46; }
+        .month-diff-value { font-size: 26px; font-weight: 800; color: #059669; }
         .month-diff-sub { font-size: 13px; color: #047857; margin-top: 4px; }
-        .month-diff-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .month-diff-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px dashed #a7f3d0; padding-bottom: 12px; }
         .stats-total-row td {
             background: #f1f5f9;
             font-weight: 700;
@@ -225,6 +223,9 @@
                         <span>Lịch Sử Đơn Hàng (Xem & Xuất Word)</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="history-date-filter" class="form-control" onchange="renderHistory()">
+                            <button class="btn btn-warning btn-sm" id="btn-toggle-edit-mode" onclick="toggleHistoryEditMode()">
+                                <i data-lucide="edit"></i> Sửa / Xóa
+                            </button>
                             <button class="btn btn-success btn-sm" onclick="exportHistoryToWord()"><i data-lucide="file-text"></i> Xuất File Word</button>
                         </div>
                     </div>
@@ -237,13 +238,20 @@
                 <div class="month-diff-card">
                     <div class="month-diff-controls">
                         <div>
-                            <div class="month-diff-label">TỔNG CHÊNH LỆCH THEO THÁNG</div>
+                            <div class="month-diff-label" style="font-size: 15px;">BÁO CÁO TỔNG HỢP THEO THÁNG</div>
                             <div class="month-diff-sub" id="current-month-label">Tháng --/--</div>
                         </div>
                         <input type="month" id="month-diff-selector" class="form-control" style="width: 160px;" onchange="renderCurrentMonthDiff()">
                     </div>
-                    <div style="text-align: right;">
-                        <div class="month-diff-value" id="stats-month-total-diff">0 đ</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+                        <div style="border-right: 1px dashed #a7f3d0; padding-right: 15px;">
+                            <div class="month-diff-label">TỔNG DOANH SỐ NET THEO THÁNG</div>
+                            <div class="month-diff-value" style="color: var(--primary);" id="stats-month-total-net">0 đ</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="month-diff-label">TỔNG CHÊNH LỆCH THEO THÁNG</div>
+                            <div class="month-diff-value" id="stats-month-total-diff">0 đ</div>
+                        </div>
                     </div>
                 </div>
 
@@ -351,6 +359,7 @@
         let ordersData = JSON.parse(safeGetItem('dms_orders')) || [];
         let tempItems = [];
         let editingOrderItems = [];
+        let isHistoryEditMode = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -622,8 +631,8 @@
         }
 
         function generateOrderHtml(order, index) {
-            let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 6px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
-            html += `<table style="width: 100%; max-width: 550px; border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5;">`;
+            let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 2px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
+            html += `<table style="width: 100%; max-width: 550px; border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2;">`;
             let totalRaw = 0;
             order.items.forEach(item => {
                 let qtyFormatted = formatDisplayNum(item.qty);
@@ -632,10 +641,10 @@
                 let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                 totalRaw += lineTotal;
                 html += `<tr>
-                    <td style="padding: 2px 8px 2px 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
-                    <td style="padding: 2px 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
-                    <td style="padding: 2px 4px; border: none; text-align: center; width: 15px;">=</td>
-                    <td style="padding: 2px 0 2px 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
+                    <td style="padding: 0 8px 0 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
+                    <td style="padding: 0 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
+                    <td style="padding: 0 4px; border: none; text-align: center; width: 15px;">=</td>
+                    <td style="padding: 0 0 0 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
                 </tr>`;
             });
             let discount = order.discount !== undefined ? order.discount : 0;
@@ -643,29 +652,29 @@
             let totalPay = totalRaw - discount;
             if (discount > 0) {
                 html += `<tr>
-                    <td style="padding: 4px 8px 2px 0; border: none;"></td>
-                    <td style="padding: 4px 8px 2px 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
-                    <td style="padding: 4px 4px 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
-                    <td style="padding: 4px 0 2px 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td style="padding: 2px 8px 0 0; border: none;"></td>
+                    <td style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td style="padding: 2px 4px 0 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
+                    <td style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 2px 8px 2px 0; border: none;"></td>
-                    <td style="padding: 2px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
-                    <td style="padding: 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #dc2626;">=</td>
-                    <td style="padding: 2px 0 2px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
+                    <td style="padding: 1px 8px 1px 0; border: none;"></td>
+                    <td style="padding: 1px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
+                    <td style="padding: 1px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #dc2626;">=</td>
+                    <td style="padding: 1px 0 1px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 2px 8px 2px 0; border: none;"></td>
-                    <td style="padding: 2px 8px; border: none; text-align: left; font-weight: bold; color: #2563eb;">Tiền phải thu</td>
-                    <td style="padding: 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #2563eb;">=</td>
-                    <td style="padding: 2px 0 2px 8px; border: none; text-align: right; font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
+                    <td style="padding: 0 8px 0 0; border: none;"></td>
+                    <td style="padding: 0 8px; border: none; text-align: left; font-weight: bold; color: #2563eb;">Tiền phải thu</td>
+                    <td style="padding: 0 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #2563eb;">=</td>
+                    <td style="padding: 0 0 0 8px; border: none; text-align: right; font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
                 </tr>`;
             } else if (order.items.length > 1) {
                 html += `<tr>
-                    <td style="padding: 4px 8px 2px 0; border: none;"></td>
-                    <td style="padding: 4px 8px 2px 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
-                    <td style="padding: 4px 4px 2px 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
-                    <td style="padding: 4px 0 2px 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td style="padding: 2px 8px 0 0; border: none;"></td>
+                    <td style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td style="padding: 2px 4px 0 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
+                    <td style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>`;
             }
             html += `</table>`;
@@ -673,6 +682,20 @@
         }
 
         // ---- LỊCH SỬ ----
+        function toggleHistoryEditMode() {
+            isHistoryEditMode = !isHistoryEditMode;
+            const btn = document.getElementById('btn-toggle-edit-mode');
+            if (isHistoryEditMode) {
+                btn.className = "btn btn-secondary btn-sm";
+                btn.innerHTML = `<i data-lucide="eye"></i> Khóa Sửa/Xóa`;
+            } else {
+                btn.className = "btn btn-warning btn-sm";
+                btn.innerHTML = `<i data-lucide="edit"></i> Sửa / Xóa`;
+            }
+            lucide.createIcons();
+            renderHistory();
+        }
+
         function renderHistory() {
             const filterDate = document.getElementById('history-date-filter').value;
             const container = document.getElementById('history-display-container');
@@ -684,16 +707,18 @@
                 return;
             }
             filtered.forEach((order, index) => {
+                let actionsHtml = '';
+                if (isHistoryEditMode) {
+                    actionsHtml = `
+                        <div style="margin-top: 8px; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                            <button class="btn btn-warning btn-sm" onclick="openEditOrderModal(${order.id})"><i data-lucide="edit"></i> Sửa</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})"><i data-lucide="trash-2"></i> Xóa</button>
+                        </div>`;
+                }
                 container.innerHTML += `
                     <div class="history-card">
-                        <div class="history-card-header">
-                            <span class="history-card-title"><i data-lucide="user"></i> ${order.customer} <small style="color:var(--text-muted); font-weight:normal;">(${order.date})</small></span>
-                            <div>
-                                <button class="btn btn-warning btn-sm" onclick="openEditOrderModal(${order.id})"><i data-lucide="edit"></i> Sửa</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})"><i data-lucide="trash-2"></i> Xóa</button>
-                            </div>
-                        </div>
                         <div class="history-text-body">${generateOrderHtml(order, index)}</div>
+                        ${actionsHtml}
                     </div>`;
             });
             lucide.createIcons();
@@ -808,9 +833,9 @@
             let docText = "";
             filtered.forEach((order, index) => {
                 docText += generateOrderHtml(order, index);
-                docText += `<div style="margin: 15px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
+                docText += `<div style="margin: 10px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
             });
-            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.4; color: #1e293b; }</style></head><body>`;
+            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.2; color: #1e293b; }</style></head><body>`;
             const blob = new Blob(['\ufeff', htmlHeader + docText + `</body></html>`], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -839,22 +864,29 @@
             document.getElementById('current-month-label').innerText = `Tháng ${month}/${year}`;
 
             let totalDiff = 0;
+            let totalNet = 0;
             ordersData.forEach(order => {
                 if (order.date && order.date.startsWith(monthKey)) {
                     let orderItemDiff = 0;
+                    let orderItemNet = 0;
                     order.items.forEach(item => {
                         let lineDiff = item.chenhLech !== undefined 
                             ? item.chenhLech 
                             : ((item.giaBan - item.giaNet) * item.qty);
                         orderItemDiff += lineDiff;
+
+                        let lineNet = (item.giaNet || 0) * item.qty;
+                        orderItemNet += lineNet;
                     });
                     let discount = order.discount !== undefined ? order.discount : 0;
                     if (!discount && order.items) {
                         discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
                     }
                     totalDiff += (orderItemDiff - discount);
+                    totalNet += orderItemNet;
                 }
             });
+            document.getElementById('stats-month-total-net').innerText = formatDisplayNum(totalNet) + " đ";
             document.getElementById('stats-month-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
         }
 
@@ -875,7 +907,6 @@
                 order.items.forEach(item => {
                     let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                     let lineDiff = item.chenhLech !== undefined ? item.chenhLech : ((item.giaBan - item.giaNet) * item.qty);
-                    // Doanh số theo giá Net: KHÔNG trừ chiết khấu
                     let lineNet = (item.giaNet || 0) * item.qty;
                     orderRaw += lineTotal;
                     orderItemDiff += lineDiff;

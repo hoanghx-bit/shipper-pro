@@ -241,7 +241,7 @@
                             <div class="month-diff-label" style="font-size: 15px;">BÁO CÁO TỔNG HỢP THEO THÁNG</div>
                             <div class="month-diff-sub" id="current-month-label">Tháng --/--</div>
                         </div>
-                        <input type="month" id="month-diff-selector" class="form-control" style="width: 160px;" onchange="renderCurrentMonthDiff()">
+                        <input type="month" id="month-diff-selector" class="form-control" style="width: 200px;" onchange="renderCurrentMonthDiff()">
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
                         <div style="border-right: 1px dashed #a7f3d0; padding-right: 15px;">
@@ -278,7 +278,7 @@
                         <span>Thống Kê Tổng Sản Phẩm Đã Bán</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="stats-date" class="form-control" onchange="onStatsFilterChange('date')">
-                            <input type="month" id="stats-month" class="form-control" onchange="onStatsFilterChange('month')">
+                            <input type="month" id="stats-month" class="form-control" style="width: 180px;" onchange="onStatsFilterChange('month')">
                             <button class="btn btn-success btn-sm" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Bảng Ra Word</button>
                         </div>
                     </div>
@@ -287,7 +287,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 50px; text-align: center;">STT</th>
-                                    <th style="text-align: left;">Tên Sản Phẩm</th>
+                                    <th style="text-align: left; white-space: nowrap;">Tên Sản Phẩm</th>
                                     <th style="width: 120px; text-align: right; padding-right: 15px;">Số lượng</th>
                                     <th style="width: 80px; text-align: left;">Đơn Vị</th>
                                 </tr>
@@ -948,7 +948,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td style="text-align: center;">${stt++}</td>
-                        <td style="text-align: left;"><strong>${sp.name}</strong></td>
+                        <td style="text-align: left; white-space: nowrap;"><strong>${sp.name}</strong></td>
                         <td style="text-align: right; padding-right: 15px;">${formatDisplayNum(sp.qty)}</td>
                         <td style="text-align: left;">${sp.unit}</td>
                     </tr>`;

@@ -284,11 +284,16 @@
                     </div>
                     <div class="table-responsive" id="stats-table-wrapper">
                         <table id="stats-table">
-                            <thead>
-                                <tr><th>STT</th><th>Tên Sản Phẩm</th><th>Tổng Số Lượng Bán</th><th>Đơn Vị</th></tr>
-                            </thead>
-                            <tbody id="stats-table-body"></tbody>
-                        </table>
+    <thead>
+        <tr>
+            <th style="width: 50px; text-align: center;">STT</th>
+            <th style="text-align: left;">Tên Sản Phẩm</th>
+            <th style="width: 120px; text-align: right; padding-right: 15px;">Số lượng</th>
+            <th style="width: 80px; text-align: left;">Đơn Vị</th>
+        </tr>
+    </thead>
+    <tbody id="stats-table-body"></tbody>
+</table>
                     </div>
                 </div>
             </div>
@@ -935,25 +940,31 @@
             document.getElementById('stats-total-discount').innerText = "-" + formatDisplayNum(totalDiscount) + " đ";
             document.getElementById('stats-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
 
-            const tbody = document.getElementById('stats-table-body');
+           const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '';
             let stt = 1;
             for (let k in productSummary) {
                 let sp = productSummary[k];
-                tbody.innerHTML += `<tr><td>${stt++}</td><td><strong>${sp.name}</strong></td><td>${formatDisplayNum(sp.qty)}</td><td>${sp.unit}</td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align: center;">${stt++}</td>
+                        <td><strong>${sp.name}</strong></td>
+                        <td style="text-align: right; padding-right: 15px;">${formatDisplayNum(sp.qty)}</td>
+                        <td style="text-align: left;">${sp.unit}</td>
+                    </tr>`;
             }
 
             if (Object.keys(productSummary).length > 0) {
                 tbody.innerHTML += `
                     <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right;">TỔNG THÙNG:</td>
-                        <td><strong>${formatDisplayNum(totalThung)}</strong></td>
-                        <td><strong>Thùng</strong></td>
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG THÙNG:</td>
+                        <td style="text-align: right; padding-right: 15px;"><strong>${formatDisplayNum(totalThung)}</strong></td>
+                        <td style="text-align: left;"><strong>Thùng</strong></td>
                     </tr>
                     <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right;">TỔNG LẺ / GÓI:</td>
-                        <td><strong>${formatDisplayNum(totalLe)}</strong></td>
-                        <td><strong>Lẻ</strong></td>
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG LẺ / GÓI:</td>
+                        <td style="text-align: right; padding-right: 15px;"><strong>${formatDisplayNum(totalLe)}</strong></td>
+                        <td style="text-align: left;"><strong>Lẻ</strong></td>
                     </tr>`;
             } else {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;

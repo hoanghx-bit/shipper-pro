@@ -63,8 +63,6 @@
         td { padding: 12px; border-bottom: 1px solid var(--border-color); color: #334155; }
         tr:hover { background: #f1f5f9; }
         .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
-        .history-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
-        .history-card-title { font-weight: 700; font-size: 15px; color: #0f172a; }
         .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2; color: #1e293b; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
@@ -76,7 +74,6 @@
         .metric-val { font-size: 16px; font-weight: 700; color: #0f172a; }
         .metric-val.highlight { color: var(--primary); font-size: 18px; }
         .metric-val.gain { color: var(--success); }
-        .metric-val.loss { color: var(--danger); }
         .month-diff-card {
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
             border: 1px solid #a7f3d0;
@@ -95,6 +92,21 @@
             background: #f1f5f9;
             font-weight: 700;
             border-top: 2px solid var(--border-color);
+        }
+        .stats-toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .stats-toolbar-item {
+            flex: 1;
+            min-width: 130px;
         }
     </style>
 </head>
@@ -135,8 +147,8 @@
                             <label>Đơn Vị:</label>
                             <select id="order-unit" class="form-control">
                                 <option value="Thùng">Thùng (T)</option>
-                                <option value="Lẻ">Gói</option>
-                                <option value="Lẻ">Dây</option>
+                                <option value="Gói">Gói</option>
+                                <option value="Dây">Dây</option>
                             </select>
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
@@ -274,23 +286,35 @@
                         <div class="kpi-value" style="color: var(--success);" id="stats-total-diff">0 đ</div>
                     </div>
                 </div>
+
                 <div class="card">
+                    <!-- 1. Tiêu đề Thống Kê Tổng lên trên -->
                     <div class="card-header">
                         <span>Thống Kê Tổng</span>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="date" id="stats-date" class="form-control" onchange="onStatsFilterChange('date')">
-                            <input type="month" id="stats-month" class="form-control" style="width: 100px;" onchange="onStatsFilterChange('month')">
-                            <button class="btn btn-success btn-sm" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Word</button>
+                    </div>
+
+                    <!-- 2. Thanh bộ lọc và nút xuất Word nằm phía dưới tiêu đề -->
+                    <div class="stats-toolbar">
+                        <div class="stats-toolbar-item">
+                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Ngày:</label>
+                            <input type="date" id="stats-date" class="form-control" style="width: 100%;" onchange="onStatsFilterChange('date')">
+                        </div>
+                        <div class="stats-toolbar-item">
+                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Tháng:</label>
+                            <input type="month" id="stats-month" class="form-control" style="width: 100%;" onchange="onStatsFilterChange('month')">
+                        </div>
+                        <div>
+                            <button class="btn btn-success" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Word</button>
                         </div>
                     </div>
+
                     <div class="table-responsive" id="stats-table-wrapper">
                         <table id="stats-table">
                             <thead>
                                 <tr>
                                     <th style="width: 50px; text-align: center;">STT</th>
                                     <th style="text-align: left; white-space: nowrap;">Tên Sản Phẩm</th>
-                                    <th style="width: 120px; text-align: right; padding-right: 15px;">Số lượng</th>
-                                    <th style="width: 80px; text-align: left;">Đơn Vị</th>
+                                    <th style="width: 220px; text-align: right; padding-right: 15px;">Số lượng</th>
                                 </tr>
                             </thead>
                             <tbody id="stats-table-body"></tbody>
@@ -339,7 +363,7 @@
                         <tr>
                             <th>Sản Phẩm</th>
                             <th style="width:90px;">Số Lượng</th>
-                            <th style="width:90px;">Đơn Vị</th>
+                            <th style="width:100px;">Đơn Vị</th>
                             <th style="width:110px;">Giá Bán</th>
                             <th>Màu/Ghi chú</th>
                             <th style="width:60px;">Xóa</th>
@@ -356,7 +380,6 @@
     </div>
 
     <script>
-        // ---- SAFE STORAGE ----
         const memoryStore = {};
         function safeGetItem(key) {
             try { return localStorage.getItem(key); }
@@ -367,7 +390,6 @@
             catch (e) { memoryStore[key] = value; }
         }
 
-        // ---- DATA ----
         let inventoryData = JSON.parse(safeGetItem('dms_inventory')) || [];
         let ordersData = JSON.parse(safeGetItem('dms_orders')) || [];
         let tempItems = [];
@@ -425,11 +447,10 @@
             if (val === 0 || val === null || val === undefined) return "0";
             let num = Number(val);
             if (isNaN(num)) return "0";
-            num = Math.round(num * 10) / 10;
+            num = Math.round(num * 100) / 100;
             return num.toString().replace('.', ',');
         }
 
-        // ---- KHO ----
         function handleExcelUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -555,7 +576,6 @@
             closeProductModal();
         }
 
-        // ---- LÊN ĐƠN ----
         function updateProductSelect() {
             const select = document.getElementById('order-product');
             select.innerHTML = '<option value="">-- Chọn sản phẩm từ kho --</option>';
@@ -575,8 +595,8 @@
             if (qty <= 0) return alert("Số lượng phải lớn hơn 0!");
             const prod = inventoryData.find(p => p.id == prodId);
             if (!prod) return;
-            let giaBan = (unit === 'Thùng') ? prod.banThung : prod.banLe;
-            let giaNet = (unit === 'Thùng') ? prod.netThung : prod.netLe;
+            let giaBan = (unit === 'Thùng' || unit === 'T') ? prod.banThung : prod.banLe;
+            let giaNet = (unit === 'Thùng' || unit === 'T') ? prod.netThung : prod.netLe;
             let tienHangGoc = giaBan * qty;
             let chenhLech = (giaBan - giaNet) * qty;
             tempItems.push({ customer, prodId: prod.id, productName: prod.name, qty, unit, color, giaBan, giaNet, tienHangGoc, chenhLech });
@@ -649,7 +669,8 @@
             let totalRaw = 0;
             order.items.forEach(item => {
                 let qtyFormatted = formatDisplayNum(item.qty);
-                let unitStr = (item.unit === 'Thùng' || item.unit === 'T') ? `${qtyFormatted}T` : `${qtyFormatted} gói`;
+                let unitName = (item.unit === 'Thùng' || item.unit === 'T') ? 'T' : item.unit.toLowerCase();
+                let unitStr = unitName === 'T' ? `${qtyFormatted}T` : `${qtyFormatted} ${unitName}`;
                 let colorStr = item.color ? ` (${item.color})` : '';
                 let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                 totalRaw += lineTotal;
@@ -694,7 +715,6 @@
             return html;
         }
 
-        // ---- LỊCH SỬ ----
         function toggleHistoryEditMode() {
             isHistoryEditMode = !isHistoryEditMode;
             const btn = document.getElementById('btn-toggle-edit-mode');
@@ -773,8 +793,9 @@
                         <td><input type="number" class="form-control" value="${item.qty}" min="0.1" step="any" onchange="updateEditItem(${idx}, 'qty', this.value)"></td>
                         <td>
                             <select class="form-control" onchange="updateEditItem(${idx}, 'unit', this.value)">
-                                <option value="Thùng" ${item.unit === 'Thùng' ? 'selected' : ''}>Thùng</option>
-                                <option value="Lẻ" ${item.unit === 'Lẻ' ? 'selected' : ''}>Lẻ</option>
+                                <option value="Thùng" ${item.unit === 'Thùng' || item.unit === 'T' ? 'selected' : ''}>Thùng</option>
+                                <option value="Gói" ${item.unit === 'Gói' ? 'selected' : ''}>Gói</option>
+                                <option value="Dây" ${item.unit === 'Dây' ? 'selected' : ''}>Dây</option>
                             </select>
                         </td>
                         <td>
@@ -794,11 +815,10 @@
             if (field === 'qty') item.qty = parseVnNum(val);
             if (field === 'unit') {
                 item.unit = val;
-                // Khi đổi đơn vị thì lấy lại giá từ kho (giá bán mặc định)
                 const prod = inventoryData.find(p => p.id == item.prodId || p.name == item.productName);
                 if (prod) {
-                    item.giaBan = (item.unit === 'Thùng') ? prod.banThung : prod.banLe;
-                    item.giaNet = (item.unit === 'Thùng') ? prod.netThung : prod.netLe;
+                    item.giaBan = (item.unit === 'Thùng' || item.unit === 'T') ? prod.banThung : prod.banLe;
+                    item.giaNet = (item.unit === 'Thùng' || item.unit === 'T') ? prod.netThung : prod.netLe;
                 }
             }
             if (field === 'color') item.color = val.trim();
@@ -806,11 +826,9 @@
                 item.giaBan = parseVnNum(val);
             }
 
-            // Luôn tính lại tiền hàng và chênh lệch
             item.tienHangGoc = item.giaBan * item.qty;
             item.chenhLech = (item.giaBan - (item.giaNet || 0)) * item.qty;
 
-            // Cập nhật lại giao diện nếu đổi đơn vị (để hiện giá bán mới từ kho)
             if (field === 'unit') {
                 renderEditOrderTable();
             }
@@ -840,7 +858,6 @@
                 let totalRaw = 0, totalDiff = 0;
                 editingOrderItems.forEach(it => {
                     it.customer = customer;
-                    // Đảm bảo tính lại lần cuối
                     it.tienHangGoc = it.giaBan * it.qty;
                     it.chenhLech = (it.giaBan - (it.giaNet || 0)) * it.qty;
                     totalRaw += it.tienHangGoc;
@@ -880,7 +897,6 @@
             document.body.removeChild(a);
         }
 
-        // ---- THỐNG KÊ ----
         function onStatsFilterChange(type) {
             if (type === 'date') document.getElementById('stats-month').value = "";
             if (type === 'month') document.getElementById('stats-date').value = "";
@@ -933,8 +949,6 @@
 
             let totalSellPay = 0, totalDiscount = 0, totalDiff = 0, totalNet = 0;
             let productSummary = {};
-            let totalThung = 0;
-            let totalLe = 0;
 
             filtered.forEach(order => {
                 let orderRaw = 0, orderItemDiff = 0, orderItemNet = 0;
@@ -946,14 +960,24 @@
                     orderItemDiff += lineDiff;
                     orderItemNet += lineNet;
 
-                    let key = item.productName + "_" + item.unit;
-                    if (!productSummary[key]) productSummary[key] = { name: item.productName, unit: item.unit, qty: 0 };
-                    productSummary[key].qty += item.qty;
+                    let key = item.productName;
+                    if (!productSummary[key]) {
+                        productSummary[key] = { 
+                            name: item.productName, 
+                            prodId: item.prodId,
+                            qtyThung: 0, 
+                            qtyLe: 0, 
+                            leUnit: '' 
+                        };
+                    }
 
                     if (item.unit === 'Thùng' || item.unit === 'T') {
-                        totalThung += item.qty;
+                        productSummary[key].qtyThung += item.qty;
                     } else {
-                        totalLe += item.qty;
+                        productSummary[key].qtyLe += item.qty;
+                        if (item.unit && item.unit !== 'Lẻ') {
+                            productSummary[key].leUnit = item.unit.toLowerCase();
+                        }
                     }
                 });
                 let discount = order.discount !== undefined ? order.discount : 0;
@@ -972,31 +996,56 @@
             const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '';
             let stt = 1;
+
+            let overallThung = 0;
+
             for (let k in productSummary) {
                 let sp = productSummary[k];
+                let prodInfo = inventoryData.find(p => (sp.prodId && p.id == sp.prodId) || p.name === sp.name);
+                let qct = prodInfo ? parseVnNum(prodInfo.qct) : 0;
+                let unitName = sp.leUnit || 'gói';
+
+                let qtyDisplay = '';
+                if (sp.qtyThung > 0 && sp.qtyLe > 0) {
+                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T + ${formatDisplayNum(sp.qtyLe)} ${unitName}`;
+                } else if (sp.qtyThung > 0) {
+                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T`;
+                } else if (sp.qtyLe > 0) {
+                    qtyDisplay = `${formatDisplayNum(sp.qtyLe)} ${unitName}`;
+                } else {
+                    qtyDisplay = `0T`;
+                }
+
+                let totalThungForThisProduct = sp.qtyThung;
+                if (qct > 0 && sp.qtyLe > 0) {
+                    let fullThungFromLe = Math.floor(sp.qtyLe / qct);
+                    let remLeTemp = sp.qtyLe - (fullThungFromLe * qct);
+                    let halfThungQty = qct / 2;
+                    
+                    let extraThung = 0;
+                    if (remLeTemp >= halfThungQty) {
+                        extraThung = 0.5;
+                    }
+                    totalThungForThisProduct += fullThungFromLe + extraThung;
+                }
+                overallThung += totalThungForThisProduct;
+
                 tbody.innerHTML += `
                     <tr>
                         <td style="text-align: center;">${stt++}</td>
                         <td style="text-align: left; white-space: nowrap;"><strong>${sp.name}</strong></td>
-                        <td style="text-align: right; padding-right: 15px;">${formatDisplayNum(sp.qty)}</td>
-                        <td style="text-align: left;">${sp.unit}</td>
+                        <td style="text-align: right; padding-right: 15px;"><strong>${qtyDisplay}</strong></td>
                     </tr>`;
             }
 
             if (Object.keys(productSummary).length > 0) {
                 tbody.innerHTML += `
                     <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG:</td>
-                        <td style="text-align: right; padding-right: 15px;"><strong>${formatDisplayNum(totalThung)}</strong></td>
-                        <td style="text-align: left;"><strong>Thùng</strong></td>
-                    </tr>
-                    <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right; padding-right: 20px;">LẺ / GÓI:</td>
-                        <td style="text-align: right; padding-right: 15px;"><strong>${formatDisplayNum(totalLe)}</strong></td>
-                        <td style="text-align: left;"><strong>Lẻ</strong></td>
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG THÙNG (Đã Quy Đổi):</td>
+                        <td style="text-align: right; padding-right: 15px; color: var(--primary);"><strong>${formatDisplayNum(overallThung)}T</strong></td>
                     </tr>`;
             } else {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
             }
         }
 

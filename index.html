@@ -124,7 +124,7 @@
                             <input type="text" id="order-customer" class="form-control" placeholder="Nhập tên khách hàng & địa chỉ...">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
-                            <label>Chọn Sản Phẩm (từ kho):</label>
+                            <label>Chọn Sản Phẩm:</label>
                             <select id="order-product" class="form-control"></select>
                         </div>
                         <div class="form-group">
@@ -135,7 +135,8 @@
                             <label>Đơn Vị:</label>
                             <select id="order-unit" class="form-control">
                                 <option value="Thùng">Thùng (T)</option>
-                                <option value="Lẻ">Lẻ / Gói</option>
+                                <option value="Lẻ">Gói</option>
+                                <option value="Lẻ">Dây</option>
                             </select>
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
@@ -157,7 +158,7 @@
                             <thead>
                                 <tr>
                                     <th>Sản Phẩm</th><th>Số Lượng</th><th>Đơn Giá Bán</th><th>Đơn Giá Net</th>
-                                    <th>Tiền Hàng</th><th>Chênh Lệch (Lãi)</th><th>Thao Tác</th>
+                                    <th>Tiền Hàng</th><th>Chênh Lệch</th><th>Thao Tác</th>
                                 </tr>
                             </thead>
                             <tbody id="temp-order-table">
@@ -220,7 +221,7 @@
             <div id="tab-history" class="tab-panel">
                 <div class="card">
                     <div class="card-header">
-                        <span>Lịch Sử Đơn Hàng (Xem & Xuất Word)</span>
+                        <span>Lịch Sử Đơn Hàng</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="history-date-filter" class="form-control" onchange="renderHistory()">
                             <button class="btn btn-warning btn-sm" id="btn-toggle-edit-mode" onclick="toggleHistoryEditMode()">
@@ -245,11 +246,11 @@
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
                         <div style="border-right: 1px dashed #a7f3d0; padding-right: 15px;">
-                            <div class="month-diff-label">TỔNG DOANH SỐ NET THEO THÁNG</div>
+                            <div class="month-diff-label">TỔNG DOANH SỐ NET</div>
                             <div class="month-diff-value" style="color: var(--primary);" id="stats-month-total-net">0 đ</div>
                         </div>
                         <div style="text-align: right;">
-                            <div class="month-diff-label">TỔNG CHÊNH LỆCH THEO THÁNG</div>
+                            <div class="month-diff-label">TỔNG CHÊNH LỆCH</div>
                             <div class="month-diff-value" id="stats-month-total-diff">0 đ</div>
                         </div>
                     </div>
@@ -257,7 +258,7 @@
 
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <div class="kpi-label">DOANH SỐ BÁN (TIỀN THU)</div>
+                        <div class="kpi-label">DOANH SỐ BÁN</div>
                         <div class="kpi-value" id="stats-total-sell">0 đ</div>
                     </div>
                     <div class="kpi-card">
@@ -275,11 +276,11 @@
                 </div>
                 <div class="card">
                     <div class="card-header">
-                        <span>Thống Kê Tổng Sản Phẩm Đã Bán</span>
+                        <span>Thống Kê Tổng</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="stats-date" class="form-control" onchange="onStatsFilterChange('date')">
                             <input type="month" id="stats-month" class="form-control" style="width: 180px;" onchange="onStatsFilterChange('month')">
-                            <button class="btn btn-success btn-sm" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Bảng Ra Word</button>
+                            <button class="btn btn-success btn-sm" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Word</button>
                         </div>
                     </div>
                     <div class="table-responsive" id="stats-table-wrapper">
@@ -632,7 +633,7 @@
             renderTempOrder();
             renderStats();
             renderCurrentMonthDiff();
-            alert("Đã ghi đơn thành công vào Lịch Sử!");
+            alert("Thành công");
         }
 
         function generateOrderHtml(order, index) {

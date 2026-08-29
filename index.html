@@ -279,7 +279,7 @@
                         <span>Thống Kê Tổng</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="date" id="stats-date" class="form-control" onchange="onStatsFilterChange('date')">
-                            <input type="month" id="stats-month" class="form-control" style="width: 180px;" onchange="onStatsFilterChange('month')">
+                            <input type="month" id="stats-month" class="form-control" style="width: 100px;" onchange="onStatsFilterChange('month')">
                             <button class="btn btn-success btn-sm" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Word</button>
                         </div>
                     </div>
@@ -325,7 +325,7 @@
     </div>
 
     <div class="modal" id="edit-order-modal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content" style="max-width: 900px;">
             <div class="card-header">Chỉnh Sửa Chi Tiết Đơn Hàng</div>
             <input type="hidden" id="edit-order-id">
             <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr; margin-bottom: 15px;">
@@ -336,7 +336,14 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr><th>Sản Phẩm</th><th style="width:100px;">Số Lượng</th><th style="width:100px;">Đơn Vị</th><th>Màu/Ghi chú</th><th style="width:60px;">Xóa</th></tr>
+                        <tr>
+                            <th>Sản Phẩm</th>
+                            <th style="width:90px;">Số Lượng</th>
+                            <th style="width:90px;">Đơn Vị</th>
+                            <th style="width:110px;">Giá Bán</th>
+                            <th>Màu/Ghi chú</th>
+                            <th style="width:60px;">Xóa</th>
+                        </tr>
                     </thead>
                     <tbody id="edit-order-items-body"></tbody>
                 </table>
@@ -756,7 +763,7 @@
             const tbody = document.getElementById('edit-order-items-body');
             tbody.innerHTML = '';
             if (editingOrderItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Đơn hàng trống sản phẩm.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Đơn hàng trống sản phẩm.</td></tr>`;
                 return;
             }
             editingOrderItems.forEach((item, idx) => {
@@ -770,6 +777,11 @@
                                 <option value="Lẻ" ${item.unit === 'Lẻ' ? 'selected' : ''}>Lẻ</option>
                             </select>
                         </td>
+                        <td>
+                            <input type="text" class="form-control" value="${formatDisplayNum(item.giaBan)}" 
+                                   onchange="updateEditItem(${idx}, 'giaBan', this.value)" 
+                                   style="font-weight: 600; color: var(--primary);">
+                        </td>
                         <td><input type="text" class="form-control" value="${item.color || ''}" onchange="updateEditItem(${idx}, 'color', this.value)"></td>
                         <td><button class="btn btn-danger btn-sm" onclick="removeEditItem(${idx})"><i data-lucide="x"></i></button></td>
                     </tr>`;
@@ -780,15 +792,28 @@
         function updateEditItem(idx, field, val) {
             let item = editingOrderItems[idx];
             if (field === 'qty') item.qty = parseVnNum(val);
-            if (field === 'unit') item.unit = val;
-            if (field === 'color') item.color = val.trim();
-            const prod = inventoryData.find(p => p.id == item.prodId || p.name == item.productName);
-            if (prod) {
-                item.giaBan = (item.unit === 'Thùng') ? prod.banThung : prod.banLe;
-                item.giaNet = (item.unit === 'Thùng') ? prod.netThung : prod.netLe;
+            if (field === 'unit') {
+                item.unit = val;
+                // Khi đổi đơn vị thì lấy lại giá từ kho (giá bán mặc định)
+                const prod = inventoryData.find(p => p.id == item.prodId || p.name == item.productName);
+                if (prod) {
+                    item.giaBan = (item.unit === 'Thùng') ? prod.banThung : prod.banLe;
+                    item.giaNet = (item.unit === 'Thùng') ? prod.netThung : prod.netLe;
+                }
             }
+            if (field === 'color') item.color = val.trim();
+            if (field === 'giaBan') {
+                item.giaBan = parseVnNum(val);
+            }
+
+            // Luôn tính lại tiền hàng và chênh lệch
             item.tienHangGoc = item.giaBan * item.qty;
-            item.chenhLech = (item.giaBan - item.giaNet) * item.qty;
+            item.chenhLech = (item.giaBan - (item.giaNet || 0)) * item.qty;
+
+            // Cập nhật lại giao diện nếu đổi đơn vị (để hiện giá bán mới từ kho)
+            if (field === 'unit') {
+                renderEditOrderTable();
+            }
         }
 
         function removeEditItem(idx) {
@@ -815,6 +840,9 @@
                 let totalRaw = 0, totalDiff = 0;
                 editingOrderItems.forEach(it => {
                     it.customer = customer;
+                    // Đảm bảo tính lại lần cuối
+                    it.tienHangGoc = it.giaBan * it.qty;
+                    it.chenhLech = (it.giaBan - (it.giaNet || 0)) * it.qty;
                     totalRaw += it.tienHangGoc;
                     totalDiff += it.chenhLech;
                 });

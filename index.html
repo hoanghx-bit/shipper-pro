@@ -288,12 +288,10 @@
                 </div>
 
                 <div class="card">
-                    <!-- 1. Tiêu đề Thống Kê Tổng lên trên -->
                     <div class="card-header">
                         <span>Thống Kê Tổng</span>
                     </div>
 
-                    <!-- 2. Thanh bộ lọc và nút xuất Word nằm phía dưới tiêu đề -->
                     <div class="stats-toolbar">
                         <div class="stats-toolbar-item">
                             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Ngày:</label>
@@ -511,6 +509,7 @@
 
         function saveInventory() {
             safeSetItem('dms_inventory', JSON.stringify(inventoryData));
+            if (window.saveInventoryToCloud) window.saveInventoryToCloud();
         }
 
         function deleteProduct(id) {
@@ -519,6 +518,7 @@
                 saveInventory();
                 renderInventory();
                 updateProductSelect();
+                if (window.deleteProductFromCloud) window.deleteProductFromCloud(id);
             }
         }
 
@@ -561,19 +561,23 @@
             const netThung = parseVnNum(document.getElementById('edit-prod-netthung').value);
             const banLe = parseVnNum(document.getElementById('edit-prod-banle').value);
             const banThung = parseVnNum(document.getElementById('edit-prod-banthung').value);
+            let savedItem = null;
             if (id) {
                 const prod = inventoryData.find(p => p.id == id);
                 if (prod) {
                     prod.name = name; prod.qct = qct; prod.netLe = netLe;
                     prod.netThung = netThung; prod.banLe = banLe; prod.banThung = banThung;
+                    savedItem = prod;
                 }
             } else {
-                inventoryData.push({ id: Date.now(), name, qct, netLe, netThung, banLe, banThung });
+                savedItem = { id: Date.now(), name, qct, netLe, netThung, banLe, banThung };
+                inventoryData.push(savedItem);
             }
             saveInventory();
             renderInventory();
             updateProductSelect();
             closeProductModal();
+            if (window.saveProductItemToCloud && savedItem) window.saveProductItemToCloud(savedItem);
         }
 
         function updateProductSelect() {
@@ -653,6 +657,8 @@
             };
             ordersData.push(newOrder);
             safeSetItem('dms_orders', JSON.stringify(ordersData));
+            if (window.saveOrderToCloud) window.saveOrderToCloud(newOrder);
+
             tempItems = [];
             document.getElementById('order-customer').value = "";
             document.getElementById('temp-customer-name').innerText = "";
@@ -764,6 +770,7 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
+                if (window.deleteOrderFromCloud) window.deleteOrderFromCloud(orderId);
             }
         }
 
@@ -872,6 +879,7 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
+                if (window.saveOrderToCloud) window.saveOrderToCloud(order);
                 alert("Đã cập nhật đơn hàng thành công!");
             }
         }
@@ -1064,28 +1072,81 @@
         }
     </script>
 
-    <!-- FIREBASE SDK INTEGRATION -->
+    <!-- FIREBASE SDK MODULIZED & REAL-TIME SYNC -->
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
-        authDomain: "dms-pro-19191.firebaseapp.com",
-        projectId: "dms-pro-19191",
-        storageBucket: "dms-pro-19191.firebasestorage.app",
-        messagingSenderId: "297081478934",
-        appId: "1:297081478934:web:3b116788a534307a187a37",
-        measurementId: "G-R740TXLRFQ"
-      };
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
+            authDomain: "dms-pro-19191.firebaseapp.com",
+            projectId: "dms-pro-19191",
+            storageBucket: "dms-pro-19191.firebasestorage.app",
+            messagingSenderId: "297081478934",
+            appId: "1:297081478934:web:3b116788a534307a187a37",
+            measurementId: "G-R740TXLRFQ"
+        };
 
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-      const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
 
-      // Gán biến db lên scope toàn cục để sử dụng trong ứng dụng khi cần
-      window.db = db;
+        // Lắng nghe dữ liệu Kho Hàng từ Cloud (Real-time)
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
+            const cloudInventory = [];
+            snapshot.forEach((doc) => {
+                cloudInventory.push(doc.data());
+            });
+            if (cloudInventory.length > 0) {
+                inventoryData = cloudInventory;
+                safeSetItem('dms_inventory', JSON.stringify(inventoryData));
+                renderInventory();
+                updateProductSelect();
+            }
+        });
+
+        // Lắng nghe dữ liệu Đơn Hàng từ Cloud (Real-time)
+        onSnapshot(collection(db, "orders"), (snapshot) => {
+            const cloudOrders = [];
+            snapshot.forEach((doc) => {
+                cloudOrders.push(doc.data());
+            });
+            if (cloudOrders.length > 0) {
+                ordersData = cloudOrders;
+                safeSetItem('dms_orders', JSON.stringify(ordersData));
+                renderHistory();
+                renderStats();
+                renderCurrentMonthDiff();
+            }
+        });
+
+        // Đẩy toàn bộ kho lên Firestore
+        window.saveInventoryToCloud = async function() {
+            for (const item of inventoryData) {
+                await setDoc(doc(db, "inventory", String(item.id)), item);
+            }
+        };
+
+        // Đẩy 1 sản phẩm đơn lẻ lên Firestore
+        window.saveProductItemToCloud = async function(item) {
+            await setDoc(doc(db, "inventory", String(item.id)), item);
+        };
+
+        // Đẩy 1 đơn hàng lên Firestore
+        window.saveOrderToCloud = async function(newOrder) {
+            await setDoc(doc(db, "orders", String(newOrder.id)), newOrder);
+        };
+
+        // Xóa đơn hàng trên Firestore
+        window.deleteOrderFromCloud = async function(orderId) {
+            await deleteDoc(doc(db, "orders", String(orderId)));
+        };
+
+        // Xóa sản phẩm kho trên Firestore
+        window.deleteProductFromCloud = async function(productId) {
+            await deleteDoc(doc(db, "inventory", String(productId)));
+        };
     </script>
 </body>
 </html>

@@ -394,6 +394,10 @@
         let editingOrderItems = [];
         let isHistoryEditMode = false;
 
+        function sortInventory() {
+            inventoryData.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' }));
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
             const today = new Date().toISOString().split('T')[0];
@@ -404,6 +408,7 @@
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('month-diff-selector').value = currentMonth;
 
+            sortInventory();
             renderInventory();
             updateProductSelect();
             renderHistory();
@@ -473,6 +478,7 @@
                         inventoryData.push({ id: Date.now() + Math.random(), name, qct, netLe, netThung, banLe, banThung });
                     }
                 }
+                sortInventory();
                 saveInventory();
                 renderInventory();
                 updateProductSelect();
@@ -482,6 +488,7 @@
         }
 
         function renderInventory() {
+            sortInventory();
             const tbody = document.getElementById('inventory-table-body');
             tbody.innerHTML = '';
             if (inventoryData.length === 0) {
@@ -573,6 +580,7 @@
                 savedItem = { id: Date.now(), name, qct, netLe, netThung, banLe, banThung };
                 inventoryData.push(savedItem);
             }
+            sortInventory();
             saveInventory();
             renderInventory();
             updateProductSelect();
@@ -581,6 +589,7 @@
         }
 
         function updateProductSelect() {
+            sortInventory();
             const select = document.getElementById('order-product');
             select.innerHTML = '<option value="">-- Chọn sản phẩm từ kho --</option>';
             inventoryData.forEach(item => {
@@ -1076,9 +1085,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-        import { 
-            getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp 
-        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
@@ -1102,6 +1109,7 @@
             });
             if (cloudInventory.length > 0) {
                 inventoryData = cloudInventory;
+                sortInventory();
                 safeSetItem('dms_inventory', JSON.stringify(inventoryData));
                 renderInventory();
                 updateProductSelect();
@@ -1135,22 +1143,9 @@
             await setDoc(doc(db, "inventory", String(item.id)), item);
         };
 
-        // Đẩy 1 đơn hàng lên Firestore với mốc TTL 365 ngày
+        // Đẩy 1 đơn hàng lên Firestore
         window.saveOrderToCloud = async function(newOrder) {
-            const DAYS_TO_KEEP = 365; // Mốc 365 ngày
-            
-            // Tính mốc thời gian hết hạn (Ngày hiện tại + 365 ngày)
-            const expireDate = new Date();
-            expireDate.setDate(expireDate.getDate() + DAYS_TO_KEEP);
-
-            // Đính kèm trường expireAt vào dữ liệu đơn hàng
-            const orderWithTTL = {
-                ...newOrder,
-                expireAt: Timestamp.fromDate(expireDate)
-            };
-
-            // Gửi lên Firestore
-            await setDoc(doc(db, "orders", String(newOrder.id)), orderWithTTL);
+            await setDoc(doc(db, "orders", String(newOrder.id)), newOrder);
         };
 
         // Xóa đơn hàng trên Firestore

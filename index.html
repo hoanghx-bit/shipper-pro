@@ -1063,5 +1063,29 @@
             document.body.removeChild(a);
         }
     </script>
+
+    <!-- FIREBASE SDK INTEGRATION -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
+        authDomain: "dms-pro-19191.firebaseapp.com",
+        projectId: "dms-pro-19191",
+        storageBucket: "dms-pro-19191.firebasestorage.app",
+        messagingSenderId: "297081478934",
+        appId: "1:297081478934:web:3b116788a534307a187a37",
+        measurementId: "G-R740TXLRFQ"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const db = getFirestore(app);
+
+      // Gán biến db lên scope toàn cục để sử dụng trong ứng dụng khi cần
+      window.db = db;
+    </script>
 </body>
 </html>

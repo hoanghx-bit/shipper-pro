@@ -88,11 +88,6 @@
         .month-diff-value { font-size: 26px; font-weight: 800; color: #059669; }
         .month-diff-sub { font-size: 13px; color: #047857; margin-top: 4px; }
         .month-diff-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px dashed #a7f3d0; padding-bottom: 12px; }
-        .stats-total-row td {
-            background: #f1f5f9;
-            font-weight: 700;
-            border-top: 2px solid var(--border-color);
-        }
         .stats-toolbar {
             display: flex;
             gap: 12px;
@@ -109,7 +104,6 @@
             min-width: 130px;
         }
 
-        /* CSS cho Toast Notification (Thông báo tự dọn dẹp) */
         #toast {
             visibility: hidden;
             min-width: 250px;
@@ -404,10 +398,20 @@
         </div>
     </div>
     
-    <!-- Phần tử hiển thị Toast -->
     <div id="toast"><i data-lucide="info"></i> <span id="toast-message"></span></div>
 
     <script>
+        // Hàm bọc an toàn khi gọi Lucide (Tránh đơ app khi offline)
+        function safeCreateIcons() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                try {
+                    lucide.createIcons();
+                } catch (e) {
+                    console.warn("Không thể tải biểu tượng icon:", e);
+                }
+            }
+        }
+
         const memoryStore = {};
         function safeGetItem(key) {
             try { return localStorage.getItem(key); }
@@ -424,18 +428,16 @@
         let editingOrderItems = [];
         let isHistoryEditMode = false;
         
-        // Hàm hiển thị thông báo Toast
         function showToast(message) {
             const toast = document.getElementById("toast");
             document.getElementById("toast-message").innerText = message;
             toast.className = "toast show";
-            lucide.createIcons(); // render icon info
+            safeCreateIcons();
             setTimeout(function(){ 
                 toast.className = toast.className.replace("show", ""); 
             }, 4000);
         }
 
-        // Hàm tự động dọn dẹp đơn hàng cũ hơn 1 năm
         window.autoCleanupOldOrders = function() {
             if (!ordersData || ordersData.length === 0) return false;
 
@@ -464,11 +466,10 @@
 
                 oldOrders.forEach(order => {
                     if (window.deleteOrderFromCloud) {
-                        window.deleteOrderFromCloud(order.id);
+                        try { window.deleteOrderFromCloud(order.id); } catch(err){}
                     }
                 });
                 
-                // Hiển thị popup thông báo
                 showToast(`Đã tự động dọn dẹp ${oldOrders.length} đơn hàng trước ngày ${cutoffDate}`);
                 return true; 
             }
@@ -480,7 +481,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
+            safeCreateIcons();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('history-date-filter').value = today;
             document.getElementById('stats-date').value = today;
@@ -489,7 +490,6 @@
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('month-diff-selector').value = currentMonth;
 
-            // Kích hoạt hàm dọn dẹp khi khởi tạo Local
             if (window.autoCleanupOldOrders) {
                 window.autoCleanupOldOrders();
             }
@@ -502,6 +502,7 @@
             renderCurrentMonthDiff();
         });
 
+        // Hàm chuyển tab bọc try-catch chống đơ khi offline
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -513,12 +514,18 @@
                 'tab-history': '3. Lịch sử đơn hàng',
                 'tab-stats': '4. Báo cáo thống kê'
             };
-            document.getElementById('page-title').innerText = titles[tabId];
-            if(tabId === 'tab-order') updateProductSelect();
-            if(tabId === 'tab-history') renderHistory();
-            if(tabId === 'tab-stats') {
-                renderStats();
-                renderCurrentMonthDiff();
+            document.getElementById('page-title').innerText = titles[tabId] || '';
+            
+            try {
+                if(tabId === 'tab-order') updateProductSelect();
+                if(tabId === 'tab-inventory') renderInventory();
+                if(tabId === 'tab-history') renderHistory();
+                if(tabId === 'tab-stats') {
+                    renderStats();
+                    renderCurrentMonthDiff();
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải giao diện tab:", error);
             }
         }
 
@@ -597,12 +604,14 @@
                         </td>
                     </tr>`;
             });
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         function saveInventory() {
             safeSetItem('dms_inventory', JSON.stringify(inventoryData));
-            if (window.saveInventoryToCloud) window.saveInventoryToCloud();
+            if (window.saveInventoryToCloud) {
+                try { window.saveInventoryToCloud(); } catch(e){}
+            }
         }
 
         function deleteProduct(id) {
@@ -611,7 +620,9 @@
                 saveInventory();
                 renderInventory();
                 updateProductSelect();
-                if (window.deleteProductFromCloud) window.deleteProductFromCloud(id);
+                if (window.deleteProductFromCloud) {
+                    try { window.deleteProductFromCloud(id); } catch(e){}
+                }
             }
         }
 
@@ -671,7 +682,9 @@
             renderInventory();
             updateProductSelect();
             closeProductModal();
-            if (window.saveProductItemToCloud && savedItem) window.saveProductItemToCloud(savedItem);
+            if (window.saveProductItemToCloud && savedItem) {
+                try { window.saveProductItemToCloud(savedItem); } catch(e){}
+            }
         }
 
         function updateProductSelect() {
@@ -732,7 +745,7 @@
             document.getElementById('temp-total-raw').innerText = `${formatDisplayNum(totalRaw)} đ`;
             document.getElementById('temp-total-pay').innerText = `${formatDisplayNum(totalRaw - discount)} đ`;
             document.getElementById('temp-total-diff').innerText = `${formatDisplayNum(totalDiff - discount)} đ`;
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         function removeTempItem(index) {
@@ -752,7 +765,9 @@
             };
             ordersData.push(newOrder);
             safeSetItem('dms_orders', JSON.stringify(ordersData));
-            if (window.saveOrderToCloud) window.saveOrderToCloud(newOrder);
+            if (window.saveOrderToCloud) {
+                try { window.saveOrderToCloud(newOrder); } catch(e){}
+            }
 
             tempItems = [];
             document.getElementById('order-customer').value = "";
@@ -826,7 +841,7 @@
                 btn.className = "btn btn-warning btn-sm";
                 btn.innerHTML = `<i data-lucide="edit"></i> Sửa / Xóa`;
             }
-            lucide.createIcons();
+            safeCreateIcons();
             renderHistory();
         }
 
@@ -855,7 +870,7 @@
                         ${actionsHtml}
                     </div>`;
             });
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         function deleteOrder(orderId) {
@@ -865,7 +880,9 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
-                if (window.deleteOrderFromCloud) window.deleteOrderFromCloud(orderId);
+                if (window.deleteOrderFromCloud) {
+                    try { window.deleteOrderFromCloud(orderId); } catch(e){}
+                }
             }
         }
 
@@ -909,7 +926,7 @@
                         <td><button class="btn btn-danger btn-sm" onclick="removeEditItem(${idx})"><i data-lucide="x"></i></button></td>
                     </tr>`;
             });
-            lucide.createIcons();
+            safeCreateIcons();
         }
 
         function updateEditItem(idx, field, val) {
@@ -974,7 +991,9 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
-                if (window.saveOrderToCloud) window.saveOrderToCloud(order);
+                if (window.saveOrderToCloud) {
+                    try { window.saveOrderToCloud(order); } catch(e){}
+                }
                 alert("Đã cập nhật đơn hàng thành công!");
             }
         }
@@ -1134,7 +1153,7 @@
                 th { background-color: #f2f2f2; }
             </style>
             </head><body>
-            <h2 style="text-align: center;">BẢNG TỔNG HỢP HÀNG BÁN MỖI NGÀY</h2>
+            <h2 style="text-align: center;">BẢNG TỔNG HỢP HÀNG BẢN MỖI NGÀY</h2>
             <p><strong>Thời gian:</strong> ${filterText}</p>
             `;
 
@@ -1185,7 +1204,6 @@
             a.click();
             document.body.removeChild(a);
         }
-
     </script>
 </body>
 </html>

@@ -88,6 +88,11 @@
         .month-diff-value { font-size: 26px; font-weight: 800; color: #059669; }
         .month-diff-sub { font-size: 13px; color: #047857; margin-top: 4px; }
         .month-diff-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px dashed #a7f3d0; padding-bottom: 12px; }
+        .stats-total-row td {
+            background: #f1f5f9;
+            font-weight: 700;
+            border-top: 2px solid var(--border-color);
+        }
         .stats-toolbar {
             display: flex;
             gap: 12px;
@@ -103,37 +108,11 @@
             flex: 1;
             min-width: 130px;
         }
-
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #334155;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px 20px;
-            position: fixed;
-            z-index: 9999;
-            right: 30px;
-            bottom: -50px;
-            font-size: 14px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 30px;
-        }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="brand"><i data-lucide="layers"></i> DMS PRO</div>
+        <div class="brand"><i data-lucide="layers"></i> DMS PRO SYSTEM</div>
         <ul class="nav-list">
             <li class="nav-item active" onclick="switchTab('tab-order', this)"><i data-lucide="shopping-cart"></i> 1. Lên đơn</li>
             <li class="nav-item" onclick="switchTab('tab-inventory', this)"><i data-lucide="package"></i> 2. Kho hàng</li>
@@ -143,7 +122,7 @@
     </div>
     <div class="main-wrapper">
         <div class="top-header">
-            <div class="header-title" id="page-title">1. Lên đơn hàng</div>
+            <div class="header-title" id="page-title">1. Quản lý Lên đơn hàng</div>
             <div class="user-badge"><i data-lucide="user"></i>Lê Hoàng</div>
         </div>
         <div class="content-body">
@@ -397,21 +376,8 @@
             </div>
         </div>
     </div>
-    
-    <div id="toast"><i data-lucide="info"></i> <span id="toast-message"></span></div>
 
     <script>
-        // Hàm bọc an toàn khi gọi Lucide (Tránh đơ app khi offline)
-        function safeCreateIcons() {
-            if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                try {
-                    lucide.createIcons();
-                } catch (e) {
-                    console.warn("Không thể tải biểu tượng icon:", e);
-                }
-            }
-        }
-
         const memoryStore = {};
         function safeGetItem(key) {
             try { return localStorage.getItem(key); }
@@ -427,61 +393,9 @@
         let tempItems = [];
         let editingOrderItems = [];
         let isHistoryEditMode = false;
-        
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            document.getElementById("toast-message").innerText = message;
-            toast.className = "toast show";
-            safeCreateIcons();
-            setTimeout(function(){ 
-                toast.className = toast.className.replace("show", ""); 
-            }, 4000);
-        }
-
-        window.autoCleanupOldOrders = function() {
-            if (!ordersData || ordersData.length === 0) return false;
-
-            const today = new Date();
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(today.getFullYear() - 1);
-            
-            const cutoffDate = oneYearAgo.toISOString().split('T')[0];
-            
-            const validOrders = [];
-            const oldOrders = [];
-
-            ordersData.forEach(order => {
-                if (order.date < cutoffDate) {
-                    oldOrders.push(order);
-                } else {
-                    validOrders.push(order);
-                }
-            });
-
-            if (oldOrders.length > 0) {
-                console.log(`Đã dọn dẹp ${oldOrders.length} đơn hàng quá hạn 1 năm.`);
-                
-                ordersData = validOrders;
-                safeSetItem('dms_orders', JSON.stringify(ordersData));
-
-                oldOrders.forEach(order => {
-                    if (window.deleteOrderFromCloud) {
-                        try { window.deleteOrderFromCloud(order.id); } catch(err){}
-                    }
-                });
-                
-                showToast(`Đã tự động dọn dẹp ${oldOrders.length} đơn hàng trước ngày ${cutoffDate}`);
-                return true; 
-            }
-            return false;
-        };
-
-        function sortInventory() {
-            inventoryData.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' }));
-        }
 
         document.addEventListener("DOMContentLoaded", () => {
-            safeCreateIcons();
+            lucide.createIcons();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('history-date-filter').value = today;
             document.getElementById('stats-date').value = today;
@@ -490,11 +404,6 @@
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('month-diff-selector').value = currentMonth;
 
-            if (window.autoCleanupOldOrders) {
-                window.autoCleanupOldOrders();
-            }
-
-            sortInventory();
             renderInventory();
             updateProductSelect();
             renderHistory();
@@ -502,7 +411,6 @@
             renderCurrentMonthDiff();
         });
 
-        // Hàm chuyển tab bọc try-catch chống đơ khi offline
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -514,18 +422,12 @@
                 'tab-history': '3. Lịch sử đơn hàng',
                 'tab-stats': '4. Báo cáo thống kê'
             };
-            document.getElementById('page-title').innerText = titles[tabId] || '';
-            
-            try {
-                if(tabId === 'tab-order') updateProductSelect();
-                if(tabId === 'tab-inventory') renderInventory();
-                if(tabId === 'tab-history') renderHistory();
-                if(tabId === 'tab-stats') {
-                    renderStats();
-                    renderCurrentMonthDiff();
-                }
-            } catch (error) {
-                console.error("Lỗi khi tải giao diện tab:", error);
+            document.getElementById('page-title').innerText = titles[tabId];
+            if(tabId === 'tab-order') updateProductSelect();
+            if(tabId === 'tab-history') renderHistory();
+            if(tabId === 'tab-stats') {
+                renderStats();
+                renderCurrentMonthDiff();
             }
         }
 
@@ -571,7 +473,6 @@
                         inventoryData.push({ id: Date.now() + Math.random(), name, qct, netLe, netThung, banLe, banThung });
                     }
                 }
-                sortInventory();
                 saveInventory();
                 renderInventory();
                 updateProductSelect();
@@ -581,7 +482,6 @@
         }
 
         function renderInventory() {
-            sortInventory();
             const tbody = document.getElementById('inventory-table-body');
             tbody.innerHTML = '';
             if (inventoryData.length === 0) {
@@ -604,14 +504,12 @@
                         </td>
                     </tr>`;
             });
-            safeCreateIcons();
+            lucide.createIcons();
         }
 
         function saveInventory() {
             safeSetItem('dms_inventory', JSON.stringify(inventoryData));
-            if (window.saveInventoryToCloud) {
-                try { window.saveInventoryToCloud(); } catch(e){}
-            }
+            if (window.saveInventoryToCloud) window.saveInventoryToCloud();
         }
 
         function deleteProduct(id) {
@@ -620,9 +518,7 @@
                 saveInventory();
                 renderInventory();
                 updateProductSelect();
-                if (window.deleteProductFromCloud) {
-                    try { window.deleteProductFromCloud(id); } catch(e){}
-                }
+                if (window.deleteProductFromCloud) window.deleteProductFromCloud(id);
             }
         }
 
@@ -677,18 +573,14 @@
                 savedItem = { id: Date.now(), name, qct, netLe, netThung, banLe, banThung };
                 inventoryData.push(savedItem);
             }
-            sortInventory();
             saveInventory();
             renderInventory();
             updateProductSelect();
             closeProductModal();
-            if (window.saveProductItemToCloud && savedItem) {
-                try { window.saveProductItemToCloud(savedItem); } catch(e){}
-            }
+            if (window.saveProductItemToCloud && savedItem) window.saveProductItemToCloud(savedItem);
         }
 
         function updateProductSelect() {
-            sortInventory();
             const select = document.getElementById('order-product');
             select.innerHTML = '<option value="">-- Chọn sản phẩm từ kho --</option>';
             inventoryData.forEach(item => {
@@ -745,7 +637,7 @@
             document.getElementById('temp-total-raw').innerText = `${formatDisplayNum(totalRaw)} đ`;
             document.getElementById('temp-total-pay').innerText = `${formatDisplayNum(totalRaw - discount)} đ`;
             document.getElementById('temp-total-diff').innerText = `${formatDisplayNum(totalDiff - discount)} đ`;
-            safeCreateIcons();
+            lucide.createIcons();
         }
 
         function removeTempItem(index) {
@@ -765,9 +657,7 @@
             };
             ordersData.push(newOrder);
             safeSetItem('dms_orders', JSON.stringify(ordersData));
-            if (window.saveOrderToCloud) {
-                try { window.saveOrderToCloud(newOrder); } catch(e){}
-            }
+            if (window.saveOrderToCloud) window.saveOrderToCloud(newOrder);
 
             tempItems = [];
             document.getElementById('order-customer').value = "";
@@ -841,7 +731,7 @@
                 btn.className = "btn btn-warning btn-sm";
                 btn.innerHTML = `<i data-lucide="edit"></i> Sửa / Xóa`;
             }
-            safeCreateIcons();
+            lucide.createIcons();
             renderHistory();
         }
 
@@ -870,7 +760,7 @@
                         ${actionsHtml}
                     </div>`;
             });
-            safeCreateIcons();
+            lucide.createIcons();
         }
 
         function deleteOrder(orderId) {
@@ -880,9 +770,7 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
-                if (window.deleteOrderFromCloud) {
-                    try { window.deleteOrderFromCloud(orderId); } catch(e){}
-                }
+                if (window.deleteOrderFromCloud) window.deleteOrderFromCloud(orderId);
             }
         }
 
@@ -926,7 +814,7 @@
                         <td><button class="btn btn-danger btn-sm" onclick="removeEditItem(${idx})"><i data-lucide="x"></i></button></td>
                     </tr>`;
             });
-            safeCreateIcons();
+            lucide.createIcons();
         }
 
         function updateEditItem(idx, field, val) {
@@ -991,9 +879,7 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
-                if (window.saveOrderToCloud) {
-                    try { window.saveOrderToCloud(order); } catch(e){}
-                }
+                if (window.saveOrderToCloud) window.saveOrderToCloud(order);
                 alert("Đã cập nhật đơn hàng thành công!");
             }
         }
@@ -1076,134 +962,206 @@
                 let orderRaw = 0, orderItemDiff = 0, orderItemNet = 0;
                 order.items.forEach(item => {
                     let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
-                    orderRaw += lineTotal;
-                    
                     let lineDiff = item.chenhLech !== undefined ? item.chenhLech : ((item.giaBan - item.giaNet) * item.qty);
-                    orderItemDiff += lineDiff;
-                    
                     let lineNet = (item.giaNet || 0) * item.qty;
+                    orderRaw += lineTotal;
+                    orderItemDiff += lineDiff;
                     orderItemNet += lineNet;
 
-                    let key = `${item.productName}|${item.unit}`;
+                    let key = item.productName;
                     if (!productSummary[key]) {
-                        productSummary[key] = {
-                            name: item.productName,
-                            unit: item.unit,
-                            qty: 0
+                        productSummary[key] = { 
+                            name: item.productName, 
+                            prodId: item.prodId,
+                            qtyThung: 0, 
+                            qtyLe: 0, 
+                            leUnit: '' 
                         };
                     }
-                    productSummary[key].qty += item.qty;
+
+                    if (item.unit === 'Thùng' || item.unit === 'T') {
+                        productSummary[key].qtyThung += item.qty;
+                    } else {
+                        productSummary[key].qtyLe += item.qty;
+                        if (item.unit && item.unit !== 'Lẻ') {
+                            productSummary[key].leUnit = item.unit.toLowerCase();
+                        }
+                    }
                 });
-
                 let discount = order.discount !== undefined ? order.discount : 0;
-                if (!discount && order.items) {
-                    discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
-                }
-                
-                let orderPay = orderRaw - discount;
-                let orderDiff = orderItemDiff - discount;
-
-                totalSellPay += orderPay;
+                if (!discount && order.items) discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
                 totalDiscount += discount;
-                totalDiff += orderDiff;
+                totalSellPay += (orderRaw - discount);
+                totalDiff += (orderItemDiff - discount);
                 totalNet += orderItemNet;
             });
 
             document.getElementById('stats-total-sell').innerText = formatDisplayNum(totalSellPay) + " đ";
             document.getElementById('stats-total-net').innerText = formatDisplayNum(totalNet) + " đ";
-            document.getElementById('stats-total-discount').innerText = formatDisplayNum(totalDiscount) + " đ";
+            document.getElementById('stats-total-discount').innerText = "-" + formatDisplayNum(totalDiscount) + " đ";
             document.getElementById('stats-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
 
             const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '';
-            
-            const sortedProducts = Object.values(productSummary).sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }));
+            let stt = 1;
 
-            if (sortedProducts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu trong khoảng thời gian này.</td></tr>`;
-                return;
-            }
+            let overallThung = 0;
 
-            sortedProducts.forEach((item, index) => {
-                let qtyFormatted = formatDisplayNum(item.qty);
-                let unitName = (item.unit === 'Thùng' || item.unit === 'T') ? 'Thùng' : item.unit;
+            for (let k in productSummary) {
+                let sp = productSummary[k];
+                let prodInfo = inventoryData.find(p => (sp.prodId && p.id == sp.prodId) || p.name === sp.name);
+                let qct = prodInfo ? parseVnNum(prodInfo.qct) : 0;
+                let unitName = sp.leUnit || 'gói';
+
+                let qtyDisplay = '';
+                if (sp.qtyThung > 0 && sp.qtyLe > 0) {
+                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T + ${formatDisplayNum(sp.qtyLe)} ${unitName}`;
+                } else if (sp.qtyThung > 0) {
+                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T`;
+                } else if (sp.qtyLe > 0) {
+                    qtyDisplay = `${formatDisplayNum(sp.qtyLe)} ${unitName}`;
+                } else {
+                    qtyDisplay = `0T`;
+                }
+
+                let totalThungForThisProduct = sp.qtyThung;
+                if (qct > 0 && sp.qtyLe > 0) {
+                    let fullThungFromLe = Math.floor(sp.qtyLe / qct);
+                    let remLeTemp = sp.qtyLe - (fullThungFromLe * qct);
+                    let halfThungQty = qct / 2;
+                    
+                    let extraThung = 0;
+                    if (remLeTemp >= halfThungQty) {
+                        extraThung = 0.5;
+                    }
+                    totalThungForThisProduct += fullThungFromLe + extraThung;
+                }
+                overallThung += totalThungForThisProduct;
+
                 tbody.innerHTML += `
                     <tr>
-                        <td style="text-align: center;">${index + 1}</td>
-                        <td style="font-weight: 500;">${item.name}</td>
-                        <td style="text-align: right; padding-right: 15px;"><strong>${qtyFormatted}</strong> <span style="color: var(--text-muted); font-size: 13px;">${unitName}</span></td>
+                        <td style="text-align: center;">${stt++}</td>
+                        <td style="text-align: left; white-space: nowrap;"><strong>${sp.name}</strong></td>
+                        <td style="text-align: right; padding-right: 15px;"><strong>${qtyDisplay}</strong></td>
                     </tr>`;
-            });
+            }
+
+            if (Object.keys(productSummary).length > 0) {
+                tbody.innerHTML += `
+                    <tr class="stats-total-row">
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG :</td>
+                        <td style="text-align: right; padding-right: 15px; color: #000;"><strong>${formatDisplayNum(overallThung)}T</strong></td>
+                    </tr>`;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
+            }
         }
 
         function exportStatsToWord() {
-            const dateFilter = document.getElementById('stats-date').value;
-            const monthFilter = document.getElementById('stats-month').value;
-            let filterText = "Tất cả thời gian";
-            if (dateFilter) filterText = `Ngày: ${dateFilter}`;
-            else if (monthFilter) filterText = `Tháng: ${monthFilter}`;
-
-            const htmlHeader = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Thống Kê Bán Hàng</title>
-            <style>
-                body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; }
-                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                th, td { border: 1px solid #000; padding: 5px; text-align: left; }
-                th { background-color: #f2f2f2; }
-            </style>
-            </head><body>
-            <h2 style="text-align: center;">BẢNG TỔNG HỢP HÀNG BẢN MỖI NGÀY</h2>
-            <p><strong>Thời gian:</strong> ${filterText}</p>
-            `;
-
-            let tableHtml = `
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 50px; text-align: center;">STT</th>
-                        <th>Tên Sản Phẩm</th>
-                        <th style="width: 120px; text-align: right;">Số lượng</th>
-                    </tr>
-                </thead>
-                <tbody>
-            `;
-            
-            const trs = document.querySelectorAll('#stats-table-body tr');
-            trs.forEach(tr => {
-                const tds = tr.querySelectorAll('td');
-                if (tds.length === 3) {
-                    tableHtml += `
-                    <tr>
-                        <td style="text-align: center;">${tds[0].innerText}</td>
-                        <td>${tds[1].innerText}</td>
-                        <td style="text-align: right;">${tds[2].innerText}</td>
-                    </tr>`;
-                }
-            });
-            tableHtml += `</tbody></table>`;
-            
-            const kpiHtml = `
-            <div style="margin-top: 20px;">
-                <p><strong>Tổng doanh số bán:</strong> ${document.getElementById('stats-total-sell').innerText}</p>
-                <p><strong>Tổng doanh số Net:</strong> ${document.getElementById('stats-total-net').innerText}</p>
-                <p><strong>Tổng chiết khấu:</strong> ${document.getElementById('stats-total-discount').innerText}</p>
-                <p><strong>Tổng chênh lệch (Lợi nhuận):</strong> ${document.getElementById('stats-total-diff').innerText}</p>
-            </div>
-            `;
-
-            const blob = new Blob(['\ufeff', htmlHeader + tableHtml + kpiHtml + `</body></html>`], { type: 'application/msword' });
+            const wrapper = document.getElementById('stats-table-wrapper').innerHTML;
+            const filterStr = document.getElementById('stats-date').value || document.getElementById('stats-month').value || 'ALL';
+            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Thống Kê Sản Phẩm</title><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #000; padding: 8px; text-align: left; font-family: Arial, sans-serif; }</style></head><body><h2>BẢNG THỐNG KÊ SẢN PHẨM BÁN DƯỢC (${filterStr})</h2>`;
+            const blob = new Blob(['\ufeff', htmlHeader + wrapper + `</body></html>`], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            let fileName = "Thong_Ke_Ban_Hang";
-            if (dateFilter) fileName += `_${dateFilter}`;
-            else if (monthFilter) fileName += `_Thang_${monthFilter}`;
-            a.download = fileName + `.doc`;
+            a.download = `Thong_Ke_San_Pham_${filterStr}.doc`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         }
+    </script>
+
+    <!-- FIREBASE SDK MODULIZED & REAL-TIME SYNC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+        import { 
+            getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp 
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
+            authDomain: "dms-pro-19191.firebaseapp.com",
+            projectId: "dms-pro-19191",
+            storageBucket: "dms-pro-19191.firebasestorage.app",
+            messagingSenderId: "297081478934",
+            appId: "1:297081478934:web:3b116788a534307a187a37",
+            measurementId: "G-R740TXLRFQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // Lắng nghe dữ liệu Kho Hàng từ Cloud (Real-time)
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
+            const cloudInventory = [];
+            snapshot.forEach((doc) => {
+                cloudInventory.push(doc.data());
+            });
+            if (cloudInventory.length > 0) {
+                inventoryData = cloudInventory;
+                safeSetItem('dms_inventory', JSON.stringify(inventoryData));
+                renderInventory();
+                updateProductSelect();
+            }
+        });
+
+        // Lắng nghe dữ liệu Đơn Hàng từ Cloud (Real-time)
+        onSnapshot(collection(db, "orders"), (snapshot) => {
+            const cloudOrders = [];
+            snapshot.forEach((doc) => {
+                cloudOrders.push(doc.data());
+            });
+            if (cloudOrders.length > 0) {
+                ordersData = cloudOrders;
+                safeSetItem('dms_orders', JSON.stringify(ordersData));
+                renderHistory();
+                renderStats();
+                renderCurrentMonthDiff();
+            }
+        });
+
+        // Đẩy toàn bộ kho lên Firestore
+        window.saveInventoryToCloud = async function() {
+            for (const item of inventoryData) {
+                await setDoc(doc(db, "inventory", String(item.id)), item);
+            }
+        };
+
+        // Đẩy 1 sản phẩm đơn lẻ lên Firestore
+        window.saveProductItemToCloud = async function(item) {
+            await setDoc(doc(db, "inventory", String(item.id)), item);
+        };
+
+        // Đẩy 1 đơn hàng lên Firestore với mốc TTL 365 ngày
+        window.saveOrderToCloud = async function(newOrder) {
+            const DAYS_TO_KEEP = 365; // Mốc 365 ngày
+            
+            // Tính mốc thời gian hết hạn (Ngày hiện tại + 365 ngày)
+            const expireDate = new Date();
+            expireDate.setDate(expireDate.getDate() + DAYS_TO_KEEP);
+
+            // Đính kèm trường expireAt vào dữ liệu đơn hàng
+            const orderWithTTL = {
+                ...newOrder,
+                expireAt: Timestamp.fromDate(expireDate)
+            };
+
+            // Gửi lên Firestore
+            await setDoc(doc(db, "orders", String(newOrder.id)), orderWithTTL);
+        };
+
+        // Xóa đơn hàng trên Firestore
+        window.deleteOrderFromCloud = async function(orderId) {
+            await deleteDoc(doc(db, "orders", String(orderId)));
+        };
+
+        // Xóa sản phẩm kho trên Firestore
+        window.deleteProductFromCloud = async function(productId) {
+            await deleteDoc(doc(db, "inventory", String(productId)));
+        };
     </script>
 </body>
 </html>

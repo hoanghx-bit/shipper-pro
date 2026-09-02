@@ -108,6 +108,33 @@
             flex: 1;
             min-width: 130px;
         }
+
+        /* CSS cho Toast Notification (Thông báo tự dọn dẹp) */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #334155;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px 20px;
+            position: fixed;
+            z-index: 9999;
+            right: 30px;
+            bottom: -50px;
+            font-size: 14px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 30px;
+        }
     </style>
 </head>
 <body>
@@ -376,6 +403,9 @@
             </div>
         </div>
     </div>
+    
+    <!-- Phần tử hiển thị Toast -->
+    <div id="toast"><i data-lucide="info"></i> <span id="toast-message"></span></div>
 
     <script>
         const memoryStore = {};
@@ -393,6 +423,57 @@
         let tempItems = [];
         let editingOrderItems = [];
         let isHistoryEditMode = false;
+        
+        // Hàm hiển thị thông báo Toast
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-message").innerText = message;
+            toast.className = "toast show";
+            lucide.createIcons(); // render icon info
+            setTimeout(function(){ 
+                toast.className = toast.className.replace("show", ""); 
+            }, 4000);
+        }
+
+        // Hàm tự động dọn dẹp đơn hàng cũ hơn 1 năm
+        window.autoCleanupOldOrders = function() {
+            if (!ordersData || ordersData.length === 0) return false;
+
+            const today = new Date();
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(today.getFullYear() - 1);
+            
+            const cutoffDate = oneYearAgo.toISOString().split('T')[0];
+            
+            const validOrders = [];
+            const oldOrders = [];
+
+            ordersData.forEach(order => {
+                if (order.date < cutoffDate) {
+                    oldOrders.push(order);
+                } else {
+                    validOrders.push(order);
+                }
+            });
+
+            if (oldOrders.length > 0) {
+                console.log(`Đã dọn dẹp ${oldOrders.length} đơn hàng quá hạn 1 năm.`);
+                
+                ordersData = validOrders;
+                safeSetItem('dms_orders', JSON.stringify(ordersData));
+
+                oldOrders.forEach(order => {
+                    if (window.deleteOrderFromCloud) {
+                        window.deleteOrderFromCloud(order.id);
+                    }
+                });
+                
+                // Hiển thị popup thông báo
+                showToast(`Đã tự động dọn dẹp ${oldOrders.length} đơn hàng trước ngày ${cutoffDate}`);
+                return true; 
+            }
+            return false;
+        };
 
         function sortInventory() {
             inventoryData.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' }));
@@ -407,6 +488,11 @@
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('month-diff-selector').value = currentMonth;
+
+            // Kích hoạt hàm dọn dẹp khi khởi tạo Local
+            if (window.autoCleanupOldOrders) {
+                window.autoCleanupOldOrders();
+            }
 
             sortInventory();
             renderInventory();
@@ -971,192 +1057,135 @@
                 let orderRaw = 0, orderItemDiff = 0, orderItemNet = 0;
                 order.items.forEach(item => {
                     let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
-                    let lineDiff = item.chenhLech !== undefined ? item.chenhLech : ((item.giaBan - item.giaNet) * item.qty);
-                    let lineNet = (item.giaNet || 0) * item.qty;
                     orderRaw += lineTotal;
+                    
+                    let lineDiff = item.chenhLech !== undefined ? item.chenhLech : ((item.giaBan - item.giaNet) * item.qty);
                     orderItemDiff += lineDiff;
+                    
+                    let lineNet = (item.giaNet || 0) * item.qty;
                     orderItemNet += lineNet;
 
-                    let key = item.productName;
+                    let key = `${item.productName}|${item.unit}`;
                     if (!productSummary[key]) {
-                        productSummary[key] = { 
-                            name: item.productName, 
-                            prodId: item.prodId,
-                            qtyThung: 0, 
-                            qtyLe: 0, 
-                            leUnit: '' 
+                        productSummary[key] = {
+                            name: item.productName,
+                            unit: item.unit,
+                            qty: 0
                         };
                     }
-
-                    if (item.unit === 'Thùng' || item.unit === 'T') {
-                        productSummary[key].qtyThung += item.qty;
-                    } else {
-                        productSummary[key].qtyLe += item.qty;
-                        if (item.unit && item.unit !== 'Lẻ') {
-                            productSummary[key].leUnit = item.unit.toLowerCase();
-                        }
-                    }
+                    productSummary[key].qty += item.qty;
                 });
+
                 let discount = order.discount !== undefined ? order.discount : 0;
-                if (!discount && order.items) discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
+                if (!discount && order.items) {
+                    discount = order.items.reduce((s, i) => s + (i.discount || 0), 0);
+                }
+                
+                let orderPay = orderRaw - discount;
+                let orderDiff = orderItemDiff - discount;
+
+                totalSellPay += orderPay;
                 totalDiscount += discount;
-                totalSellPay += (orderRaw - discount);
-                totalDiff += (orderItemDiff - discount);
+                totalDiff += orderDiff;
                 totalNet += orderItemNet;
             });
 
             document.getElementById('stats-total-sell').innerText = formatDisplayNum(totalSellPay) + " đ";
             document.getElementById('stats-total-net').innerText = formatDisplayNum(totalNet) + " đ";
-            document.getElementById('stats-total-discount').innerText = "-" + formatDisplayNum(totalDiscount) + " đ";
+            document.getElementById('stats-total-discount').innerText = formatDisplayNum(totalDiscount) + " đ";
             document.getElementById('stats-total-diff').innerText = formatDisplayNum(totalDiff) + " đ";
 
             const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '';
-            let stt = 1;
+            
+            const sortedProducts = Object.values(productSummary).sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }));
 
-            let overallThung = 0;
+            if (sortedProducts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu trong khoảng thời gian này.</td></tr>`;
+                return;
+            }
 
-            for (let k in productSummary) {
-                let sp = productSummary[k];
-                let prodInfo = inventoryData.find(p => (sp.prodId && p.id == sp.prodId) || p.name === sp.name);
-                let qct = prodInfo ? parseVnNum(prodInfo.qct) : 0;
-                let unitName = sp.leUnit || 'gói';
-
-                let qtyDisplay = '';
-                if (sp.qtyThung > 0 && sp.qtyLe > 0) {
-                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T + ${formatDisplayNum(sp.qtyLe)} ${unitName}`;
-                } else if (sp.qtyThung > 0) {
-                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T`;
-                } else if (sp.qtyLe > 0) {
-                    qtyDisplay = `${formatDisplayNum(sp.qtyLe)} ${unitName}`;
-                } else {
-                    qtyDisplay = `0T`;
-                }
-
-                let totalThungForThisProduct = sp.qtyThung;
-                if (qct > 0 && sp.qtyLe > 0) {
-                    let fullThungFromLe = Math.floor(sp.qtyLe / qct);
-                    let remLeTemp = sp.qtyLe - (fullThungFromLe * qct);
-                    let halfThungQty = qct / 2;
-                    
-                    let extraThung = 0;
-                    if (remLeTemp >= halfThungQty) {
-                        extraThung = 0.5;
-                    }
-                    totalThungForThisProduct += fullThungFromLe + extraThung;
-                }
-                overallThung += totalThungForThisProduct;
-
+            sortedProducts.forEach((item, index) => {
+                let qtyFormatted = formatDisplayNum(item.qty);
+                let unitName = (item.unit === 'Thùng' || item.unit === 'T') ? 'Thùng' : item.unit;
                 tbody.innerHTML += `
                     <tr>
-                        <td style="text-align: center;">${stt++}</td>
-                        <td style="text-align: left; white-space: nowrap;"><strong>${sp.name}</strong></td>
-                        <td style="text-align: right; padding-right: 15px;"><strong>${qtyDisplay}</strong></td>
+                        <td style="text-align: center;">${index + 1}</td>
+                        <td style="font-weight: 500;">${item.name}</td>
+                        <td style="text-align: right; padding-right: 15px;"><strong>${qtyFormatted}</strong> <span style="color: var(--text-muted); font-size: 13px;">${unitName}</span></td>
                     </tr>`;
-            }
-
-            if (Object.keys(productSummary).length > 0) {
-                tbody.innerHTML += `
-                    <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG :</td>
-                        <td style="text-align: right; padding-right: 15px; color: #000;"><strong>${formatDisplayNum(overallThung)}T</strong></td>
-                    </tr>`;
-            } else {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
-            }
+            });
         }
 
         function exportStatsToWord() {
-            const wrapper = document.getElementById('stats-table-wrapper').innerHTML;
-            const filterStr = document.getElementById('stats-date').value || document.getElementById('stats-month').value || 'ALL';
-            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Thống Kê Sản Phẩm</title><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #000; padding: 8px; text-align: left; font-family: Arial, sans-serif; }</style></head><body><h2>BẢNG THỐNG KÊ SẢN PHẨM BÁN DƯỢC (${filterStr})</h2>`;
-            const blob = new Blob(['\ufeff', htmlHeader + wrapper + `</body></html>`], { type: 'application/msword' });
+            const dateFilter = document.getElementById('stats-date').value;
+            const monthFilter = document.getElementById('stats-month').value;
+            let filterText = "Tất cả thời gian";
+            if (dateFilter) filterText = `Ngày: ${dateFilter}`;
+            else if (monthFilter) filterText = `Tháng: ${monthFilter}`;
+
+            const htmlHeader = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Thống Kê Bán Hàng</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+            </head><body>
+            <h2 style="text-align: center;">BẢNG TỔNG HỢP HÀNG BÁN MỖI NGÀY</h2>
+            <p><strong>Thời gian:</strong> ${filterText}</p>
+            `;
+
+            let tableHtml = `
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px; text-align: center;">STT</th>
+                        <th>Tên Sản Phẩm</th>
+                        <th style="width: 120px; text-align: right;">Số lượng</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            const trs = document.querySelectorAll('#stats-table-body tr');
+            trs.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length === 3) {
+                    tableHtml += `
+                    <tr>
+                        <td style="text-align: center;">${tds[0].innerText}</td>
+                        <td>${tds[1].innerText}</td>
+                        <td style="text-align: right;">${tds[2].innerText}</td>
+                    </tr>`;
+                }
+            });
+            tableHtml += `</tbody></table>`;
+            
+            const kpiHtml = `
+            <div style="margin-top: 20px;">
+                <p><strong>Tổng doanh số bán:</strong> ${document.getElementById('stats-total-sell').innerText}</p>
+                <p><strong>Tổng doanh số Net:</strong> ${document.getElementById('stats-total-net').innerText}</p>
+                <p><strong>Tổng chiết khấu:</strong> ${document.getElementById('stats-total-discount').innerText}</p>
+                <p><strong>Tổng chênh lệch (Lợi nhuận):</strong> ${document.getElementById('stats-total-diff').innerText}</p>
+            </div>
+            `;
+
+            const blob = new Blob(['\ufeff', htmlHeader + tableHtml + kpiHtml + `</body></html>`], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `Thong_Ke_San_Pham_${filterStr}.doc`;
+            let fileName = "Thong_Ke_Ban_Hang";
+            if (dateFilter) fileName += `_${dateFilter}`;
+            else if (monthFilter) fileName += `_Thang_${monthFilter}`;
+            a.download = fileName + `.doc`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         }
-    </script>
 
-    <!-- FIREBASE SDK MODULIZED & REAL-TIME SYNC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
-            authDomain: "dms-pro-19191.firebaseapp.com",
-            projectId: "dms-pro-19191",
-            storageBucket: "dms-pro-19191.firebasestorage.app",
-            messagingSenderId: "297081478934",
-            appId: "1:297081478934:web:3b116788a534307a187a37",
-            measurementId: "G-R740TXLRFQ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-
-        // Lắng nghe dữ liệu Kho Hàng từ Cloud (Real-time)
-        onSnapshot(collection(db, "inventory"), (snapshot) => {
-            const cloudInventory = [];
-            snapshot.forEach((doc) => {
-                cloudInventory.push(doc.data());
-            });
-            if (cloudInventory.length > 0) {
-                inventoryData = cloudInventory;
-                sortInventory();
-                safeSetItem('dms_inventory', JSON.stringify(inventoryData));
-                renderInventory();
-                updateProductSelect();
-            }
-        });
-
-        // Lắng nghe dữ liệu Đơn Hàng từ Cloud (Real-time)
-        onSnapshot(collection(db, "orders"), (snapshot) => {
-            const cloudOrders = [];
-            snapshot.forEach((doc) => {
-                cloudOrders.push(doc.data());
-            });
-            if (cloudOrders.length > 0) {
-                ordersData = cloudOrders;
-                safeSetItem('dms_orders', JSON.stringify(ordersData));
-                renderHistory();
-                renderStats();
-                renderCurrentMonthDiff();
-            }
-        });
-
-        // Đẩy toàn bộ kho lên Firestore
-        window.saveInventoryToCloud = async function() {
-            for (const item of inventoryData) {
-                await setDoc(doc(db, "inventory", String(item.id)), item);
-            }
-        };
-
-        // Đẩy 1 sản phẩm đơn lẻ lên Firestore
-        window.saveProductItemToCloud = async function(item) {
-            await setDoc(doc(db, "inventory", String(item.id)), item);
-        };
-
-        // Đẩy 1 đơn hàng lên Firestore
-        window.saveOrderToCloud = async function(newOrder) {
-            await setDoc(doc(db, "orders", String(newOrder.id)), newOrder);
-        };
-
-        // Xóa đơn hàng trên Firestore
-        window.deleteOrderFromCloud = async function(orderId) {
-            await deleteDoc(doc(db, "orders", String(orderId)));
-        };
-
-        // Xóa sản phẩm kho trên Firestore
-        window.deleteProductFromCloud = async function(productId) {
-            await deleteDoc(doc(db, "inventory", String(productId)));
-        };
     </script>
 </body>
 </html>

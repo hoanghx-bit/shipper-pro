@@ -108,6 +108,30 @@
             flex: 1;
             min-width: 130px;
         }
+
+        /* Tối ưu bảng Lịch sử cho máy tính */
+        .history-print-table {
+            width: 100%;
+            max-width: 550px;
+        }
+        @media (min-width: 768px) {
+            .history-print-table {
+                width: 420px !important; /* Rút ngắn khoảng trắng */
+                table-layout: fixed; /* Ép các cột thẳng hàng tuyệt đối */
+            }
+            .history-print-table .col-name { width: 200px; word-wrap: break-word; }
+            .history-print-table .col-qty { width: 75px; }
+            .history-print-table .col-eq { width: 20px; }
+            .history-print-table .col-total { width: 90px; }
+        }
+
+        /* Nút chỉnh sửa tên ở tab Thống kê */
+        .stats-edit-btn {
+            background: none; border: none; cursor: pointer; color: var(--warning); 
+            display: none; align-items: center; justify-content: center; padding: 2px;
+        }
+        .stats-edit-mode .stats-edit-btn { display: flex; }
+        .stats-edit-mode .stats-name-text { border-bottom: 1px dashed var(--warning); cursor: text; }
     </style>
 </head>
 <body>
@@ -297,8 +321,13 @@
                             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Tháng:</label>
                             <input type="month" id="stats-month" class="form-control" style="width: 100%;" onchange="onStatsFilterChange('month')">
                         </div>
-                        <div>
-                            <button class="btn btn-success" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Word</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-warning" id="btn-stats-edit" onclick="toggleStatsEdit()">
+                                <i data-lucide="lock"></i> Mở khóa sửa
+                            </button>
+                            <button class="btn btn-success" onclick="exportStatsToWord()">
+                                <i data-lucide="file-text"></i> Xuất Word
+                            </button>
                         </div>
                     </div>
 
@@ -706,7 +735,7 @@
 
         function generateOrderHtml(order, index) {
             let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 2px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
-            html += `<table style="width: 100%; max-width: 550px; border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2;">`;
+            html += `<table class="history-print-table" style="border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2;">`;
             let totalRaw = 0;
             order.items.forEach(item => {
                 let qtyFormatted = formatDisplayNum(item.qty);
@@ -716,10 +745,10 @@
                 let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                 totalRaw += lineTotal;
                 html += `<tr>
-                    <td style="padding: 0 8px 0 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
-                    <td style="padding: 0 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
-                    <td style="padding: 0 4px; border: none; text-align: center; width: 15px;">=</td>
-                    <td style="padding: 0 0 0 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
+                    <td class="col-name" style="padding: 0 8px 0 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
+                    <td class="col-qty" style="padding: 0 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
+                    <td class="col-eq" style="padding: 0 4px; border: none; text-align: center;">=</td>
+                    <td class="col-total" style="padding: 0 0 0 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
                 </tr>`;
             });
             let discount = order.discount !== undefined ? order.discount : 0;
@@ -727,29 +756,29 @@
             let totalPay = totalRaw - discount;
             if (discount > 0) {
                 html += `<tr>
-                    <td style="padding: 2px 8px 0 0; border: none;"></td>
-                    <td style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
-                    <td style="padding: 2px 4px 0 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
-                    <td style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td class="col-name" style="padding: 2px 8px 0 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td class="col-eq" style="padding: 2px 4px 0 4px; border: none; text-align: center; font-weight: bold;">=</td>
+                    <td class="col-total" style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 1px 8px 1px 0; border: none;"></td>
-                    <td style="padding: 1px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
-                    <td style="padding: 1px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #dc2626;">=</td>
-                    <td style="padding: 1px 0 1px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
+                    <td class="col-name" style="padding: 1px 8px 1px 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 1px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
+                    <td class="col-eq" style="padding: 1px 4px; border: none; text-align: center; font-weight: bold; color: #dc2626;">=</td>
+                    <td class="col-total" style="padding: 1px 0 1px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 0 8px 0 0; border: none;"></td>
-                    <td style="padding: 0 8px; border: none; text-align: left; font-weight: bold; color: #2563eb;">Tiền phải thu</td>
-                    <td style="padding: 0 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #2563eb;">=</td>
-                    <td style="padding: 0 0 0 8px; border: none; text-align: right; font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
+                    <td class="col-name" style="padding: 0 8px 0 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 0 8px; border: none; text-align: left; font-weight: bold; color: #2563eb;">Phải thu</td>
+                    <td class="col-eq" style="padding: 0 4px; border: none; text-align: center; font-weight: bold; color: #2563eb;">=</td>
+                    <td class="col-total" style="padding: 0 0 0 8px; border: none; text-align: right; font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
                 </tr>`;
             } else if (order.items.length > 1) {
                 html += `<tr>
-                    <td style="padding: 2px 8px 0 0; border: none;"></td>
-                    <td style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
-                    <td style="padding: 2px 4px 0 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
-                    <td style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td class="col-name" style="padding: 2px 8px 0 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td class="col-eq" style="padding: 2px 4px 0 4px; border: none; text-align: center; font-weight: bold;">=</td>
+                    <td class="col-total" style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>`;
             }
             html += `</table>`;
@@ -1082,7 +1111,12 @@
                 tbody.innerHTML += `
                     <tr>
                         <td style="text-align: center;">${stt++}</td>
-                        <td style="text-align: left; white-space: nowrap;"><strong>${sp.name}</strong></td>
+                        <td style="text-align: left; white-space: normal;">
+                            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                                <strong><span class="stats-name-text">${sp.name}</span></strong>
+                                <button class="stats-edit-btn" onclick="promptEditStatsName(this)"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+                            </div>
+                        </td>
                         <td style="text-align: right; padding-right: 15px;"><strong>${qtyDisplay}</strong></td>
                     </tr>`;
             }
@@ -1110,6 +1144,32 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+
+        let isStatsEdit = false;
+        function toggleStatsEdit() {
+            isStatsEdit = !isStatsEdit;
+            const btn = document.getElementById('btn-stats-edit');
+            const tbody = document.getElementById('stats-table-body');
+            if (isStatsEdit) {
+                btn.innerHTML = `<i data-lucide="unlock"></i> Khóa sửa`;
+                btn.classList.replace('btn-warning', 'btn-secondary');
+                tbody.classList.add('stats-edit-mode');
+            } else {
+                btn.innerHTML = `<i data-lucide="lock"></i> Mở khóa sửa`;
+                btn.classList.replace('btn-secondary', 'btn-warning');
+                tbody.classList.remove('stats-edit-mode');
+            }
+            safeCreateIcons();
+        }
+
+        function promptEditStatsName(btnEl) {
+            if(!isStatsEdit) return;
+            const span = btnEl.parentElement.querySelector('.stats-name-text');
+            const newName = prompt("Nhập tên mới hoặc ghi chú:", span.innerText);
+            if (newName !== null && newName.trim() !== "") {
+                span.innerText = newName.trim();
+            }
         }
     </script>
 

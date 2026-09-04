@@ -62,8 +62,8 @@
         th { background: #f8fafc; padding: 12px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); }
         td { padding: 12px; border-bottom: 1px solid var(--border-color); color: #334155; }
         tr:hover { background: #f1f5f9; }
-        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
-        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.3; color: #1e293b; }
+        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2; color: #1e293b; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 600px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
@@ -107,38 +107,6 @@
         .stats-toolbar-item {
             flex: 1;
             min-width: 130px;
-        }
-
-        .history-print-table {
-            width: 100%;
-            max-width: 450px;
-            table-layout: fixed;
-            border-collapse: collapse;
-            font-family: Arial, 'Segoe UI', sans-serif;
-            font-size: 14px;
-            line-height: 1.3;
-        }
-        .history-print-table td {
-            padding: 1px 0;
-            border: none;
-            vertical-align: top;
-        }
-        .history-print-table .col-name { text-align: left; word-wrap: break-word; overflow-wrap: break-word; padding-right: 4px; }
-        .history-print-table .col-qty { text-align: left; padding-right: 4px; white-space: nowrap; }
-        .history-print-table .col-eq { text-align: center; }
-        .history-print-table .col-total { text-align: right; white-space: nowrap; font-weight: 500; }
-
-        .stats-edit-btn {
-            background: none; border: none; cursor: pointer; color: var(--warning); 
-            display: none; align-items: center; justify-content: center; padding: 2px;
-        }
-        .stats-edit-mode .stats-edit-btn { display: inline-flex; }
-        .stats-edit-mode .stats-name-text,
-        .stats-edit-mode .stats-qty-text,
-        .stats-edit-mode .stats-total-label-text,
-        .stats-edit-mode .stats-total-val-text { 
-            border-bottom: 1px dashed var(--warning); 
-            cursor: text; 
         }
     </style>
 </head>
@@ -329,13 +297,8 @@
                             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Tháng:</label>
                             <input type="month" id="stats-month" class="form-control" style="width: 100%;" onchange="onStatsFilterChange('month')">
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-warning" id="btn-stats-edit" onclick="toggleStatsEdit()">
-                                <i data-lucide="lock"></i> Mở khóa sửa
-                            </button>
-                            <button class="btn btn-success" onclick="exportStatsToWord()">
-                                <i data-lucide="file-text"></i> Xuất Word
-                            </button>
+                        <div>
+                            <button class="btn btn-success" onclick="exportStatsToWord()"><i data-lucide="file-text"></i> Xuất Word</button>
                         </div>
                     </div>
 
@@ -420,6 +383,7 @@
             catch (e) { memoryStore[key] = value; }
         }
 
+        // Bọc an toàn hàm gọi Icon Lucide khi ở chế độ Offline
         function safeCreateIcons() {
             if (typeof lucide !== 'undefined' && lucide.createIcons) {
                 try { lucide.createIcons(); } catch (e) { console.warn("Lucide icons offline skipped:", e); }
@@ -432,12 +396,14 @@
         let editingOrderItems = [];
         let isHistoryEditMode = false;
 
+        // Hàm sắp xếp kho hàng theo thứ tự A-Z
         function sortInventory() {
             inventoryData.sort((a, b) => {
                 return (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' });
             });
         }
 
+        // Hàm tự động xóa các đơn hàng cũ quá 1 năm (365 ngày) trong bộ nhớ local
         function cleanOldOrders() {
             const oneYearAgo = new Date();
             oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -547,7 +513,7 @@
         }
 
         function renderInventory() {
-            sortInventory();
+            sortInventory(); // Tự động sắp xếp A-Z
             const tbody = document.getElementById('inventory-table-body');
             tbody.innerHTML = '';
             if (inventoryData.length === 0) {
@@ -648,7 +614,7 @@
         }
 
         function updateProductSelect() {
-            sortInventory();
+            sortInventory(); // Sắp xếp A-Z trước khi đưa vào dropdown chọn đơn hàng
             const select = document.getElementById('order-product');
             select.innerHTML = '<option value="">-- Chọn sản phẩm từ kho --</option>';
             inventoryData.forEach(item => {
@@ -739,14 +705,8 @@
         }
 
         function generateOrderHtml(order, index) {
-            let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 4px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
-            html += `<table class="history-print-table">
-                <colgroup>
-                    <col style="width: 48%;">
-                    <col style="width: 24%;">
-                    <col style="width: 6%;">
-                    <col style="width: 22%;">
-                </colgroup>`;
+            let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 2px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
+            html += `<table style="width: 100%; max-width: 550px; border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2;">`;
             let totalRaw = 0;
             order.items.forEach(item => {
                 let qtyFormatted = formatDisplayNum(item.qty);
@@ -756,10 +716,10 @@
                 let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                 totalRaw += lineTotal;
                 html += `<tr>
-                    <td class="col-name">${item.productName}${colorStr}</td>
-                    <td class="col-qty">${unitStr}</td>
-                    <td class="col-eq">=</td>
-                    <td class="col-total">${formatDisplayNum(lineTotal)}</td>
+                    <td style="padding: 0 8px 0 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
+                    <td style="padding: 0 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
+                    <td style="padding: 0 4px; border: none; text-align: center; width: 15px;">=</td>
+                    <td style="padding: 0 0 0 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
                 </tr>`;
             });
             let discount = order.discount !== undefined ? order.discount : 0;
@@ -767,29 +727,29 @@
             let totalPay = totalRaw - discount;
             if (discount > 0) {
                 html += `<tr>
-                    <td class="col-name"></td>
-                    <td class="col-qty" style="font-weight: bold;">Tổng</td>
-                    <td class="col-eq" style="font-weight: bold;">=</td>
-                    <td class="col-total" style="font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td style="padding: 2px 8px 0 0; border: none;"></td>
+                    <td style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td style="padding: 2px 4px 0 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
+                    <td style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>
                 <tr>
-                    <td class="col-name"></td>
-                    <td class="col-qty" style="font-weight: bold; color: #dc2626;">Chiết khấu</td>
-                    <td class="col-eq" style="font-weight: bold; color: #dc2626;">=</td>
-                    <td class="col-total" style="font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
+                    <td style="padding: 1px 8px 1px 0; border: none;"></td>
+                    <td style="padding: 1px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
+                    <td style="padding: 1px 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #dc2626;">=</td>
+                    <td style="padding: 1px 0 1px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
                 </tr>
                 <tr>
-                    <td class="col-name"></td>
-                    <td class="col-qty" style="font-weight: bold; color: #2563eb;">Phải thu</td>
-                    <td class="col-eq" style="font-weight: bold; color: #2563eb;">=</td>
-                    <td class="col-total" style="font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
+                    <td style="padding: 0 8px 0 0; border: none;"></td>
+                    <td style="padding: 0 8px; border: none; text-align: left; font-weight: bold; color: #2563eb;">Tiền phải thu</td>
+                    <td style="padding: 0 4px; border: none; text-align: center; width: 15px; font-weight: bold; color: #2563eb;">=</td>
+                    <td style="padding: 0 0 0 8px; border: none; text-align: right; font-weight: bold; color: #2563eb;">${formatDisplayNum(totalPay)}</td>
                 </tr>`;
             } else if (order.items.length > 1) {
                 html += `<tr>
-                    <td class="col-name"></td>
-                    <td class="col-qty" style="font-weight: bold;">Tổng</td>
-                    <td class="col-eq" style="font-weight: bold;">=</td>
-                    <td class="col-total" style="font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td style="padding: 2px 8px 0 0; border: none;"></td>
+                    <td style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td style="padding: 2px 4px 0 4px; border: none; text-align: center; width: 15px; font-weight: bold;">=</td>
+                    <td style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>`;
             }
             html += `</table>`;
@@ -811,7 +771,7 @@
         }
 
         function renderHistory() {
-            cleanOldOrders();
+            cleanOldOrders(); // Làm sạch các đơn quá 1 năm
             const filterDate = document.getElementById('history-date-filter').value;
             const container = document.getElementById('history-display-container');
             container.innerHTML = '';
@@ -971,7 +931,7 @@
                 docText += generateOrderHtml(order, index);
                 docText += `<div style="margin: 10px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
             });
-            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.3; color: #1e293b; }</style></head><body>`;
+            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.2; color: #1e293b; }</style></head><body>`;
             const blob = new Blob(['\ufeff', htmlHeader + docText + `</body></html>`], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -1085,6 +1045,7 @@
 
             let overallThung = 0;
 
+            // Sắp xếp báo cáo thống kê tên sản phẩm theo A-Z
             const sortedKeys = Object.keys(productSummary).sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
             for (let k of sortedKeys) {
@@ -1121,36 +1082,16 @@
                 tbody.innerHTML += `
                     <tr>
                         <td style="text-align: center;">${stt++}</td>
-                        <td style="text-align: left; white-space: normal;">
-                            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-                                <strong><span class="stats-name-text">${sp.name}</span></strong>
-                                <button class="stats-edit-btn" onclick="promptEditText(this, '.stats-name-text')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                            </div>
-                        </td>
-                        <td style="text-align: right; padding-right: 15px;">
-                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:5px; flex-wrap:wrap;">
-                                <strong><span class="stats-qty-text">${qtyDisplay}</span></strong>
-                                <button class="stats-edit-btn" onclick="promptEditText(this, '.stats-qty-text')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                            </div>
-                        </td>
+                        <td style="text-align: left; white-space: nowrap;"><strong>${sp.name}</strong></td>
+                        <td style="text-align: right; padding-right: 15px;"><strong>${qtyDisplay}</strong></td>
                     </tr>`;
             }
 
             if (sortedKeys.length > 0) {
                 tbody.innerHTML += `
                     <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right; padding-right: 20px;">
-                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:5px;">
-                                <span class="stats-total-label-text">TỔNG :</span>
-                                <button class="stats-edit-btn" onclick="promptEditText(this, '.stats-total-label-text')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                            </div>
-                        </td>
-                        <td style="text-align: right; padding-right: 15px; color: #000;">
-                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:5px;">
-                                <strong><span class="stats-total-val-text">${formatDisplayNum(overallThung)}T</span></strong>
-                                <button class="stats-edit-btn" onclick="promptEditText(this, '.stats-total-val-text')"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
-                            </div>
-                        </td>
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG :</td>
+                        <td style="text-align: right; padding-right: 15px; color: #000;"><strong>${formatDisplayNum(overallThung)}T</strong></td>
                     </tr>`;
             } else {
                 tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
@@ -1170,42 +1111,15 @@
             a.click();
             document.body.removeChild(a);
         }
-
-        let isStatsEdit = false;
-        function toggleStatsEdit() {
-            isStatsEdit = !isStatsEdit;
-            const btn = document.getElementById('btn-stats-edit');
-            const tbody = document.getElementById('stats-table-body');
-            if (isStatsEdit) {
-                btn.innerHTML = `<i data-lucide="unlock"></i> Khóa sửa`;
-                btn.classList.replace('btn-warning', 'btn-secondary');
-                tbody.classList.add('stats-edit-mode');
-            } else {
-                btn.innerHTML = `<i data-lucide="lock"></i> Mở khóa sửa`;
-                btn.classList.replace('btn-secondary', 'btn-warning');
-                tbody.classList.remove('stats-edit-mode');
-            }
-            safeCreateIcons();
-        }
-
-        function promptEditText(btnEl, selector) {
-            if(!isStatsEdit) return;
-            const container = btnEl.closest('td') || btnEl.parentElement;
-            const span = container.querySelector(selector);
-            if (!span) return;
-            const newText = prompt("Nhập nội dung mới:", span.innerText);
-            if (newText !== null && newText.trim() !== "") {
-                span.innerText = newText.trim();
-            }
-        }
     </script>
 
+    <!-- FIREBASE SDK MODULIZED & REAL-TIME SYNC -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAnalytics, isSupported as isAnalyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
         import { 
             getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp, query, where, getDocs 
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
@@ -1219,33 +1133,32 @@
 
         try {
             const app = initializeApp(firebaseConfig);
-            
-            isAnalyticsSupported().then(supported => {
-                if (supported) getAnalytics(app);
-            }).catch(() => {});
-
+            const analytics = getAnalytics(app);
             const db = getFirestore(app);
 
+            // Tự động quét và xóa các đơn hàng cũ hơn 1 năm trên Firestore khi mở app
             async function autoCleanFirestoreOldOrders() {
                 try {
                     const oneYearAgo = new Date();
                     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
                     const cutoffDate = oneYearAgo.toISOString().split('T')[0];
 
+                    // Lọc lấy các đơn có ngày nhỏ hơn mốc 1 năm trước
                     const q = query(collection(db, "orders"), where("date", "<", cutoffDate));
                     const querySnapshot = await getDocs(q);
 
-                    for (const document of querySnapshot.docs) {
+                    querySnapshot.forEach(async (document) => {
                         await deleteDoc(doc(db, "orders", document.id));
-                    }
+                    });
                 } catch (e) {
                     console.warn("Lỗi khi tự động dọn dẹp đơn cũ trên Firestore:", e);
                 }
             }
 
+            // Chạy dọn dẹp Firestore
             autoCleanFirestoreOldOrders();
 
-            // Đồng bộ 2 chiều Kho hàng
+            // Lắng nghe dữ liệu Kho Hàng từ Cloud (Real-time)
             onSnapshot(collection(db, "inventory"), (snapshot) => {
                 const cloudInventory = [];
                 snapshot.forEach((doc) => {
@@ -1257,12 +1170,10 @@
                     safeSetItem('dms_inventory', JSON.stringify(inventoryData));
                     renderInventory();
                     updateProductSelect();
-                } else if (inventoryData.length > 0) {
-                    window.saveInventoryToCloud();
                 }
-            }, (error) => console.warn("Firestore inventory offline mode:", error));
+            }, (error) => console.warn("Firestore offline mode active"));
 
-            // Đồng bộ 2 chiều Đơn hàng
+            // Lắng nghe dữ liệu Đơn Hàng từ Cloud (Real-time)
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const cloudOrders = [];
                 snapshot.forEach((doc) => {
@@ -1275,40 +1186,41 @@
                     renderHistory();
                     renderStats();
                     renderCurrentMonthDiff();
-                } else if (ordersData.length > 0) {
-                    ordersData.forEach(order => {
-                        window.saveOrderToCloud(order);
-                    });
                 }
-            }, (error) => console.warn("Firestore orders offline mode:", error));
+            }, (error) => console.warn("Firestore offline mode active"));
 
+            // Đẩy toàn bộ kho lên Firestore
             window.saveInventoryToCloud = async function() {
                 try {
                     for (const item of inventoryData) {
                         await setDoc(doc(db, "inventory", String(item.id)), item);
                     }
-                } catch(e) { console.error("Cloud save inventory error:", e); }
+                } catch(e) {}
             };
 
+            // Đẩy 1 sản phẩm đơn lẻ lên Firestore
             window.saveProductItemToCloud = async function(item) {
-                try { await setDoc(doc(db, "inventory", String(item.id)), item); } catch(e) { console.error("Cloud save product item error:", e); }
+                try { await setDoc(doc(db, "inventory", String(item.id)), item); } catch(e) {}
             };
 
+            // Đẩy 1 đơn hàng lên Firestore
             window.saveOrderToCloud = async function(newOrder) {
                 try {
                     await setDoc(doc(db, "orders", String(newOrder.id)), newOrder);
-                } catch(e) { console.error("Cloud save order error:", e); }
+                } catch(e) {}
             };
 
+            // Xóa đơn hàng trên Firestore
             window.deleteOrderFromCloud = async function(orderId) {
-                try { await deleteDoc(doc(db, "orders", String(orderId))); } catch(e) { console.error("Cloud delete order error:", e); }
+                try { await deleteDoc(doc(db, "orders", String(orderId))); } catch(e) {}
             };
 
+            // Xóa sản phẩm kho trên Firestore
             window.deleteProductFromCloud = async function(productId) {
-                try { await deleteDoc(doc(db, "inventory", String(productId))); } catch(e) { console.error("Cloud delete product error:", e); }
+                try { await deleteDoc(doc(db, "inventory", String(productId))); } catch(e) {}
             };
         } catch (e) {
-            console.warn("Firebase initialization failed:", e);
+            console.warn("Firebase initialization skipped (offline)");
         }
     </script>
 </body>

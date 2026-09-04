@@ -337,7 +337,7 @@
                                 <tr>
                                     <th style="width: 50px; text-align: center;">STT</th>
                                     <th style="text-align: left; white-space: nowrap;">Tên Sản Phẩm</th>
-                                    <th style="width: 220px; text-align: right; padding-right: 15px;">Số lượng</th>
+                                    <th style="width: 100px; text-align: right; padding-right: 15px;">Số lượng</th>
                                 </tr>
                             </thead>
                             <tbody id="stats-table-body"></tbody>
@@ -1124,12 +1124,23 @@
             if (sortedKeys.length > 0) {
                 tbody.innerHTML += `
                     <tr class="stats-total-row">
-                        <td colspan="2" style="text-align: right; padding-right: 20px;">TỔNG :</td>
-                        <td style="text-align: right; padding-right: 15px; color: #000;"><strong>${formatDisplayNum(overallThung)}T</strong></td>
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">
+                            <div style="display:inline-flex; align-items:center; gap:5px; justify-content:flex-end;">
+                                <strong><span class="stats-name-text">TỔNG :</span></strong>
+                                <button class="stats-edit-btn" onclick="promptEditStatsName(this)"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+                            </div>
+                        </td>
+                        <td style="text-align: right; padding-right: 15px; color: #000;">
+                            <div style="display:inline-flex; align-items:center; gap:5px; justify-content:flex-end;">
+                                <strong><span class="stats-name-text">${formatDisplayNum(overallThung)}T</span></strong>
+                                <button class="stats-edit-btn" onclick="promptEditStatsName(this)"><i data-lucide="edit-2" style="width:14px;height:14px;"></i></button>
+                            </div>
+                        </td>
                     </tr>`;
             } else {
                 tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
             }
+            safeCreateIcons();
         }
 
         function exportStatsToWord() {

@@ -109,7 +109,6 @@
             min-width: 130px;
         }
 
-        /* Tối ưu định dạng bảng in đơn hàng - Thẳng hàng tuyệt đối */
         .history-print-table {
             width: 100%;
             max-width: 450px;
@@ -129,7 +128,6 @@
         .history-print-table .col-eq { text-align: center; }
         .history-print-table .col-total { text-align: right; white-space: nowrap; font-weight: 500; }
 
-        /* Nút chỉnh sửa linh hoạt ở tab Thống kê */
         .stats-edit-btn {
             background: none; border: none; cursor: pointer; color: var(--warning); 
             display: none; align-items: center; justify-content: center; padding: 2px;
@@ -740,7 +738,6 @@
             alert("Thành công");
         }
 
-        /* Hàm khởi tạo cấu trúc HTML in ấn - Đảm bảo các cột căn thẳng hàng tuyệt đối */
         function generateOrderHtml(order, index) {
             let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 4px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
             html += `<table class="history-print-table">
@@ -1174,7 +1171,6 @@
             document.body.removeChild(a);
         }
 
-        /* Chức năng mở khóa & chỉnh sửa linh hoạt trên bảng Thống kê */
         let isStatsEdit = false;
         function toggleStatsEdit() {
             isStatsEdit = !isStatsEdit;
@@ -1204,13 +1200,12 @@
         }
     </script>
 
-    <!-- FIREBASE SDK MODULIZED & REAL-TIME SYNC -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAnalytics, isSupported as isAnalyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
         import { 
             getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp, query, where, getDocs 
-        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
@@ -1224,7 +1219,11 @@
 
         try {
             const app = initializeApp(firebaseConfig);
-            const analytics = getAnalytics(app);
+            
+            isAnalyticsSupported().then(supported => {
+                if (supported) getAnalytics(app);
+            }).catch(() => {});
+
             const db = getFirestore(app);
 
             async function autoCleanFirestoreOldOrders() {
@@ -1236,9 +1235,9 @@
                     const q = query(collection(db, "orders"), where("date", "<", cutoffDate));
                     const querySnapshot = await getDocs(q);
 
-                    querySnapshot.forEach(async (document) => {
+                    for (const document of querySnapshot.docs) {
                         await deleteDoc(doc(db, "orders", document.id));
-                    });
+                    }
                 } catch (e) {
                     console.warn("Lỗi khi tự động dọn dẹp đơn cũ trên Firestore:", e);
                 }
@@ -1246,6 +1245,7 @@
 
             autoCleanFirestoreOldOrders();
 
+            // Đồng bộ 2 chiều Kho hàng
             onSnapshot(collection(db, "inventory"), (snapshot) => {
                 const cloudInventory = [];
                 snapshot.forEach((doc) => {
@@ -1257,9 +1257,12 @@
                     safeSetItem('dms_inventory', JSON.stringify(inventoryData));
                     renderInventory();
                     updateProductSelect();
+                } else if (inventoryData.length > 0) {
+                    window.saveInventoryToCloud();
                 }
-            }, (error) => console.warn("Firestore offline mode active"));
+            }, (error) => console.warn("Firestore inventory offline mode:", error));
 
+            // Đồng bộ 2 chiều Đơn hàng
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const cloudOrders = [];
                 snapshot.forEach((doc) => {
@@ -1272,36 +1275,40 @@
                     renderHistory();
                     renderStats();
                     renderCurrentMonthDiff();
+                } else if (ordersData.length > 0) {
+                    ordersData.forEach(order => {
+                        window.saveOrderToCloud(order);
+                    });
                 }
-            }, (error) => console.warn("Firestore offline mode active"));
+            }, (error) => console.warn("Firestore orders offline mode:", error));
 
             window.saveInventoryToCloud = async function() {
                 try {
                     for (const item of inventoryData) {
                         await setDoc(doc(db, "inventory", String(item.id)), item);
                     }
-                } catch(e) {}
+                } catch(e) { console.error("Cloud save inventory error:", e); }
             };
 
             window.saveProductItemToCloud = async function(item) {
-                try { await setDoc(doc(db, "inventory", String(item.id)), item); } catch(e) {}
+                try { await setDoc(doc(db, "inventory", String(item.id)), item); } catch(e) { console.error("Cloud save product item error:", e); }
             };
 
             window.saveOrderToCloud = async function(newOrder) {
                 try {
                     await setDoc(doc(db, "orders", String(newOrder.id)), newOrder);
-                } catch(e) {}
+                } catch(e) { console.error("Cloud save order error:", e); }
             };
 
             window.deleteOrderFromCloud = async function(orderId) {
-                try { await deleteDoc(doc(db, "orders", String(orderId))); } catch(e) {}
+                try { await deleteDoc(doc(db, "orders", String(orderId))); } catch(e) { console.error("Cloud delete order error:", e); }
             };
 
             window.deleteProductFromCloud = async function(productId) {
-                try { await deleteDoc(doc(db, "inventory", String(productId))); } catch(e) {}
+                try { await deleteDoc(doc(db, "inventory", String(productId))); } catch(e) { console.error("Cloud delete product error:", e); }
             };
         } catch (e) {
-            console.warn("Firebase initialization skipped (offline)");
+            console.warn("Firebase initialization failed:", e);
         }
     </script>
 </body>

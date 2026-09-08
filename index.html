@@ -6,6 +6,7 @@
     <title>Hệ Thống Quản Lý Phân Phối - DMS Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -40,39 +41,40 @@
         .kpi-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .kpi-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
         .kpi-value { font-size: 22px; font-weight: 700; color: #0f172a; margin-top: 5px; }
-        .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        .card-header { font-size: 16px; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .card-header { font-size: 16px; font-weight: 700; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: #1e293b; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 13px; font-weight: 600; color: #475569; }
-        .form-control { padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; transition: border 0.2s; }
+        .form-control { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .btn { padding: 9px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .btn { padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .btn-primary { background: var(--primary); color: #fff; }
-        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
         .btn-success { background: var(--success); color: #fff; }
-        .btn-success:hover { background: #059669; }
+        .btn-success:hover { background: #059669; transform: translateY(-1px); }
         .btn-danger { background: var(--danger); color: #fff; }
         .btn-danger:hover { background: #dc2626; }
         .btn-warning { background: var(--warning); color: #fff; }
         .btn-secondary { background: #e2e8f0; color: #334155; }
-        .btn-sm { padding: 5px 10px; font-size: 12px; }
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th { background: #f8fafc; padding: 12px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); }
-        td { padding: 12px; border-bottom: 1px solid var(--border-color); color: #334155; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; }
+        .table-responsive { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; background: #fff;}
+        th { background: #f8fafc; padding: 14px 12px; font-weight: 600; color: #475569; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
+        td { padding: 14px 12px; border-bottom: 1px solid var(--border-color); color: #334155; vertical-align: middle; }
         tr:hover { background: #f1f5f9; }
-        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
-        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2; color: #1e293b; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
+        .history-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .history-text-body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.3; color: #1e293b; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
-        .modal-content { background: #fff; border-radius: 12px; width: 100%; max-width: 600px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
-        .summary-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 15px; }
-        .summary-metrics { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-        .metric-item { display: flex; flex-direction: column; }
-        .metric-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 600px; padding: 25px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        .summary-box { background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 15px; }
+        .summary-metrics { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+        .metric-item { display: flex; flex-direction: column; gap: 4px; }
+        .metric-label { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
         .metric-val { font-size: 16px; font-weight: 700; color: #0f172a; }
-        .metric-val.highlight { color: var(--primary); font-size: 18px; }
+        .metric-val.highlight { color: var(--primary); font-size: 20px; }
         .metric-val.gain { color: var(--success); }
         .month-diff-card {
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
@@ -98,88 +100,245 @@
             gap: 12px;
             align-items: flex-end;
             flex-wrap: wrap;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             background: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 12px;
             border: 1px solid var(--border-color);
         }
         .stats-toolbar-item {
             flex: 1;
-            min-width: 130px;
+            min-width: 140px;
         }
-
-        /* Tối ưu bảng Lịch sử cho máy tính */
-        .history-print-table {
-            width: 100%;
-            max-width: 550px;
-        }
+        .history-print-table { width: 100%; max-width: 550px; }
         @media (min-width: 768px) {
             .history-print-table {
-                width: 420px !important; /* Rút ngắn khoảng trắng */
-                table-layout: fixed; /* Ép các cột thẳng hàng tuyệt đối */
+                width: 420px !important;
+                table-layout: fixed;
             }
             .history-print-table .col-name { width: 200px; word-wrap: break-word; }
             .history-print-table .col-qty { width: 75px; }
             .history-print-table .col-eq { width: 20px; }
             .history-print-table .col-total { width: 90px; }
         }
-
-        /* Tối ưu bảng Thống kê: 2 cột tên SP & số lượng sát nhau nhất */
-        #stats-table {
-            width: auto !important;
-            table-layout: auto !important;
-            max-width: 100%;
-        }
-        #stats-table th,
-        #stats-table td {
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
-        #stats-table th:nth-child(1),
-        #stats-table td:nth-child(1) {
-            padding-left: 6px;
-            padding-right: 6px;
-            width: 30px;
-        }
-        #stats-table th:nth-child(2),
-        #stats-table td:nth-child(2) {
-            padding-left: 8px;
-            padding-right: 6px;
-            white-space: nowrap;
-        }
-        #stats-table th:nth-child(3),
-        #stats-table td:nth-child(3) {
-            padding-left: 4px;
-            padding-right: 8px;
-            white-space: nowrap;
-        }
-
-        /* Nút chỉnh sửa tên ở tab Thống kê */
+        #stats-table { width: auto !important; table-layout: auto !important; max-width: 100%; }
         .stats-edit-btn {
             background: none; border: none; cursor: pointer; color: var(--warning); 
             display: none; align-items: center; justify-content: center; padding: 2px;
         }
         .stats-edit-mode .stats-edit-btn { display: flex; }
         .stats-edit-mode .stats-name-text { border-bottom: 1px dashed var(--warning); cursor: text; }
+        .inventory-action-col { display: none; }
+        .inventory-edit-mode .inventory-action-col { display: table-cell; }
+        .dashboard-charts { margin-top: 15px; }
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .chart-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        .percent-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .percent-good { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .percent-mid { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .percent-low { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .target-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        .dash-pct-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+            align-items: center;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .dash-pct-row strong { color: #1e293b; }
+        .dash-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .dash-summary-item {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-left: 5px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        .dash-summary-item:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .dash-summary-item:nth-child(2) { border-left-color: #3b82f6; }
+        .dash-summary-item:nth-child(3) { border-left-color: var(--success); }
+        .dash-summary-item .label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .dash-summary-item .value { font-size: 26px; font-weight: 800; color: #0f172a; }
+        .dash-summary-item .value.primary { color: var(--primary); }
+        .dash-summary-item .value.success { color: var(--success); }
+        .dash-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            color: #fff;
+            box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-hero::after {
+            content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.03)" stroke-width="20" fill="none"/></svg>') repeat;
+            opacity: 0.8; pointer-events: none;
+        }
+        .dash-hero-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            flex-wrap: wrap; gap: 15px; margin-bottom: 24px; padding-bottom: 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.15); position: relative; z-index: 2;
+        }
+        .dash-hero-title { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase; }
+        .dash-hero-sub { font-size: 14px; color: #cbd5e1; margin-top: 6px; }
+        .dash-hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; position: relative; z-index: 2; }
+        .dash-hero-metric {
+            background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); transition: background 0.3s;
+        }
+        .dash-hero-metric:hover { background: rgba(255, 255, 255, 0.1); }
+        .dash-hero-metric .label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .dash-hero-metric .value { font-size: 28px; font-weight: 800; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="brand"><i data-lucide="layers"></i> DMS PRO SYSTEM</div>
         <ul class="nav-list">
-            <li class="nav-item active" onclick="switchTab('tab-order', this)"><i data-lucide="shopping-cart"></i> 1. Lên đơn</li>
-            <li class="nav-item" onclick="switchTab('tab-inventory', this)"><i data-lucide="package"></i> 2. Kho hàng</li>
-            <li class="nav-item" onclick="switchTab('tab-history', this)"><i data-lucide="file-text"></i> 3. Lịch sử</li>
-            <li class="nav-item" onclick="switchTab('tab-stats', this)"><i data-lucide="bar-chart-2"></i> 4. Thống kê</li>
+            <li class="nav-item" onclick="switchTab('tab-dashboard', this)"><i data-lucide="layout-dashboard"></i> Dashboard</li>
+            <li class="nav-item active" onclick="switchTab('tab-order', this)"><i data-lucide="shopping-cart"></i> Lên đơn</li>
+            <li class="nav-item" onclick="switchTab('tab-inventory', this)"><i data-lucide="package"></i> Kho hàng</li>
+            <li class="nav-item" onclick="switchTab('tab-history', this)"><i data-lucide="file-text"></i> Lịch sử</li>
+            <li class="nav-item" onclick="switchTab('tab-stats', this)"><i data-lucide="bar-chart-2"></i> Thống kê</li>
         </ul>
     </div>
     <div class="main-wrapper">
         <div class="top-header">
-            <div class="header-title" id="page-title">1. Quản lý Lên đơn hàng</div>
+            <div class="header-title" id="page-title">Quản lý Lên đơn hàng</div>
             <div class="user-badge"><i data-lucide="user"></i>Lê Hoàng</div>
         </div>
         <div class="content-body">
+            <div id="tab-dashboard" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <span><i data-lucide="target" style="vertical-align: middle; margin-right: 5px;"></i> Thiết lập Mục tiêu Tháng</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="month" id="dashboard-month" class="form-control" style="width: 180px;" onchange="onDashboardMonthChange()">
+                            <button class="btn btn-secondary btn-sm" id="btn-edit-targets" style="display:none;" onclick="showTargetForm()">
+                                <i data-lucide="edit"></i> Sửa mục tiêu
+                            </button>
+                        </div>
+                    </div>
+                    <div id="target-form-wrap" class="target-form">
+                        <div class="form-group">
+                            <label>Doanh số Khoán tháng (VNĐ)</label>
+                            <input type="number" id="target-khoan" class="form-control" placeholder="Nhập doanh số khoán cả tháng..." min="0" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label>Doanh số DMS (VNĐ)</label>
+                            <input type="number" id="target-dms-input" class="form-control" placeholder="Nhập doanh số DMS..." min="0" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-primary" onclick="saveDashboardTargets()"><i data-lucide="save"></i> Lưu Mục tiêu</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-hero">
+                    <div class="dash-hero-top">
+                        <div>
+                            <div class="dash-hero-title">MỤC TIÊU NGÀY LÀM VIỆC CÒN LẠI</div>
+                            <div class="dash-hero-sub" id="dash-working-info">-- ngày làm việc còn lại (Chủ nhật nghỉ)</div>
+                        </div>
+                    </div>
+                    <div class="dash-hero-grid">
+                        <div class="dash-hero-metric">
+                            <div class="label">Còn thiếu (Khoán − Thực tế)</div>
+                            <div class="value" id="dash-remaining-amount">0 đ</div>
+                        </div>
+                        <div class="dash-hero-metric">
+                            <div class="label">Mục tiêu ngày (theo Thực tế)</div>
+                            <div class="value" id="dash-daily-target">0 đ</div>
+                        </div>
+                        <div class="dash-hero-metric">
+                            <div class="label">Còn thiếu (Khoán − DMS)</div>
+                            <div class="value" id="dash-remaining-dms">0 đ</div>
+                        </div>
+                        <div class="dash-hero-metric">
+                            <div class="label">Mục tiêu ngày (theo DMS)</div>
+                            <div class="value" id="dash-daily-target-dms">0 đ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-summary-grid">
+                    <div class="dash-summary-item">
+                        <div class="label">Doanh số Khoán (Gốc)</div>
+                        <div class="value" id="dash-khoan">0 đ</div>
+                    </div>
+                    <div class="dash-summary-item">
+                        <div class="label">Doanh số Thực tế (Net)</div>
+                        <div class="value primary" id="dash-actual">0 đ</div>
+                    </div>
+                    <div class="dash-summary-item">
+                        <div class="label">Doanh số DMS</div>
+                        <div class="value success" id="dash-dms">0 đ</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-charts">
+                    <div class="chart-card">
+                        <h3><i data-lucide="bar-chart-3"></i> Phân tích Trực quan Doanh số Tháng</h3>
+                        <div class="dash-pct-row">
+                            <span>Tỉ lệ Thực tế / Khoán: <strong id="chart-net-pct" class="percent-badge">0%</strong></span>
+                            <span>Tỉ lệ DMS / Khoán: <strong id="chart-dms-pct" class="percent-badge">0%</strong></span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-combined"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="tab-order" class="tab-panel active">
                 <div class="card">
                     <div class="card-header">Thông Tin Nhập Đơn Hàng</div>
@@ -200,8 +359,8 @@
                             <label>Đơn Vị:</label>
                             <select id="order-unit" class="form-control">
                                 <option value="Thùng">Thùng (T)</option>
+				<option value="Hộp">Hộp</option>
                                 <option value="Gói">Gói</option>
-                                <option value="Hộp">Hộp</option>
                                 <option value="Dây">Dây</option>
                             </select>
                         </div>
@@ -214,7 +373,7 @@
                         <button class="btn btn-primary" onclick="addTempItem()"><i data-lucide="plus"></i> Thêm Vào Đơn</button>
                     </div>
                 </div>
-                <div class="card" style="border-top: 3px solid var(--primary);">
+                <div class="card" style="border-top: 4px solid var(--primary);">
                     <div class="card-header">
                         <span>Chi Tiết Đơn Hàng Tạm Tính</span>
                         <span id="temp-customer-name" style="color: var(--primary); font-size: 15px;"></span>
@@ -246,7 +405,7 @@
                                 <span class="metric-label">TIỀN PHẢI THU:</span>
                                 <span class="metric-val highlight" id="temp-total-pay">0 đ</span>
                             </div>
-                            <div class="metric-item" style="border-left: 1px solid var(--border-color); padding-left: 15px;">
+                            <div class="metric-item" style="border-left: 1px solid var(--border-color); padding-left: 20px;">
                                 <span class="metric-label">CHÊNH LỆCH (BÁN - NET):</span>
                                 <span class="metric-val gain" id="temp-total-diff">0 đ</span>
                             </div>
@@ -261,6 +420,9 @@
                     <div class="card-header">
                         <span>Quản Lý Dữ Liệu Kho</span>
                         <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-warning btn-sm" id="btn-toggle-inventory-edit" onclick="toggleInventoryEditMode()">
+                                <i data-lucide="lock"></i> Mở khóa sửa
+                            </button>
                             <button class="btn btn-primary btn-sm" onclick="openAddProductModal()"><i data-lucide="plus-circle"></i> Thêm Sản Phẩm</button>
                             <label class="btn btn-success btn-sm" style="margin: 0;">
                                 <i data-lucide="upload"></i> Upload Excel Kho
@@ -269,11 +431,12 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table>
+                        <table id="inventory-table">
                             <thead>
                                 <tr>
                                     <th>#</th><th>Tên Sản Phẩm</th><th>QC/T</th><th>Giá Net Lẻ</th>
-                                    <th>Giá Net Thùng</th><th>Giá Bán Lẻ</th><th>Giá Bán Thùng</th><th>Hành Động</th>
+                                    <th>Giá Net Thùng</th><th>Giá Bán Lẻ</th><th>Giá Bán Thùng</th>
+                                    <th class="inventory-action-col">Hành Động</th>
                                 </tr>
                             </thead>
                             <tbody id="inventory-table-body"></tbody>
@@ -345,11 +508,11 @@
 
                     <div class="stats-toolbar">
                         <div class="stats-toolbar-item">
-                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Ngày:</label>
+                            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">Xem Theo Ngày:</label>
                             <input type="date" id="stats-date" class="form-control" style="width: 100%;" onchange="onStatsFilterChange('date')">
                         </div>
                         <div class="stats-toolbar-item">
-                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Xem Theo Tháng:</label>
+                            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">Xem Theo Tháng:</label>
                             <input type="month" id="stats-month" class="form-control" style="width: 100%;" onchange="onStatsFilterChange('month')">
                         </div>
                         <div style="display: flex; gap: 8px;">
@@ -433,6 +596,56 @@
     </div>
 
     <script>
+        // Cấu hình biểu đồ chuyên nghiệp[cite: 1]
+        const professionalChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { font: { family: 'sans-serif', size: 13 }, usePointStyle: true, padding: 20 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13, padding: 5 },
+                    padding: 12, cornerRadius: 8, boxPadding: 6
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    beginAtZero: true, border: { display: false },
+                    grid: { color: 'rgba(0, 0, 0, 0.06)', borderDash: [5, 5] }
+                }
+            },
+            elements: {
+                line: { tension: 0.4, borderWidth: 3 },
+                point: { radius: 4, hoverRadius: 7, borderWidth: 2 }
+            }
+        };
+
+        // Danh sách các ngày nghỉ lễ được cài đặt (Định dạng: YYYY-MM-DD)[cite: 2]
+        const holidaySettings = ['2026-09-02', '2026-09-03'];
+
+        // Hàm tính toán số ngày nghỉ hợp lệ để trừ đi[cite: 2]
+        function getActualWorkingDays(currentCalculatedDays, holidaysArray) {
+            if (!currentCalculatedDays || currentCalculatedDays <= 0) return 0;
+            const holidayCount = holidaysArray.length; 
+            const finalDays = currentCalculatedDays - holidayCount;
+            return finalDays > 0 ? finalDays : 0;
+        }
+
+        // Hàm hỗ trợ lọc ra các ngày lễ nằm trong khoảng thời gian đã cho (không tính trùng chủ nhật)[cite: 2]
+        function getHolidaysInRange(fromDate, toDate) {
+            return holidaySettings.filter(h => {
+                const hDate = new Date(h); hDate.setHours(0,0,0,0);
+                const f = new Date(fromDate); f.setHours(0,0,0,0);
+                const t = new Date(toDate); t.setHours(0,0,0,0);
+                return hDate >= f && hDate <= t && hDate.getDay() !== 0;
+            });
+        }
+
         const memoryStore = {};
         function safeGetItem(key) {
             try { return localStorage.getItem(key); }
@@ -443,7 +656,6 @@
             catch (e) { memoryStore[key] = value; }
         }
 
-        // Bọc an toàn hàm gọi Icon Lucide khi ở chế độ Offline
         function safeCreateIcons() {
             if (typeof lucide !== 'undefined' && lucide.createIcons) {
                 try { lucide.createIcons(); } catch (e) { console.warn("Lucide icons offline skipped:", e); }
@@ -452,18 +664,19 @@
 
         let inventoryData = JSON.parse(safeGetItem('dms_inventory')) || [];
         let ordersData = JSON.parse(safeGetItem('dms_orders')) || [];
+        let targetsData = JSON.parse(safeGetItem('dms_targets')) || {}; 
         let tempItems = [];
         let editingOrderItems = [];
         let isHistoryEditMode = false;
+        let isInventoryEditMode = false;
+        let chartCombined = null;
 
-        // Hàm sắp xếp kho hàng theo thứ tự A-Z
         function sortInventory() {
             inventoryData.sort((a, b) => {
                 return (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' });
             });
         }
 
-        // Hàm tự động xóa các đơn hàng cũ quá 1 năm (365 ngày) trong bộ nhớ local
         function cleanOldOrders() {
             const oneYearAgo = new Date();
             oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -492,6 +705,7 @@
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('month-diff-selector').value = currentMonth;
+            document.getElementById('dashboard-month').value = currentMonth;
 
             renderInventory();
             updateProductSelect();
@@ -506,12 +720,14 @@
             document.getElementById(tabId).classList.add('active');
             el.classList.add('active');
             const titles = {
-                'tab-order': '1. Quản lý Lên đơn hàng',
-                'tab-inventory': '2. Quản lý Kho hàng',
-                'tab-history': '3. Lịch sử đơn hàng',
-                'tab-stats': '4. Báo cáo thống kê'
+                'tab-dashboard': 'Dashboard - Phân tích chuyên sâu',
+                'tab-order': 'Quản lý Lên đơn hàng',
+                'tab-inventory': 'Quản lý Kho hàng',
+                'tab-history': 'Lịch sử đơn hàng',
+                'tab-stats': 'Báo cáo thống kê'
             };
             document.getElementById('page-title').innerText = titles[tabId];
+            if(tabId === 'tab-dashboard') renderDashboard();
             if(tabId === 'tab-order') updateProductSelect();
             if(tabId === 'tab-inventory') renderInventory();
             if(tabId === 'tab-history') renderHistory();
@@ -572,12 +788,28 @@
             reader.readAsArrayBuffer(file);
         }
 
+        function toggleInventoryEditMode() {
+            isInventoryEditMode = !isInventoryEditMode;
+            const btn = document.getElementById('btn-toggle-inventory-edit');
+            const table = document.getElementById('inventory-table');
+            if (isInventoryEditMode) {
+                btn.innerHTML = `<i data-lucide="unlock"></i> Khóa sửa`;
+                btn.classList.replace('btn-warning', 'btn-secondary');
+                table.classList.add('inventory-edit-mode');
+            } else {
+                btn.innerHTML = `<i data-lucide="lock"></i> Mở khóa sửa`;
+                btn.classList.replace('btn-secondary', 'btn-warning');
+                table.classList.remove('inventory-edit-mode');
+            }
+            safeCreateIcons();
+        }
+
         function renderInventory() {
-            sortInventory(); // Tự động sắp xếp A-Z
+            sortInventory(); 
             const tbody = document.getElementById('inventory-table-body');
             tbody.innerHTML = '';
             if (inventoryData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted);">Kho trống. Vui lòng upload file Excel hoặc thêm mới.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 30px;">Kho trống. Vui lòng upload file Excel hoặc thêm mới.</td></tr>`;
                 return;
             }
             inventoryData.forEach((item, index) => {
@@ -590,7 +822,7 @@
                         <td>${formatDisplayNum(item.netThung)}</td>
                         <td>${formatDisplayNum(item.banLe)}</td>
                         <td>${formatDisplayNum(item.banThung)}</td>
-                        <td>
+                        <td class="inventory-action-col">
                             <button class="btn btn-warning btn-sm" onclick="openEditProductModal('${item.id}')"><i data-lucide="edit"></i> Sửa</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteProduct('${item.id}')"><i data-lucide="trash"></i> Xóa</button>
                         </td>
@@ -674,7 +906,7 @@
         }
 
         function updateProductSelect() {
-            sortInventory(); // Sắp xếp A-Z trước khi đưa vào dropdown chọn đơn hàng
+            sortInventory();
             const select = document.getElementById('order-product');
             select.innerHTML = '<option value="">-- Chọn sản phẩm từ kho --</option>';
             inventoryData.forEach(item => {
@@ -708,7 +940,7 @@
             let totalRaw = 0, totalDiff = 0;
             const discount = parseVnNum(document.getElementById('temp-order-discount').value);
             if (tempItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có sản phẩm nào trong đơn tạm</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">Chưa có sản phẩm nào trong đơn tạm</td></tr>`;
                 document.getElementById('temp-total-raw').innerText = "0 đ";
                 document.getElementById('temp-total-pay').innerText = "0 đ";
                 document.getElementById('temp-total-diff').innerText = "0 đ";
@@ -719,7 +951,7 @@
                 totalDiff += item.chenhLech;
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${item.productName}</strong> ${item.color ? `<small>(${item.color})</small>` : ''}</td>
+                        <td><strong>${item.productName}</strong> ${item.color ? `<small style="color:var(--text-muted);">(${item.color})</small>` : ''}</td>
                         <td>${formatDisplayNum(item.qty)} ${item.unit}</td>
                         <td>${formatDisplayNum(item.giaBan)}</td>
                         <td>${formatDisplayNum(item.giaNet)}</td>
@@ -761,12 +993,13 @@
             renderTempOrder();
             renderStats();
             renderCurrentMonthDiff();
+            if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
             alert("Thành công");
         }
 
         function generateOrderHtml(order, index) {
-            let html = `<div style="font-weight: bold; font-size: 15px; margin-bottom: 2px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
-            html += `<table class="history-print-table" style="border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.2;">`;
+            let html = `<div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #0f172a;">${index + 1}. ${order.customer}</div>`;
+            html += `<table class="history-print-table" style="border-collapse: collapse; border: none; font-family: Arial, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.3;">`;
             let totalRaw = 0;
             order.items.forEach(item => {
                 let qtyFormatted = formatDisplayNum(item.qty);
@@ -776,10 +1009,10 @@
                 let lineTotal = item.tienHangGoc !== undefined ? item.tienHangGoc : (item.giaBan * item.qty);
                 totalRaw += lineTotal;
                 html += `<tr>
-                    <td class="col-name" style="padding: 0 8px 0 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
-                    <td class="col-qty" style="padding: 0 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
-                    <td class="col-eq" style="padding: 0 4px; border: none; text-align: center;">=</td>
-                    <td class="col-total" style="padding: 0 0 0 8px; border: none; text-align: right; white-space: nowrap; font-weight: 500;">${formatDisplayNum(lineTotal)}</td>
+                    <td class="col-name" style="padding: 2px 8px 2px 0; border: none; text-align: left;">${item.productName}${colorStr}</td>
+                    <td class="col-qty" style="padding: 2px 8px; border: none; text-align: left; white-space: nowrap;">${unitStr}</td>
+                    <td class="col-eq" style="padding: 2px 4px; border: none; text-align: center;">=</td>
+                    <td class="col-total" style="padding: 2px 0 2px 8px; border: none; text-align: right; white-space: nowrap; font-weight: 600;">${formatDisplayNum(lineTotal)}</td>
                 </tr>`;
             });
             let discount = order.discount !== undefined ? order.discount : 0;
@@ -787,16 +1020,16 @@
             let totalPay = totalRaw - discount;
             if (discount > 0) {
                 html += `<tr>
-                    <td class="col-name" style="padding: 2px 8px 0 0; border: none;"></td>
-                    <td class="col-qty" style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
-                    <td class="col-eq" style="padding: 2px 4px 0 4px; border: none; text-align: center; font-weight: bold;">=</td>
-                    <td class="col-total" style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td class="col-name" style="padding: 4px 8px 0 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 4px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td class="col-eq" style="padding: 4px 4px 0 4px; border: none; text-align: center; font-weight: bold;">=</td>
+                    <td class="col-total" style="padding: 4px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>
                 <tr>
-                    <td class="col-name" style="padding: 1px 8px 1px 0; border: none;"></td>
-                    <td class="col-qty" style="padding: 1px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
-                    <td class="col-eq" style="padding: 1px 4px; border: none; text-align: center; font-weight: bold; color: #dc2626;">=</td>
-                    <td class="col-total" style="padding: 1px 0 1px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
+                    <td class="col-name" style="padding: 2px 8px 2px 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 2px 8px; border: none; text-align: left; font-weight: bold; color: #dc2626;">Chiết khấu</td>
+                    <td class="col-eq" style="padding: 2px 4px; border: none; text-align: center; font-weight: bold; color: #dc2626;">=</td>
+                    <td class="col-total" style="padding: 2px 0 2px 8px; border: none; text-align: right; font-weight: bold; color: #dc2626;">${formatDisplayNum(discount)}</td>
                 </tr>
                 <tr>
                     <td class="col-name" style="padding: 0 8px 0 0; border: none;"></td>
@@ -806,10 +1039,10 @@
                 </tr>`;
             } else if (order.items.length > 1) {
                 html += `<tr>
-                    <td class="col-name" style="padding: 2px 8px 0 0; border: none;"></td>
-                    <td class="col-qty" style="padding: 2px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
-                    <td class="col-eq" style="padding: 2px 4px 0 4px; border: none; text-align: center; font-weight: bold;">=</td>
-                    <td class="col-total" style="padding: 2px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
+                    <td class="col-name" style="padding: 4px 8px 0 0; border: none;"></td>
+                    <td class="col-qty" style="padding: 4px 8px 0 8px; border: none; text-align: left; font-weight: bold;">Tổng</td>
+                    <td class="col-eq" style="padding: 4px 4px 0 4px; border: none; text-align: center; font-weight: bold;">=</td>
+                    <td class="col-total" style="padding: 4px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>`;
             }
             html += `</table>`;
@@ -831,21 +1064,21 @@
         }
 
         function renderHistory() {
-            cleanOldOrders(); // Làm sạch các đơn quá 1 năm
+            cleanOldOrders();
             const filterDate = document.getElementById('history-date-filter').value;
             const container = document.getElementById('history-display-container');
             container.innerHTML = '';
             let filtered = ordersData;
             if (filterDate) filtered = ordersData.filter(o => o.date === filterDate);
             if (filtered.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 30px;">Không có đơn hàng nào trong ngày đã chọn.</div>`;
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 40px; border-radius: 12px; background: #f8fafc; border: 1px dashed #cbd5e1;">Không có đơn hàng nào trong ngày đã chọn.</div>`;
                 return;
             }
             filtered.forEach((order, index) => {
                 let actionsHtml = '';
                 if (isHistoryEditMode) {
                     actionsHtml = `
-                        <div style="margin-top: 8px; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                        <div style="margin-top: 12px; text-align: right; border-top: 1px dashed var(--border-color); padding-top: 12px;">
                             <button class="btn btn-warning btn-sm" onclick="openEditOrderModal(${order.id})"><i data-lucide="edit"></i> Sửa</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})"><i data-lucide="trash-2"></i> Xóa</button>
                         </div>`;
@@ -866,6 +1099,7 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
+                if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
                 if (window.deleteOrderFromCloud) window.deleteOrderFromCloud(orderId);
             }
         }
@@ -897,8 +1131,8 @@
                         <td>
                             <select class="form-control" onchange="updateEditItem(${idx}, 'unit', this.value)">
                                 <option value="Thùng" ${item.unit === 'Thùng' || item.unit === 'T' ? 'selected' : ''}>Thùng</option>
+				<option value="Hộp" ${item.unit === 'Hộp' ? 'selected' : ''}>Hộp</option>
                                 <option value="Gói" ${item.unit === 'Gói' ? 'selected' : ''}>Gói</option>
-                                <option value="Hộp" ${item.unit === 'Hộp' ? 'selected' : ''}>Hộp</option>
                                 <option value="Dây" ${item.unit === 'Dây' ? 'selected' : ''}>Dây</option>
                             </select>
                         </td>
@@ -977,6 +1211,7 @@
                 renderHistory();
                 renderStats();
                 renderCurrentMonthDiff();
+                if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
                 if (window.saveOrderToCloud) window.saveOrderToCloud(order);
                 alert("Đã cập nhật đơn hàng thành công!");
             }
@@ -990,9 +1225,9 @@
             let docText = "";
             filtered.forEach((order, index) => {
                 docText += generateOrderHtml(order, index);
-                docText += `<div style="margin: 10px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
+                docText += `<div style="margin: 15px 0; border-bottom: 1px dashed #cbd5e1;"></div>`;
             });
-            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.2; color: #1e293b; }</style></head><body>`;
+            const htmlHeader = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Sử Đơn Hàng</title><style>body { font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.3; color: #1e293b; }</style></head><body>`;
             const blob = new Blob(['\ufeff', htmlHeader + docText + `</body></html>`], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -1069,22 +1304,13 @@
 
                     let key = item.productName;
                     if (!productSummary[key]) {
-                        productSummary[key] = { 
-                            name: item.productName, 
-                            prodId: item.prodId,
-                            qtyThung: 0, 
-                            qtyLe: 0, 
-                            leUnit: '' 
-                        };
+                        productSummary[key] = { name: item.productName, prodId: item.prodId, qtyThung: 0, qtyLe: 0, leUnit: '' };
                     }
-
                     if (item.unit === 'Thùng' || item.unit === 'T') {
                         productSummary[key].qtyThung += item.qty;
                     } else {
                         productSummary[key].qtyLe += item.qty;
-                        if (item.unit && item.unit !== 'Lẻ') {
-                            productSummary[key].leUnit = item.unit.toLowerCase();
-                        }
+                        if (item.unit && item.unit !== 'Lẻ') productSummary[key].leUnit = item.unit.toLowerCase();
                     }
                 });
                 let discount = order.discount !== undefined ? order.discount : 0;
@@ -1103,10 +1329,8 @@
             const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '';
             let stt = 1;
-
             let overallThung = 0;
 
-            // Sắp xếp báo cáo thống kê tên sản phẩm theo A-Z
             const sortedKeys = Object.keys(productSummary).sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
             for (let k of sortedKeys) {
@@ -1116,26 +1340,16 @@
                 let unitName = sp.leUnit || 'gói';
 
                 let qtyDisplay = '';
-                if (sp.qtyThung > 0 && sp.qtyLe > 0) {
-                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T + ${formatDisplayNum(sp.qtyLe)} ${unitName}`;
-                } else if (sp.qtyThung > 0) {
-                    qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T`;
-                } else if (sp.qtyLe > 0) {
-                    qtyDisplay = `${formatDisplayNum(sp.qtyLe)} ${unitName}`;
-                } else {
-                    qtyDisplay = `0T`;
-                }
+                if (sp.qtyThung > 0 && sp.qtyLe > 0) qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T + ${formatDisplayNum(sp.qtyLe)} ${unitName}`;
+                else if (sp.qtyThung > 0) qtyDisplay = `${formatDisplayNum(sp.qtyThung)}T`;
+                else if (sp.qtyLe > 0) qtyDisplay = `${formatDisplayNum(sp.qtyLe)} ${unitName}`;
+                else qtyDisplay = `0T`;
 
                 let totalThungForThisProduct = sp.qtyThung;
                 if (qct > 0 && sp.qtyLe > 0) {
                     let fullThungFromLe = Math.floor(sp.qtyLe / qct);
                     let remLeTemp = sp.qtyLe - (fullThungFromLe * qct);
-                    let halfThungQty = qct / 2;
-                    
-                    let extraThung = 0;
-                    if (remLeTemp >= halfThungQty) {
-                        extraThung = 0.5;
-                    }
+                    let extraThung = remLeTemp >= (qct / 2) ? 0.5 : 0;
                     totalThungForThisProduct += fullThungFromLe + extraThung;
                 }
                 overallThung += totalThungForThisProduct;
@@ -1170,7 +1384,7 @@
                         </td>
                     </tr>`;
             } else {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">Không có dữ liệu bán trong khoảng thời gian này.</td></tr>`;
             }
             safeCreateIcons();
         }
@@ -1210,28 +1424,198 @@
             if(!isStatsEdit) return;
             const span = btnEl.parentElement.querySelector('.stats-name-text');
             const newName = prompt("Nhập tên mới hoặc ghi chú:", span.innerText);
-            if (newName !== null && newName.trim() !== "") {
-                span.innerText = newName.trim();
+            if (newName !== null && newName.trim() !== "") span.innerText = newName.trim();
+        }
+
+        function formatRoundNum(val) {
+            if (val === 0 || val === null || val === undefined) return "0";
+            let num = Math.round(Number(val));
+            if (isNaN(num)) return "0";
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function getMonthActualNet(monthKey) {
+            let totalNet = 0;
+            ordersData.forEach(order => {
+                if (!order.date || !order.date.startsWith(monthKey)) return;
+                order.items.forEach(item => {
+                    totalNet += (item.giaNet || 0) * item.qty;
+                });
+            });
+            return totalNet;
+        }
+
+        function countWorkingDays(fromDate, toDate) {
+            if (fromDate > toDate) return 0;
+            let count = 0;
+            const d = new Date(fromDate); d.setHours(0, 0, 0, 0);
+            const end = new Date(toDate); end.setHours(0, 0, 0, 0);
+            while (d <= end) {
+                if (d.getDay() !== 0) count++;
+                d.setDate(d.getDate() + 1);
             }
+            return count;
+        }
+
+        // Tích hợp logic trừ ngày nghỉ lễ vào tính toán ngày làm việc[cite: 2, 3]
+        function getMonthWorkingInfo(monthKey) {
+            const [year, month] = monthKey.split('-').map(Number);
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const totalWorkingRaw = countWorkingDays(firstDay, lastDay);
+            const totalWorking = getActualWorkingDays(totalWorkingRaw, getHolidaysInRange(firstDay, lastDay));
+
+            if (today < firstDay) {
+                return { totalWorking, remainingWorking: totalWorking, passedWorking: 0 };
+            }
+            if (today > lastDay) {
+                return { totalWorking, remainingWorking: 0, passedWorking: totalWorking };
+            }
+
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const passedWorkingRaw = yesterday < firstDay ? 0 : countWorkingDays(firstDay, yesterday);
+            const passedWorking = getActualWorkingDays(passedWorkingRaw, getHolidaysInRange(firstDay, yesterday));
+            
+            const remainingWorkingRaw = countWorkingDays(today, lastDay);
+            const remainingWorking = getActualWorkingDays(remainingWorkingRaw, getHolidaysInRange(today, lastDay));
+
+            return { totalWorking, remainingWorking, passedWorking };
+        }
+
+        function onDashboardMonthChange() {
+            renderDashboard();
+        }
+
+        function showTargetForm() {
+            document.getElementById('target-form-wrap').style.display = 'grid';
+            document.getElementById('btn-edit-targets').style.display = 'none';
+        }
+
+        function hideTargetForm() {
+            document.getElementById('target-form-wrap').style.display = 'none';
+            document.getElementById('btn-edit-targets').style.display = 'inline-flex';
+        }
+
+        function saveDashboardTargets() {
+            const monthKey = document.getElementById('dashboard-month').value;
+            if (!monthKey) return alert("Vui lòng chọn tháng!");
+            const khoan = Math.round(parseVnNum(document.getElementById('target-khoan').value));
+            const dmsInput = Math.round(parseVnNum(document.getElementById('target-dms-input').value));
+            targetsData[monthKey] = { khoan, dmsInput };
+            safeSetItem('dms_targets', JSON.stringify(targetsData));
+            if (window.saveTargetToCloud) window.saveTargetToCloud(monthKey, targetsData[monthKey]);
+            alert("Đã lưu mục tiêu tháng " + monthKey);
+            hideTargetForm();
+            renderDashboard();
+        }
+
+        function formatPct(val) {
+            if (!isFinite(val) || isNaN(val)) return "0%";
+            return Math.round(val) + "%";
+        }
+
+        function getPctClass(pct) {
+            if (pct >= 100) return "percent-good";
+            if (pct >= 70) return "percent-mid";
+            return "percent-low";
+        }
+
+        function renderDashboard() {
+            let monthKey = document.getElementById('dashboard-month').value;
+            if (!monthKey) {
+                const now = new Date();
+                monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                document.getElementById('dashboard-month').value = monthKey;
+            }
+
+            const targets = targetsData[monthKey] || { khoan: 0, dmsInput: 0 };
+            const hasTargets = (targets.khoan > 0 || targets.dmsInput > 0);
+
+            document.getElementById('target-khoan').value = targets.khoan || '';
+            document.getElementById('target-dms-input').value = targets.dmsInput || '';
+
+            if (hasTargets) hideTargetForm();
+            else showTargetForm();
+
+            const khoan = Math.round(targets.khoan || 0);
+            const dmsInput = Math.round(targets.dmsInput || 0);
+            const actualNetRaw = Math.round(getMonthActualNet(monthKey));
+            const actualNet = actualNetRaw * 1000;
+
+            const pctNet = khoan > 0 ? (actualNet / khoan) * 100 : 0;
+            const pctDms = khoan > 0 ? (dmsInput / khoan) * 100 : 0;
+
+            const workInfo = getMonthWorkingInfo(monthKey);
+            const remainingAmount = Math.max(0, khoan - actualNet);
+            const remainingDms = Math.max(0, khoan - dmsInput);
+            const dailyTarget = workInfo.remainingWorking > 0 ? Math.round(remainingAmount / workInfo.remainingWorking) : 0;
+            const dailyTargetDms = workInfo.remainingWorking > 0 ? Math.round(remainingDms / workInfo.remainingWorking) : 0;
+
+            document.getElementById('dash-khoan').innerText = formatRoundNum(khoan) + " đ";
+            document.getElementById('dash-actual').innerText = formatRoundNum(actualNet) + " đ";
+            document.getElementById('dash-dms').innerText = formatRoundNum(dmsInput) + " đ";
+            document.getElementById('dash-remaining-amount').innerText = formatRoundNum(remainingAmount) + " đ";
+            document.getElementById('dash-daily-target').innerText = formatRoundNum(dailyTarget) + " đ";
+            document.getElementById('dash-remaining-dms').innerText = formatRoundNum(remainingDms) + " đ";
+            document.getElementById('dash-daily-target-dms').innerText = formatRoundNum(dailyTargetDms) + " đ";
+            document.getElementById('dash-working-info').innerText =
+                `${workInfo.remainingWorking} ngày làm việc còn lại / ${workInfo.totalWorking} ngày trong tháng · Chủ nhật & Lễ nghỉ`;
+
+            const netPctEl = document.getElementById('chart-net-pct');
+            const dmsPctEl = document.getElementById('chart-dms-pct');
+            netPctEl.className = `percent-badge ${getPctClass(pctNet)}`;
+            netPctEl.innerText = formatPct(pctNet);
+            dmsPctEl.className = `percent-badge ${getPctClass(pctDms)}`;
+            dmsPctEl.innerText = formatPct(pctDms);
+
+            if (chartCombined) { chartCombined.destroy(); chartCombined = null; }
+
+            const ctx = document.getElementById('chart-combined').getContext('2d');
+            
+            // Kế thừa và hợp nhất cấu hình biểu đồ chuyên nghiệp[cite: 1, 3]
+            const chartOpts = JSON.parse(JSON.stringify(professionalChartOptions));
+            chartOpts.plugins.legend.display = false;
+            chartOpts.plugins.tooltip.callbacks = {
+                label: function(ctx) { return formatRoundNum(ctx.raw) + ' đ'; }
+            };
+            chartOpts.scales.y.ticks = {
+                color: '#64748b', font: { size: 12 },
+                callback: function(value) { return formatRoundNum(value); }
+            };
+            chartOpts.scales.x.ticks = { color: '#475569', font: { weight: 'bold', size: 13 } };
+
+            chartCombined = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Doanh số Khoán', 'Doanh số Thực tế', 'Doanh số DMS'],
+                    datasets: [{
+                        data: [khoan, actualNet, dmsInput],
+                        backgroundColor: ['#94a3b8', '#2563eb', '#10b981'],
+                        borderRadius: 8,
+                        maxBarThickness: 80
+                    }]
+                },
+                options: chartOpts
+            });
+
+            safeCreateIcons();
         }
     </script>
 
-    <!-- FIREBASE SDK MODULIZED & REAL-TIME SYNC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-        import { 
-            getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp, query, where, getDocs 
-        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0",
-            authDomain: "dms-pro-19191.firebaseapp.com",
-            projectId: "dms-pro-19191",
-            storageBucket: "dms-pro-19191.firebasestorage.app",
-            messagingSenderId: "297081478934",
-            appId: "1:297081478934:web:3b116788a534307a187a37",
-            measurementId: "G-R740TXLRFQ"
+            apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0", authDomain: "dms-pro-19191.firebaseapp.com",
+            projectId: "dms-pro-19191", storageBucket: "dms-pro-19191.firebasestorage.app",
+            messagingSenderId: "297081478934", appId: "1:297081478934:web:3b116788a534307a187a37", measurementId: "G-R740TXLRFQ"
         };
 
         try {
@@ -1239,89 +1623,60 @@
             const analytics = getAnalytics(app);
             const db = getFirestore(app);
 
-            // Tự động quét và xóa các đơn hàng cũ hơn 1 năm trên Firestore khi mở app
             async function autoCleanFirestoreOldOrders() {
                 try {
-                    const oneYearAgo = new Date();
-                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                    const oneYearAgo = new Date(); oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
                     const cutoffDate = oneYearAgo.toISOString().split('T')[0];
-
-                    // Lọc lấy các đơn có ngày nhỏ hơn mốc 1 năm trước
                     const q = query(collection(db, "orders"), where("date", "<", cutoffDate));
                     const querySnapshot = await getDocs(q);
-
-                    querySnapshot.forEach(async (document) => {
-                        await deleteDoc(doc(db, "orders", document.id));
-                    });
-                } catch (e) {
-                    console.warn("Lỗi khi tự động dọn dẹp đơn cũ trên Firestore:", e);
-                }
+                    querySnapshot.forEach(async (document) => { await deleteDoc(doc(db, "orders", document.id)); });
+                } catch (e) { console.warn("Lỗi khi tự động dọn dẹp đơn cũ trên Firestore:", e); }
             }
 
-            // Chạy dọn dẹp Firestore
             autoCleanFirestoreOldOrders();
 
-            // Lắng nghe dữ liệu Kho Hàng từ Cloud (Real-time)
             onSnapshot(collection(db, "inventory"), (snapshot) => {
                 const cloudInventory = [];
-                snapshot.forEach((doc) => {
-                    cloudInventory.push(doc.data());
-                });
+                snapshot.forEach((doc) => { cloudInventory.push(doc.data()); });
                 if (cloudInventory.length > 0) {
-                    inventoryData = cloudInventory;
-                    sortInventory();
+                    inventoryData = cloudInventory; sortInventory();
                     safeSetItem('dms_inventory', JSON.stringify(inventoryData));
-                    renderInventory();
-                    updateProductSelect();
+                    renderInventory(); updateProductSelect();
                 }
             }, (error) => console.warn("Firestore offline mode active"));
 
-            // Lắng nghe dữ liệu Đơn Hàng từ Cloud (Real-time)
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const cloudOrders = [];
-                snapshot.forEach((doc) => {
-                    cloudOrders.push(doc.data());
-                });
+                snapshot.forEach((doc) => { cloudOrders.push(doc.data()); });
                 if (cloudOrders.length > 0) {
-                    ordersData = cloudOrders;
-                    cleanOldOrders();
+                    ordersData = cloudOrders; cleanOldOrders();
                     safeSetItem('dms_orders', JSON.stringify(ordersData));
-                    renderHistory();
-                    renderStats();
-                    renderCurrentMonthDiff();
+                    renderHistory(); renderStats(); renderCurrentMonthDiff();
+                    if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
                 }
             }, (error) => console.warn("Firestore offline mode active"));
 
-            // Đẩy toàn bộ kho lên Firestore
             window.saveInventoryToCloud = async function() {
-                try {
-                    for (const item of inventoryData) {
-                        await setDoc(doc(db, "inventory", String(item.id)), item);
-                    }
-                } catch(e) {}
+                try { for (const item of inventoryData) { await setDoc(doc(db, "inventory", String(item.id)), item); } } catch(e) {}
             };
+            window.saveProductItemToCloud = async function(item) { try { await setDoc(doc(db, "inventory", String(item.id)), item); } catch(e) {} };
+            window.saveOrderToCloud = async function(newOrder) { try { await setDoc(doc(db, "orders", String(newOrder.id)), newOrder); } catch(e) {} };
+            window.deleteOrderFromCloud = async function(orderId) { try { await deleteDoc(doc(db, "orders", String(orderId))); } catch(e) {} };
+            window.deleteProductFromCloud = async function(productId) { try { await deleteDoc(doc(db, "inventory", String(productId))); } catch(e) {} };
+            window.saveTargetToCloud = async function(monthKey, targetObj) { try { await setDoc(doc(db, "targets", monthKey), { month: monthKey, ...targetObj }); } catch(e) {} };
 
-            // Đẩy 1 sản phẩm đơn lẻ lên Firestore
-            window.saveProductItemToCloud = async function(item) {
-                try { await setDoc(doc(db, "inventory", String(item.id)), item); } catch(e) {}
-            };
-
-            // Đẩy 1 đơn hàng lên Firestore
-            window.saveOrderToCloud = async function(newOrder) {
-                try {
-                    await setDoc(doc(db, "orders", String(newOrder.id)), newOrder);
-                } catch(e) {}
-            };
-
-            // Xóa đơn hàng trên Firestore
-            window.deleteOrderFromCloud = async function(orderId) {
-                try { await deleteDoc(doc(db, "orders", String(orderId))); } catch(e) {}
-            };
-
-            // Xóa sản phẩm kho trên Firestore
-            window.deleteProductFromCloud = async function(productId) {
-                try { await deleteDoc(doc(db, "inventory", String(productId))); } catch(e) {}
-            };
+            onSnapshot(collection(db, "targets"), (snapshot) => {
+                const cloudTargets = {};
+                snapshot.forEach((d) => {
+                    const data = d.data(); const key = data.month || d.id;
+                    if (key) cloudTargets[key] = { khoan: data.khoan || 0, dmsInput: data.dmsInput || 0 };
+                });
+                if (Object.keys(cloudTargets).length > 0) {
+                    targetsData = { ...targetsData, ...cloudTargets };
+                    safeSetItem('dms_targets', JSON.stringify(targetsData));
+                    if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
+                }
+            }, (error) => console.warn("Firestore targets offline"));
         } catch (e) {
             console.warn("Firebase initialization skipped (offline)");
         }

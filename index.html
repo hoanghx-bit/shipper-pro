@@ -364,6 +364,10 @@
                                 <option value="Dây">Dây</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Giá Tùy Chỉnh (đ/đơn vị):</label>
+                            <input type="number" id="order-custom-price" class="form-control" placeholder="Mặc định từ kho" min="0" step="any">
+                        </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label>Màu sắc / Ghi chú:</label>
                             <input type="text" id="order-color" class="form-control" placeholder="Ví dụ: trộn màu, Đỏ, Xanh...">
@@ -392,6 +396,12 @@
                         </table>
                     </div>
                     <div class="summary-box">
+                        <div style="width: 100%; margin-bottom: 10px;">
+                            <div class="form-group">
+                                <label style="font-weight: 700; color: #1e293b;">Ghi chú toàn đơn hàng:</label>
+                                <input type="text" id="temp-order-note" class="form-control" placeholder="Nhập ghi chú chung cho toàn bộ đơn hàng...">
+                            </div>
+                        </div>
                         <div class="summary-metrics">
                             <div class="metric-item">
                                 <span class="metric-label">TỔNG TIỀN HÀNG:</span>
@@ -572,6 +582,7 @@
                 <div class="form-group"><label>Tên Khách Hàng:</label><input type="text" id="edit-order-customer" class="form-control"></div>
                 <div class="form-group"><label>Ngày Lên Đơn:</label><input type="date" id="edit-order-date" class="form-control"></div>
                 <div class="form-group"><label>Chiết Khấu Đơn (đ):</label><input type="number" id="edit-order-discount" class="form-control" value="0" step="any"></div>
+                <div class="form-group" style="grid-column: span 3;"><label>Ghi Chú Đơn Hàng:</label><input type="text" id="edit-order-note" class="form-control"></div>
             </div>
             <div class="table-responsive">
                 <table>
@@ -920,17 +931,24 @@
             const qty = parseVnNum(document.getElementById('order-qty').value);
             const unit = document.getElementById('order-unit').value;
             const color = document.getElementById('order-color').value.trim();
+            const customPriceInput = document.getElementById('order-custom-price').value.trim();
+
             if (!customer) return alert("Vui lòng nhập tên khách hàng!");
             if (!prodId) return alert("Vui lòng chọn sản phẩm!");
             if (qty <= 0) return alert("Số lượng phải lớn hơn 0!");
             const prod = inventoryData.find(p => p.id == prodId);
             if (!prod) return;
-            let giaBan = (unit === 'Thùng' || unit === 'T') ? prod.banThung : prod.banLe;
+
+            let giaBanDefault = (unit === 'Thùng' || unit === 'T') ? prod.banThung : prod.banLe;
+            let giaBan = customPriceInput !== "" ? parseVnNum(customPriceInput) : giaBanDefault;
             let giaNet = (unit === 'Thùng' || unit === 'T') ? prod.netThung : prod.netLe;
             let tienHangGoc = giaBan * qty;
             let chenhLech = (giaBan - giaNet) * qty;
+
             tempItems.push({ customer, prodId: prod.id, productName: prod.name, qty, unit, color, giaBan, giaNet, tienHangGoc, chenhLech });
             document.getElementById('temp-customer-name').innerText = `Khách hàng: ${customer}`;
+            
+            document.getElementById('order-custom-price').value = "";
             renderTempOrder();
         }
 
@@ -975,10 +993,13 @@
             if (tempItems.length === 0) return alert("Đơn hàng trống!");
             const today = new Date().toISOString().split('T')[0];
             const discount = parseVnNum(document.getElementById('temp-order-discount').value);
+            const orderNote = document.getElementById('temp-order-note').value.trim();
+
             let totalRaw = 0, totalDiff = 0;
             tempItems.forEach(item => { totalRaw += item.tienHangGoc; totalDiff += item.chenhLech; });
             const newOrder = {
                 id: Date.now(), date: today, customer: tempItems[0].customer,
+                orderNote: orderNote,
                 items: [...tempItems], discount, totalRaw, totalPay: totalRaw - discount, totalDiff: totalDiff - discount
             };
             ordersData.push(newOrder);
@@ -990,6 +1011,7 @@
             document.getElementById('order-customer').value = "";
             document.getElementById('temp-customer-name').innerText = "";
             document.getElementById('temp-order-discount').value = "0";
+            document.getElementById('temp-order-note').value = "";
             renderTempOrder();
             renderStats();
             renderCurrentMonthDiff();
@@ -1045,6 +1067,15 @@
                     <td class="col-total" style="padding: 4px 0 0 8px; border: none; text-align: right; font-weight: bold;">${formatDisplayNum(totalRaw)}</td>
                 </tr>`;
             }
+
+            if (order.orderNote) {
+                html += `<tr>
+                    <td colspan="4" style="padding: 6px 0 0 0; border: none; text-align: left; font-weight: bold; color: #0f172a;">
+                        * Ghi chú: ${order.orderNote}
+                    </td>
+                </tr>`;
+            }
+
             html += `</table>`;
             return html;
         }
@@ -1111,6 +1142,7 @@
             document.getElementById('edit-order-customer').value = order.customer;
             document.getElementById('edit-order-date').value = order.date;
             document.getElementById('edit-order-discount').value = order.discount || 0;
+            document.getElementById('edit-order-note').value = order.orderNote || "";
             editingOrderItems = JSON.parse(JSON.stringify(order.items));
             renderEditOrderTable();
             document.getElementById('edit-order-modal').classList.add('active');
@@ -1186,6 +1218,8 @@
             const customer = document.getElementById('edit-order-customer').value.trim();
             const date = document.getElementById('edit-order-date').value;
             const discount = parseVnNum(document.getElementById('edit-order-discount').value);
+            const orderNote = document.getElementById('edit-order-note').value.trim();
+
             if (!customer) return alert("Vui lòng nhập tên khách hàng!");
             if (editingOrderItems.length === 0) return alert("Đơn hàng phải có ít nhất 1 sản phẩm!");
             const order = ordersData.find(o => o.id == orderId);
@@ -1193,6 +1227,8 @@
                 order.customer = customer;
                 order.date = date;
                 order.discount = discount;
+                order.orderNote = orderNote;
+
                 let totalRaw = 0, totalDiff = 0;
                 editingOrderItems.forEach(it => {
                     it.customer = customer;
@@ -1457,7 +1493,7 @@
             return count;
         }
 
-        // Tích hợp logic trừ ngày nghỉ lễ vào tính toán ngày làm việc[cite: 2, 3]
+        // Tích hợp logic trừ ngày nghỉ lễ vào tính toán ngày làm việc[cite: 2]
         function getMonthWorkingInfo(monthKey) {
             const [year, month] = monthKey.split('-').map(Number);
             const firstDay = new Date(year, month - 1, 1);
@@ -1577,7 +1613,7 @@
 
             const ctx = document.getElementById('chart-combined').getContext('2d');
             
-            // Kế thừa và hợp nhất cấu hình biểu đồ chuyên nghiệp[cite: 1, 3]
+            // Kế thừa và hợp nhất cấu hình biểu đồ chuyên nghiệp[cite: 1]
             const chartOpts = JSON.parse(JSON.stringify(professionalChartOptions));
             chartOpts.plugins.legend.display = false;
             chartOpts.plugins.tooltip.callbacks = {

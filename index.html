@@ -1790,6 +1790,7 @@
 
         // Customer directory and visit routes (Monday-Saturday); coordinates are stored locally.
         let customersData = JSON.parse(safeGetItem('dms_customers') || '[]');
+        function customerIdOf(c) { return c?.id ?? c?.customerId ?? c?.customer_id ?? c?._firestoreDocId ?? c?.uid ?? null; }
         let currentPosition = null;
         function saveCustomer() {
             const name = document.getElementById('cust-name').value.trim();
@@ -1835,7 +1836,8 @@
         function customerRowsForFilter(filterValue) {
             const day = weekdayForCustomerFilter(filterValue);
             const allDays = filterValue === 'all' || filterValue === 'all-days' || filterValue === '';
-            return customersData.filter(c => allDays || normalizedCustomerDay(c) === day)
+            return customersData.map(c => ({...c, id: customerIdOf(c)}))
+                .filter(c => allDays || normalizedCustomerDay(c) === day)
                 .map(c => ({...c, day:normalizedCustomerDay(c), distance:currentPosition && c.lat != null && c.lon != null ? haversine(currentPosition,{lat:Number(c.lat),lon:Number(c.lon)}) : Infinity}))
                 .sort((a,b) => a.distance-b.distance);
         }
@@ -1867,19 +1869,21 @@
             });
         }
         async function deleteCustomer(id){
-            const customer = customersData.find(c => String(c.id) === String(id));
+            const customer = customersData.find(c => String(customerIdOf(c)) === String(id) || String(c._firestoreDocId || '') === String(id));
             if(!customer || !confirm('Xóa khách hàng “' + customer.name + '”?')) return;
             const status = document.getElementById('customer-sync-status');
             // Tombstone prevents the live Firestore listener from re-uploading a deleted local record.
             const tombstones = new Set(JSON.parse(safeGetItem('dms_deleted_customer_ids') || '[]').map(String));
             tombstones.add(String(id));
+            if (customerIdOf(customer) != null) tombstones.add(String(customerIdOf(customer)));
+            if (customer._firestoreDocId) tombstones.add(String(customer._firestoreDocId));
             safeSetItem('dms_deleted_customer_ids', JSON.stringify([...tombstones]));
-            customersData = customersData.filter(c => String(c.id) !== String(id));
+            customersData = customersData.filter(c => String(customerIdOf(c)) !== String(id) && String(c._firestoreDocId || '') !== String(id));
             safeSetItem('dms_customers', JSON.stringify(customersData));
             renderCustomers(); renderOrderCustomerVisits();
             if (status) { status.textContent = 'Đang xóa khách hàng trên Firestore…'; status.style.color = '#64748b'; }
             if (window.deleteCustomerFromCloud) {
-                const ok = await window.deleteCustomerFromCloud(id, customer._firestoreDocId);
+                const ok = await window.deleteCustomerFromCloud(customerIdOf(customer) ?? id, customer._firestoreDocId);
                 if (!ok) {
                     // Keep the item deleted locally; tombstone ensures it cannot reappear on next snapshot.
                     if (status) { status.textContent = 'Đã ẩn khách tại thiết bị nhưng Firestore chưa cho phép xóa. Kiểm tra Security Rules (delete) hoặc quyền đăng nhập.'; status.style.color = '#b45309'; }
@@ -1905,7 +1909,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, Timestamp, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD1WARwdmeVWv4RptGX_ViXaTZfoYtXWm0", authDomain: "dms-pro-19191.firebaseapp.com",
@@ -1961,18 +1965,36 @@
             window.saveTargetToCloud = async function(monthKey, targetObj) { try { await setDoc(doc(db, "targets", monthKey), { month: monthKey, ...targetObj }); } catch(e) {} };
 
             // Đồng bộ danh bạ khách hàng hai chiều với Firestore.
+            // Dấu xóa được lưu trên Firestore để không bị mất khi người dùng xóa dữ liệu trình duyệt.
             const customerStatus = () => document.getElementById("customer-sync-status");
+            const customerKey = value => String(value ?? "").trim();
+            async function readCloudDeletedCustomerIds() {
+                const deleted = new Set(JSON.parse(safeGetItem("dms_deleted_customer_ids") || "[]").map(String));
+                const markers = await getDocs(collection(db, "deletedCustomers"));
+                markers.forEach(marker => {
+                    const data = marker.data() || {};
+                    deleted.add(String(data.id ?? marker.id));
+                    deleted.add(String(marker.id));
+                });
+                safeSetItem("dms_deleted_customer_ids", JSON.stringify([...deleted]));
+                return deleted;
+            }
+
             onSnapshot(collection(db, "customers"), async (snapshot) => {
                 try {
-                    const deletedIds = new Set(JSON.parse(safeGetItem("dms_deleted_customer_ids") || "[]").map(String));
+                    const deletedIds = await readCloudDeletedCustomerIds();
                     const cloudCustomers = [];
                     snapshot.forEach((d) => {
-                        const data = d.data(); const customerId = String(data.id ?? d.id);
-                        if (!deletedIds.has(customerId) && !deletedIds.has(String(d.id))) cloudCustomers.push({ ...data, id: data.id ?? d.id, _firestoreDocId: d.id });
+                        const data = d.data() || {};
+                        const customerId = customerKey(data.id ?? data.customerId ?? data.customer_id ?? d.id);
+                        if (!deletedIds.has(customerId) && !deletedIds.has(customerKey(d.id))) {
+                            cloudCustomers.push({ ...data, id: data.id ?? data.customerId ?? data.customer_id ?? d.id, _firestoreDocId: d.id });
+                        }
                     });
-                    const localCustomers = JSON.parse(safeGetItem("dms_customers") || "[]").filter(c => !deletedIds.has(String(c.id)));
-                    const cloudIds = new Set(cloudCustomers.map(c => String(c.id)));
-                    const localOnly = localCustomers.filter(c => !cloudIds.has(String(c.id)));
+                    const localCustomers = JSON.parse(safeGetItem("dms_customers") || "[]")
+                        .filter(c => !deletedIds.has(customerKey(c.id)));
+                    const cloudIds = new Set(cloudCustomers.map(c => customerKey(c.id)));
+                    const localOnly = localCustomers.filter(c => !cloudIds.has(customerKey(c.id)) && !deletedIds.has(customerKey(c.id)));
                     for (const c of localOnly) {
                         await setDoc(doc(db, "customers", String(c.id)), c);
                         cloudCustomers.push({ ...c, _firestoreDocId: String(c.id) });
@@ -1985,15 +2007,22 @@
                 } catch (e) {
                     console.warn("Lỗi đồng bộ danh bạ khách hàng:", e);
                     const status = customerStatus();
-                    if (status) { status.textContent = "Chưa đồng bộ được Firestore; dữ liệu tạm lưu trên thiết bị."; status.style.color = "#b45309"; }
+                    if (status) { status.textContent = "Chưa đồng bộ được danh bạ Firestore: " + (e?.code || "kiểm tra mạng/quyền truy cập"); status.style.color = "#b45309"; }
                 }
             }, (error) => {
                 console.warn("Firestore customer sync offline:", error);
                 const status = customerStatus();
                 if (status) { status.textContent = "Firestore chưa kết nối: " + (error?.code || "kiểm tra mạng/quyền truy cập"); status.style.color = "#b45309"; }
             });
+
             window.saveCustomerToCloud = async function(customer) {
                 try {
+                    const deletedIds = await readCloudDeletedCustomerIds();
+                    deletedIds.delete(customerKey(customer.id));
+                    deletedIds.delete(customerKey(String(customer.id)));
+                    safeSetItem("dms_deleted_customer_ids", JSON.stringify([...deletedIds]));
+                    // Khi thêm lại một khách đã xóa, gỡ dấu xóa trên cloud trước khi lưu.
+                    await deleteDoc(doc(db, "deletedCustomers", String(customer.id))).catch(() => {});
                     await setDoc(doc(db, "customers", String(customer.id)), customer);
                     const status = customerStatus();
                     if (status) { status.textContent = "Đã lưu khách hàng lên Firestore."; status.style.color = "#15803d"; }
@@ -2001,31 +2030,42 @@
                 } catch (e) {
                     console.error("Không lưu được khách hàng lên Firestore:", e);
                     const status = customerStatus();
-                    if (status) { status.textContent = "Lưu trên thiết bị thành công nhưng Firestore bị lỗi. Kiểm tra quyền truy cập/mạng."; status.style.color = "#b45309"; }
+                    if (status) { status.textContent = "Lưu trên thiết bị thành công nhưng Firestore bị lỗi: " + (e?.code || "kiểm tra mạng/quyền truy cập"); status.style.color = "#b45309"; }
                     return false;
                 }
             };
+
             window.deleteCustomerFromCloud = async function(customerId, firestoreDocId) {
+                const id = customerKey(customerId);
                 try {
-                    const idsToDelete = new Set([String(customerId)]);
+                    // Ghi dấu xóa lên cloud trước. Dấu này vẫn còn sau khi xóa cache/localStorage.
+                    await setDoc(doc(db, "deletedCustomers", id), {
+                        id,
+                        firestoreDocId: firestoreDocId || id,
+                        deletedAt: new Date().toISOString()
+                    });
+                    const idsToDelete = new Set([id]);
                     if (firestoreDocId) idsToDelete.add(String(firestoreDocId));
-                    const record = customersData.find(c => String(c.id) === String(customerId));
-                    if (record?._firestoreDocId) idsToDelete.add(String(record._firestoreDocId));
-                    // Also find legacy documents whose document ID differs but whose data.id matches.
-                    const matches = await getDocs(query(collection(db, "customers"), where("id", "==", customerId)));
-                    matches.forEach(d => idsToDelete.add(d.id));
-                    for (const docId of idsToDelete) {
-                        try { await deleteDoc(doc(db, "customers", docId)); }
-                        catch (deleteError) {
-                            // A missing document is harmless; permissions/network errors are not.
-                            if (deleteError?.code !== "not-found") throw deleteError;
+                    // Quét collection để xử lý dữ liệu cũ có document ID khác hoặc id lưu dạng chuỗi/số.
+                    const allCustomers = await getDocs(collection(db, "customers"));
+                    allCustomers.forEach(d => {
+                        const data = d.data() || {};
+                        const identifiers = [d.id, data.id, data.customerId, data.customer_id, data.uid].filter(v => v !== undefined && v !== null).map(customerKey);
+                        const numericId = Number(id);
+                        if (identifiers.includes(id) || (Number.isFinite(numericId) && identifiers.includes(customerKey(numericId))) || (firestoreDocId && customerKey(d.id) === customerKey(firestoreDocId))) {
+                            idsToDelete.add(d.id);
                         }
+                    });
+                    for (const docId of idsToDelete) {
+                        await deleteDoc(doc(db, "customers", docId));
                     }
+                    const status = customerStatus();
+                    if (status) { status.textContent = "Đã xóa khách hàng khỏi Firestore và lưu dấu xóa đồng bộ."; status.style.color = "#15803d"; }
                     return true;
                 } catch (e) {
                     console.error("Không xóa được khách hàng trên Firestore:", e);
-                    const status = document.getElementById("customer-sync-status");
-                    if (status) { status.textContent = "Firestore từ chối xóa (" + (e?.code || e?.message || "lỗi không xác định") + "). Kiểm tra quyền delete trong Security Rules."; status.style.color = "#b45309"; }
+                    const status = customerStatus();
+                    if (status) { status.textContent = "Đã ghi nhận yêu cầu xóa nhưng Firestore báo lỗi: " + (e?.code || e?.message || "lỗi không xác định"); status.style.color = "#b45309"; }
                     return false;
                 }
             };

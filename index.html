@@ -273,6 +273,16 @@
         .customer-row.near { background:#eff6ff; border-left:4px solid #2563eb; }
         .customer-meta { color:#64748b; font-size:12px; margin-top:3px; }
         @media(max-width:760px) { .nav-list { overflow-x:auto; } .nav-item { flex:0 0 auto; } .content-body { padding:8px; } .customer-layout { grid-template-columns:1fr; } .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .dash-hero-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .top-header { padding:0 10px; } }
+        /* Chỉ áp dụng cho tab Khách hàng: danh sách có vùng cuộn riêng trên điện thoại */
+        #tab-customers .customer-list-card { min-height:0; }
+        #tab-customers #customer-list { max-height:calc(100dvh - 285px); min-height:120px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+        #tab-customers .customer-row { flex-wrap:wrap; }
+        #tab-customers .customer-row > div:first-child { min-width:0; overflow-wrap:anywhere; }
+        @media(max-width:760px) {
+          #tab-customers #customer-list { max-height:calc(100dvh - 330px); }
+          #tab-customers .customer-layout { gap:8px; }
+          #tab-customers .customer-list-card { margin-bottom:12px; }
+        }
     </style>
 </head>
 <body>
@@ -597,18 +607,20 @@
     <div id="tab-customers" class="tab-panel">
       <div class="customer-layout">
         <div class="card">
-          <div class="card-header">Danh bạ khách hàng / Cửa hàng</div>
-          <div class="form-group"><label>Tên khách hàng / cửa hàng</label><input id="cust-name" class="form-control" placeholder="Tên cửa hàng"></div>
-          <div class="form-group" style="margin-top:8px"><label>Địa chỉ</label><input id="cust-address" class="form-control" placeholder="Địa chỉ cửa hàng"></div>
-          <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-top:8px">
-            <div class="form-group"><label>Ngày viếng thăm</label><select id="cust-day" class="form-control"><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option></select></div>
-            <div class="form-group"><label>Điện thoại</label><input id="cust-phone" class="form-control" placeholder="Số điện thoại"></div>
+          <div class="card-header"><span>Danh bạ khách hàng / Cửa hàng</span><button class="btn btn-primary btn-sm" id="toggle-customer-form-btn" onclick="toggleCustomerForm()"><i data-lucide="user-plus"></i> Thêm khách hàng mới</button></div>
+          <div id="customer-form-wrap" style="display:none">
+            <div class="form-group"><label>Tên khách hàng / cửa hàng</label><input id="cust-name" class="form-control" placeholder="Tên cửa hàng"></div>
+            <div class="form-group" style="margin-top:8px"><label>Địa chỉ</label><input id="cust-address" class="form-control" placeholder="Địa chỉ cửa hàng"></div>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-top:8px">
+              <div class="form-group"><label>Ngày viếng thăm</label><select id="cust-day" class="form-control"><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option></select></div>
+              <div class="form-group"><label>Điện thoại</label><input id="cust-phone" class="form-control" placeholder="Số điện thoại"></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary" onclick="saveCustomer()"><i data-lucide="user-plus"></i> Lưu khách hàng</button><button class="btn btn-secondary" onclick="toggleCustomerForm(false)">Hủy</button></div>
+            <p style="font-size:12px;color:#64748b;margin-top:8px">Dùng nút “Ghim vị trí” ở từng khách hàng để lưu vị trí cửa hàng.</p>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary" onclick="saveCustomer()"><i data-lucide="user-plus"></i> Thêm khách hàng</button></div>
-          <p style="font-size:12px;color:#64748b;margin-top:8px">Vị trí hiện tại được cập nhật tự động khi cấp quyền GPS. Dùng nút “Ghim vị trí” ở từng khách hàng để lưu vị trí cửa hàng.</p>
           <p id="customer-sync-status" style="font-size:12px;color:#64748b;margin-top:4px">Đồng bộ Firestore đang khởi tạo…</p>
         </div>
-        <div class="card"><div class="card-header"><span>Danh sách viếng thăm theo tuyến</span><select id="customer-day-filter" class="form-control" style="width:auto" onchange="renderCustomers()"><option value="today">Hôm nay</option><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option><option value="all">Tất cả các ngày</option></select></div><div id="customer-list"></div></div>
+        <div class="card customer-list-card"><div class="card-header"><span>Danh sách viếng thăm theo tuyến</span><select id="customer-day-filter" class="form-control" style="width:auto" onchange="renderCustomers()"><option value="today">Hôm nay</option><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option><option value="all">Tất cả các ngày</option></select></div><div id="customer-list"></div></div>
       </div>
     </div>
 
@@ -1792,6 +1804,19 @@
         let customersData = JSON.parse(safeGetItem('dms_customers') || '[]');
         function customerIdOf(c) { return c?.id ?? c?.customerId ?? c?.customer_id ?? c?._firestoreDocId ?? c?.uid ?? null; }
         let currentPosition = null;
+        function toggleCustomerForm(forceOpen) {
+            const wrap = document.getElementById('customer-form-wrap');
+            if (!wrap) return;
+            const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : wrap.style.display === 'none';
+            wrap.style.display = shouldOpen ? 'block' : 'none';
+            const btn = document.getElementById('toggle-customer-form-btn');
+            if (btn) btn.innerHTML = shouldOpen
+                ? '<i data-lucide="x"></i> Đóng biểu mẫu'
+                : '<i data-lucide="user-plus"></i> Thêm khách hàng mới';
+            safeCreateIcons();
+            if (shouldOpen) document.getElementById('cust-name')?.focus();
+        }
+
         function saveCustomer() {
             const name = document.getElementById('cust-name').value.trim();
             if (!name) return alert('Vui lòng nhập tên khách hàng/cửa hàng.');
@@ -1799,6 +1824,7 @@
             customersData.push(customer); safeSetItem('dms_customers', JSON.stringify(customersData));
             if (window.saveCustomerToCloud) window.saveCustomerToCloud(customer);
             ['cust-name','cust-address','cust-phone'].forEach(id=>document.getElementById(id).value='');
+            toggleCustomerForm(false);
             renderCustomers(); renderOrderCustomerVisits();
         }
         function getPosition(success) {

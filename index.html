@@ -273,6 +273,9 @@
         .customer-row.near { background:#eff6ff; border-left:4px solid #2563eb; }
         .customer-meta { color:#64748b; font-size:12px; margin-top:3px; }
         @media(max-width:760px) { .nav-list { overflow-x:auto; } .nav-item { flex:0 0 auto; } .content-body { padding:8px; } .customer-layout { grid-template-columns:1fr; } .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .dash-hero-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .top-header { padding:0 10px; } }
+        /* Trạng thái đã viếng thăm chỉ áp dụng trong danh sách khách của tab Lên đơn */
+        #tab-order .btn-visited { background:#facc15 !important; color:#713f12 !important; border:1px solid #eab308; }
+        #tab-order .btn-visited:hover { background:#eab308 !important; }
         /* Chỉ áp dụng cho tab Khách hàng: danh sách có vùng cuộn riêng trên điện thoại */
         #tab-customers .customer-list-card { min-height:0; }
         #tab-customers #customer-list { max-height:calc(100dvh - 285px); min-height:120px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
@@ -283,11 +286,243 @@
           #tab-customers .customer-layout { gap:8px; }
           #tab-customers .customer-list-card { margin-bottom:12px; }
         }
+
+        /* ===== Giao diện DMS hiện đại: sidebar trái, nền sáng, widget gọn ===== */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #16a34a;
+            --warning: #facc15;
+            --app-shadow: 0 3px 12px rgba(15, 23, 42, .045);
+        }
+        body {
+            display: flex;
+            flex-direction: row;
+            height: 100dvh;
+            overflow: hidden;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .sidebar {
+            width: 232px;
+            min-width: 232px;
+            height: 100%;
+            flex-direction: column;
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 0;
+            border-right: 1px solid #334155;
+            box-shadow: 3px 0 14px rgba(15,23,42,.06);
+            transition: width .22s ease, min-width .22s ease;
+            z-index: 20;
+        }
+        .brand {
+            min-height: 66px;
+            padding: 14px 13px;
+            color: #fff;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            gap: 10px;
+            justify-content: flex-start;
+            font-size: 14px;
+            letter-spacing: .35px;
+            white-space: nowrap;
+        }
+        .brand > i { width: 22px; height: 22px; color: #60a5fa; flex-shrink: 0; }
+        .brand-label { overflow: hidden; }
+        .sidebar-toggle {
+            margin-left: auto;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #cbd5e1;
+            background: transparent;
+            border: 1px solid #475569;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+        .sidebar-toggle:hover { background: #334155; color: #fff; }
+        .sidebar-toggle svg { width: 16px; height: 16px; }
+        .nav-list {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+            padding: 16px 10px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            white-space: normal;
+        }
+        .nav-item {
+            flex: 0 0 auto;
+            justify-content: flex-start;
+            text-align: left;
+            gap: 12px;
+            min-height: 42px;
+            padding: 10px 12px;
+            color: #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background .18s ease, color .18s ease, transform .18s ease;
+        }
+        .nav-item > i, .nav-item > svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .nav-item:hover { background: #334155; color: #fff; }
+        .nav-item.active { color: #fff; background: #3b82f6; box-shadow: 0 4px 10px rgba(59,130,246,.2); }
+        .main-wrapper { min-width: 0; flex: 1; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header {
+            height: 62px;
+            min-height: 62px;
+            padding: 0 24px;
+            background: #fff;
+            border-bottom: 1px solid #e8edf4;
+            box-shadow: 0 1px 4px rgba(15,23,42,.025);
+        }
+        .header-title { font-size: 17px; font-weight: 700; color: #1e293b; }
+        .user-badge { background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; border-radius: 9px; }
+        .content-body { flex: 1; min-height: 0; padding: 22px; overflow-y: auto; overscroll-behavior: contain; }
+        .tab-panel.active { animation: fadeIn .16s ease-out; }
+        .card, .kpi-card, .dash-summary-item, .chart-card, .history-card {
+            border: 1px solid #e6ebf2;
+            border-radius: 11px;
+            box-shadow: var(--app-shadow);
+        }
+        .card { padding: 17px; margin-bottom: 16px; }
+        .card-header { color: #1e293b; font-size: 14px; font-weight: 700; border-bottom-color: #edf1f6; }
+        .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; }
+        .kpi-card { padding: 16px; }
+        .kpi-label { font-size: 12px; letter-spacing: .2px; }
+        .kpi-value { font-size: 22px; }
+        .dash-summary-grid { grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; }
+        .dash-summary-item { padding: 17px; gap: 6px; border-left-width: 3px; }
+        .dash-summary-item .label { font-size: 11px; letter-spacing: .3px; }
+        .dash-summary-item .value { font-size: 23px; }
+        .dash-hero { padding: 22px; border-radius: 12px; background: linear-gradient(135deg, #1e293b 0%, #334e83 100%); box-shadow: 0 8px 20px rgba(30,41,59,.12); }
+        .dash-hero-title { color: #93c5fd; }
+        .dash-hero-grid { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; }
+        .dash-hero-metric { padding: 15px; border-radius: 10px; background: rgba(255,255,255,.075); }
+        .dash-hero-metric .value { font-size: 23px; }
+        .chart-card { padding: 18px; }
+        .chart-container { height: 280px; }
+        .form-control { border-color: #dbe3ed; border-radius: 7px; background: #fff; color: #1e293b; }
+        .form-control:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+        .btn { border-radius: 7px; }
+        .btn-primary { background: #3b82f6; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #16a34a; }
+        .btn-warning { background: #facc15; color: #713f12; }
+        th { background: #f1f5f9; color: #334155; border-bottom: 1px solid #e2e8f0; }
+        td { border-bottom-color: #edf1f6; }
+        tr:hover { background: #f8fafc; }
+        .summary-box, .stats-toolbar, .dash-pct-row { border-radius: 10px; }
+        .month-diff-card { border-radius: 11px; padding: 17px; }
+        .month-diff-value { font-size: 24px; }
+        .percent-good { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .percent-mid { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        #tab-customers .customer-layout { grid-template-columns: minmax(240px,.85fr) minmax(300px,1.5fr); }
+        body.sidebar-collapsed .sidebar { width: 70px; min-width: 70px; }
+        body.sidebar-collapsed .brand { padding: 14px 19px; }
+        body.sidebar-collapsed .brand-label { display: none; }
+        body.sidebar-collapsed .sidebar-toggle { margin-left: 0; }
+        body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+        body.sidebar-collapsed .nav-list { padding: 16px 9px; }
+        body.sidebar-collapsed .nav-item { justify-content: center; padding: 11px 0; gap: 0; font-size: 0; }
+        body.sidebar-collapsed .nav-item > i, body.sidebar-collapsed .nav-item > svg { width: 20px; height: 20px; }
+        @media (max-width: 760px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; min-width: 0; height: auto; border-right: 0; border-bottom: 1px solid #334155; }
+            .brand { min-height: 48px; padding: 8px 12px; }
+            .nav-list { flex-direction: row; padding: 7px 8px; gap: 5px; }
+            .nav-item { flex: 0 0 auto; min-height: 36px; padding: 8px 10px; gap: 7px; font-size: 12px; }
+            .nav-item > i, .nav-item > svg { width: 16px; height: 16px; }
+            .main-wrapper { flex: 1; min-height: 0; height: auto; }
+            .top-header { height: 49px; min-height: 49px; padding: 0 12px; }
+            .header-title { font-size: 14px; }
+            .content-body { padding: 10px; }
+            .dash-hero { padding: 15px; }
+            .dash-hero-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .dash-summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .chart-container { height: 230px; }
+            body.sidebar-collapsed .sidebar { width: 100%; min-width: 0; }
+            body.sidebar-collapsed .brand { padding: 8px 12px; }
+            body.sidebar-collapsed .brand-label { display: inline; }
+            body.sidebar-collapsed .nav-list { padding: 7px 8px; }
+            body.sidebar-collapsed .nav-item { justify-content: flex-start; padding: 8px 10px; gap: 7px; font-size: 12px; }
+            body.sidebar-collapsed .nav-item > i, body.sidebar-collapsed .nav-item > svg { width: 16px; height: 16px; }
+        }
+
+
+        /* Bảng bán chạy quy đổi về thùng; KPI thống kê gọn nhưng không cắt nội dung */
+        .best-selling-detail { color:#64748b; font-size:11px; font-weight:400; margin-top:3px; }
+        #tab-dashboard #best-selling-body td:last-child { white-space:normal; min-width:130px; }
+        #tab-stats .month-diff-card { padding:12px 15px; gap:10px; margin-bottom:12px; border-radius:10px; }
+        #tab-stats .month-diff-controls { padding-bottom:9px; gap:8px; }
+        #tab-stats .month-diff-label { font-size:11px !important; line-height:1.35; letter-spacing:.15px; }
+        #tab-stats .month-diff-sub { font-size:11px; margin-top:2px; }
+        #tab-stats .month-diff-value { font-size:clamp(16px, 2vw, 21px); line-height:1.3; overflow-wrap:anywhere; }
+        #tab-stats .month-diff-card > div:nth-child(2) { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; }
+        #tab-stats .month-diff-card > div:nth-child(2) > div { min-width:0; padding-right:8px !important; }
+        #tab-stats .kpi-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin-bottom:12px; }
+        #tab-stats .kpi-card { min-width:0; padding:11px 12px; border-radius:10px; }
+        #tab-stats .kpi-label { font-size:10px; line-height:1.35; letter-spacing:.15px; overflow-wrap:anywhere; }
+        #tab-stats .kpi-value { font-size:clamp(14px, 1.65vw, 19px); line-height:1.35; margin-top:6px; overflow-wrap:anywhere; word-break:normal; }
+        #tab-stats .stats-toolbar { gap:9px; padding:11px; margin-bottom:12px; }
+        #tab-stats .stats-toolbar-item { min-width:125px; }
+        #tab-stats .stats-toolbar label { font-size:11px !important; margin-bottom:4px !important; }
+        @media(max-width:900px) { #tab-stats .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        /* Dashboard: thu gọn KPI, vẫn hiển thị đủ nhãn và giá trị */
+        #tab-dashboard .dash-hero { padding:13px 15px; margin-bottom:10px; }
+        #tab-dashboard .dash-hero-title { font-size:11px; line-height:1.35; }
+        #tab-dashboard .dash-hero-sub { font-size:11px; line-height:1.4; margin-top:3px; }
+        #tab-dashboard .dash-hero-grid { gap:8px; margin-top:10px; }
+        #tab-dashboard .dash-hero-metric { min-width:0; padding:9px 10px; }
+        #tab-dashboard .dash-hero-metric .label { font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
+        #tab-dashboard .dash-hero-metric .value { font-size:clamp(15px,1.45vw,19px); line-height:1.3; margin-top:4px; overflow-wrap:anywhere; }
+        #tab-dashboard .dash-summary-grid { gap:8px; margin-bottom:10px; }
+        #tab-dashboard .dash-summary-item { min-width:0; padding:10px 12px; gap:4px; }
+        #tab-dashboard .dash-summary-item .label { font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
+        #tab-dashboard .dash-summary-item .value { font-size:clamp(15px,1.5vw,19px); line-height:1.3; margin-top:2px; overflow-wrap:anywhere; }
+        #tab-order .visit-icon-btn { width:34px; min-width:34px; height:32px; padding:0; justify-content:center; gap:0; border-radius:8px; }
+        #tab-order .visit-icon-btn svg { width:17px; height:17px; }
+        #tab-order .visit-icon-btn.has-order { background:#16a34a !important; color:#fff !important; border:1px solid #15803d; }
+        #tab-order .visit-icon-btn.has-order:hover { background:#15803d !important; }
+        #tab-order .visit-icon-btn.btn-visited { background:#facc15 !important; color:#713f12 !important; border-color:#eab308; }
+        @media(max-width:760px) {
+          #tab-dashboard .dash-hero { padding:11px; }
+          #tab-dashboard .dash-hero-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+          #tab-dashboard .dash-hero-metric { padding:8px; }
+          #tab-dashboard .dash-hero-metric .label, #tab-dashboard .dash-summary-item .label { font-size:9px; }
+          #tab-dashboard .dash-hero-metric .value, #tab-dashboard .dash-summary-item .value { font-size:14px; }
+          #tab-dashboard .dash-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+          #tab-dashboard .dash-summary-item { padding:9px; }
+        }
+        @media(max-width:480px) {
+          #tab-dashboard .dash-hero-metric .value, #tab-dashboard .dash-summary-item .value { font-size:13px; }
+          #tab-dashboard .dash-hero-metric .label, #tab-dashboard .dash-summary-item .label { font-size:9px; }
+        }
+        @media(max-width:480px) {
+          #tab-stats .month-diff-card { padding:10px; }
+          #tab-stats .month-diff-card > div:nth-child(2) { gap:7px !important; }
+          #tab-stats .month-diff-value { font-size:16px; }
+          #tab-stats .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+          #tab-stats .kpi-card { padding:10px; }
+          #tab-stats .kpi-label { font-size:9px; }
+          #tab-stats .kpi-value { font-size:14px; }
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="brand"><i data-lucide="layers"></i> DMS PRO SYSTEM</div>
+        <div class="brand"><i data-lucide="layers"></i><span class="brand-label">DMS PRO SYSTEM</span><button type="button" class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Thu gọn thanh điều hướng" title="Thu gọn thanh điều hướng"><i data-lucide="panel-left-close"></i></button></div>
         <ul class="nav-list">
             <li class="nav-item active" onclick="switchTab('tab-order', this)"><i data-lucide="shopping-cart"></i> Lên đơn</li>
             <li class="nav-item" onclick="switchTab('tab-dashboard', this)"><i data-lucide="layout-dashboard"></i> Dashboard</li>
@@ -372,7 +607,7 @@
                     </div>
                 </div>
 
-                <div class="card"><div class="card-header"><span><i data-lucide="trending-up" style="vertical-align:middle"></i> Sản phẩm bán chạy trong tháng</span></div><div class="table-responsive"><table><thead><tr><th>#</th><th>Sản phẩm</th><th>Số lượng bán</th></tr></thead><tbody id="best-selling-body"></tbody></table></div></div>
+                <div class="card"><div class="card-header"><span><i data-lucide="trending-up" style="vertical-align:middle"></i> Sản phẩm bán chạy trong tháng</span></div><div class="table-responsive"><table><thead><tr><th>#</th><th>Sản phẩm</th><th>SL quy đổi thùng</th></tr></thead><tbody id="best-selling-body"></tbody></table></div></div>
                 <div class="dashboard-charts">
                     <div class="chart-card">
                         <h3><i data-lucide="bar-chart-3"></i> Phân tích Trực quan Doanh số Tháng</h3>
@@ -390,6 +625,10 @@
             <div id="tab-order" class="tab-panel active">
                 <div class="card" id="order-customer-visit-card">
                     <div class="card-header"><span><i data-lucide="map-pinned" style="vertical-align:middle"></i> Khách hàng cần viếng thăm</span><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;color:#64748b">Tự lọc theo thứ hiện tại</span><select id="order-customer-day-filter" class="form-control" style="width:auto;min-width:145px" onchange="renderOrderCustomerVisits()"><option value="today">Hôm nay</option><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option><option value="all">Tất cả các ngày</option></select></div></div>
+                    <div style="margin-bottom:10px;position:relative">
+                        <i data-lucide="search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#64748b"></i>
+                        <input type="search" id="order-customer-search" class="form-control" placeholder="Tìm theo tên khách hàng..." oninput="renderOrderCustomerVisits()" style="width:100%;padding-left:36px">
+                    </div>
                     <div id="order-customer-visit-list"></div>
                 </div>
                 <div class="card" id="order-entry-form-card" style="display:none">
@@ -601,10 +840,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="tab-customers" class="tab-panel">
+            <div id="tab-customers" class="tab-panel">
       <div class="customer-layout">
         <div class="card">
           <div class="card-header"><span>Danh bạ khách hàng / Cửa hàng</span><button class="btn btn-primary btn-sm" id="toggle-customer-form-btn" onclick="toggleCustomerForm()"><i data-lucide="user-plus"></i> Thêm khách hàng mới</button></div>
@@ -622,6 +858,8 @@
         </div>
         <div class="card customer-list-card"><div class="card-header"><span>Danh sách viếng thăm theo tuyến</span><select id="customer-day-filter" class="form-control" style="width:auto" onchange="renderCustomers()"><option value="today">Hôm nay</option><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option><option value="all">Tất cả các ngày</option></select></div><div id="customer-list"></div></div>
       </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal" id="product-modal">
@@ -812,6 +1050,18 @@
             if (orderForm) orderForm.style.display = 'none';
             if (tempOrder) tempOrder.style.display = 'none';
         });
+
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            const collapsed = document.body.classList.contains('sidebar-collapsed');
+            const button = document.getElementById('sidebar-toggle');
+            if (button) {
+                button.title = collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng';
+                button.setAttribute('aria-label', button.title);
+                button.innerHTML = `<i data-lucide="${collapsed ? 'panel-left-open' : 'panel-left-close'}"></i>`;
+                safeCreateIcons();
+            }
+        }
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
@@ -1116,6 +1366,7 @@
             }
             renderStats();
             renderCurrentMonthDiff();
+            renderOrderCustomerVisits();
             if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
             if (!finishAfterSave) alert("Đã lưu đơn hàng thành công.");
         }
@@ -1131,6 +1382,7 @@
         }
 
         function finishVisitAndReturnToCustomers() {
+            markCurrentCustomerVisited();
             const form = document.getElementById('order-entry-form-card');
             const tempCard = document.getElementById('temp-order-card');
             if (form) form.style.display = 'none';
@@ -1144,6 +1396,7 @@
             switchTab('tab-order', nav);
             const listCard = document.getElementById('order-customer-visit-card');
             if (listCard) listCard.scrollIntoView({behavior:'smooth', block:'start'});
+            renderOrderCustomerVisits();
         }
 
         function generateOrderHtml(order, index) {
@@ -1786,16 +2039,31 @@
                 options: chartOpts
             });
 
+            // Sản phẩm bán chạy: chỉ cộng các đơn đã lưu trong tháng đang chọn.
+            // Quy đổi hàng lẻ về thùng theo QC/T để so sánh cùng một đơn vị.
             const bestBody = document.getElementById('best-selling-body');
             if (bestBody) {
                 const sums = {};
-                ordersData.filter(o => (o.date || '').startsWith(monthKey)).forEach(o => (o.items || []).forEach(it => {
-                    const k = it.productName || 'Sản phẩm';
-                    if (!sums[k]) sums[k] = {qty:0, unit:it.unit || ''};
-                    sums[k].qty += parseVnNum(it.qty);
+                ordersData.filter(o => (o.date || '').startsWith(monthKey)).forEach(order => (order.items || []).forEach(it => {
+                    const name = (it.productName || 'Sản phẩm').trim();
+                    const product = inventoryData.find(p => (it.prodId != null && String(p.id) === String(it.prodId)) || p.name === name);
+                    const qct = product ? parseVnNum(product.qct) : 0;
+                    const qty = parseVnNum(it.qty);
+                    const isCarton = it.unit === 'Thùng' || it.unit === 'T';
+                    if (!sums[name]) sums[name] = { cartonQty: 0, looseQty: 0, hasUnknownPack: false, qct };
+                    if (isCarton) sums[name].cartonQty += qty;
+                    else if (qct > 0) sums[name].looseQty += qty;
+                    else sums[name].hasUnknownPack = true;
+                    if (!sums[name].qct && qct > 0) sums[name].qct = qct;
                 }));
-                const top = Object.entries(sums).sort((a,b)=>b[1].qty-a[1].qty).slice(0,8);
-                bestBody.innerHTML = top.length ? top.map(([name,v],i)=>`<tr><td>${i+1}</td><td><strong>${name}</strong></td><td>${formatDisplayNum(v.qty)} ${v.unit}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:#64748b">Chưa có dữ liệu bán trong tháng này.</td></tr>';
+                const top = Object.entries(sums).map(([name, v]) => {
+                    const equivalent = v.cartonQty + (v.qct > 0 ? v.looseQty / v.qct : 0);
+                    const detail = v.qct > 0
+                        ? `${formatDisplayNum(equivalent)} T${v.looseQty ? ` <span class="best-selling-detail">(${formatDisplayNum(v.cartonQty)}T + ${formatDisplayNum(v.looseQty)} lẻ)</span>` : ''}`
+                        : (v.cartonQty ? `${formatDisplayNum(v.cartonQty)} T` : 'Thiếu QC/T');
+                    return { name, equivalent, detail, hasUnknownPack: v.hasUnknownPack };
+                }).sort((a,b) => b.equivalent - a.equivalent).slice(0,8);
+                bestBody.innerHTML = top.length ? top.map((v,i)=>`<tr><td>${i+1}</td><td><strong>${v.name}</strong></td><td>${v.detail}${v.hasUnknownPack && v.equivalent > 0 ? '<div class="best-selling-detail">Có dòng lẻ chưa quy đổi do thiếu QC/T</div>' : ''}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:#64748b">Chưa có dữ liệu bán trong tháng này.</td></tr>';
             }
             safeCreateIcons();
         }
@@ -1804,6 +2072,29 @@
         let customersData = JSON.parse(safeGetItem('dms_customers') || '[]');
         function customerIdOf(c) { return c?.id ?? c?.customerId ?? c?.customer_id ?? c?._firestoreDocId ?? c?.uid ?? null; }
         let currentPosition = null;
+        let currentVisitCustomerId = null;
+        function localDateKey(date = new Date()) {
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        }
+        function getCustomerVisitStatus() {
+            try { return JSON.parse(safeGetItem('dms_customer_visit_status') || '{}') || {}; }
+            catch (_) { return {}; }
+        }
+        function isCustomerVisitedToday(id) {
+            const status = getCustomerVisitStatus();
+            return !!status[localDateKey()]?.[String(id)];
+        }
+        function markCurrentCustomerVisited() {
+            if (currentVisitCustomerId == null) return;
+            const status = getCustomerVisitStatus();
+            const today = localDateKey();
+            if (!status[today]) status[today] = {};
+            status[today][String(currentVisitCustomerId)] = true;
+            // Giữ lịch sử trạng thái trong 60 ngày gần nhất để dữ liệu không tăng vô hạn.
+            Object.keys(status).sort().slice(0, Math.max(0, Object.keys(status).length - 60)).forEach(day => delete status[day]);
+            safeSetItem('dms_customer_visit_status', JSON.stringify(status));
+            currentVisitCustomerId = null;
+        }
         function toggleCustomerForm(forceOpen) {
             const wrap = document.getElementById('customer-form-wrap');
             if (!wrap) return;
@@ -1875,12 +2166,40 @@
             list.innerHTML=rows.length?rows.map(c=>`<div class="customer-row ${c.distance<=100?'near':''}"><div><strong>${c.name}</strong><div class="customer-meta">${c.address||'Chưa có địa chỉ'}${c.phone?' · '+c.phone:''}</div><div class="customer-meta">Tuyến: ${Number.isFinite(c.day)?('Thứ '+(c.day===6?'7':c.day+1)):'Chưa đặt ngày'} · ${Number.isFinite(c.distance)?(c.distance<1000?Math.round(c.distance)+' m':(c.distance/1000).toFixed(1)+' km'):'Chưa có khoảng cách'} ${c.distance<=100?' · GẦN VỊ TRÍ HIỆN TẠI':''}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="selectCustomerForLocation('${c.id}')">Ghim vị trí khách</button><button class="btn btn-primary btn-sm" onclick="visitCustomer('${c.id}')"><i data-lucide="map-pin-check"></i> Viếng thăm</button><button class="btn btn-danger btn-sm" onclick="deleteCustomer('${c.id}')">×</button></div></div>`).join(''):'<div style="padding:20px;color:#64748b;text-align:center">Chưa có khách hàng cho lựa chọn này.</div>';
             safeCreateIcons();
         }
+        function customerHasOrderToday(customer) {
+            const name = String(customer?.name || '').trim().toLocaleLowerCase('vi');
+            if (!name) return false;
+            const today = localDateKey();
+            return ordersData.some(order =>
+                String(order.date || '') === today &&
+                String(order.customer || '').trim().toLocaleLowerCase('vi') === name
+            );
+        }
         function renderOrderCustomerVisits() {
             const list=document.getElementById('order-customer-visit-list'); if(!list) return;
             const filter=document.getElementById('order-customer-day-filter');
             if(filter && !filter.dataset.initialized){filter.value='today';filter.dataset.initialized='1';}
-            const rows=customerRowsForFilter(filter ? filter.value : 'today');
-            list.innerHTML=rows.length?rows.map(c=>`<div class="customer-row ${c.distance<=100?'near':''}"><div><strong>${c.name}</strong><div class="customer-meta">${c.address||'Chưa có địa chỉ'}${c.phone?' · '+c.phone:''}</div><div class="customer-meta">Tuyến: ${Number.isFinite(c.day)?('Thứ '+(c.day===6?'7':c.day+1)):'Chưa đặt ngày'} · ${Number.isFinite(c.distance)?(c.distance<1000?Math.round(c.distance)+' m':(c.distance/1000).toFixed(1)+' km'):'Chưa có khoảng cách'} ${c.distance<=100?' · GẦN VỊ TRÍ HIỆN TẠI':''}</div></div><button class="btn btn-primary btn-sm" onclick="visitCustomer('${c.id}')"><i data-lucide="map-pin-check"></i> Viếng thăm</button></div>`).join(''):'<div style="padding:18px;color:#64748b;text-align:center">Chưa có khách hàng cho lựa chọn này. Thêm khách tại tab “Khách hàng / Tuyến”.</div>';
+            const searchInput=document.getElementById('order-customer-search');
+            const searchTerm=(searchInput?.value || '').trim().toLocaleLowerCase('vi');
+            const rows=customerRowsForFilter(filter ? filter.value : 'today')
+                .filter(c => !searchTerm || String(c.name || '').toLocaleLowerCase('vi').includes(searchTerm));
+            list.innerHTML=rows.length?rows.map(c=>{
+                const visited=isCustomerVisitedToday(c.id);
+                const hasOrder=customerHasOrderToday(c);
+                const buttonClass=hasOrder?'has-order':(visited?'btn-visited':'btn-primary');
+                const buttonIcon=hasOrder?'shopping-bag':(visited?'check-circle-2':'map-pin-check');
+                const buttonTitle=hasOrder?'Khách đã có đơn hôm nay':(visited?'Đã viếng thăm hôm nay':'Viếng thăm khách hàng');
+                return `<div class="customer-row ${c.distance<=100?'near':''}">
+                    <div style="min-width:0;flex:1">
+                        <strong>${c.name}</strong>
+                        <div class="customer-meta">${c.address||'Chưa có địa chỉ'}${c.phone?' · '+c.phone:''}</div>
+                        <div class="customer-meta">Tuyến: ${Number.isFinite(c.day)?('Thứ '+(c.day===6?'7':c.day+1)):'Chưa đặt ngày'} · ${Number.isFinite(c.distance)?(c.distance<1000?Math.round(c.distance)+' m':(c.distance/1000).toFixed(1)+' km'):'Chưa có khoảng cách'} ${c.distance<=100?' · GẦN VỊ TRÍ HIỆN TẠI':''}</div>
+                    </div>
+                    <button class="btn ${buttonClass} btn-sm visit-icon-btn" title="${buttonTitle}" aria-label="${buttonTitle}" onclick="visitCustomer('${c.id}')">
+                        <i data-lucide="${buttonIcon}"></i>
+                    </button>
+                </div>`;
+            }).join(''):'<div style="padding:18px;color:#64748b;text-align:center">'+(searchTerm?'Không tìm thấy khách hàng phù hợp.':'Chưa có khách hàng cho lựa chọn này. Thêm khách tại tab “Khách hàng / Tuyến”.')+'</div>';
             safeCreateIcons();
         }
         // Ghim vị trí riêng cho đúng một khách hàng được chọn; không cập nhật tọa độ các khách khác.
@@ -1920,6 +2239,7 @@
         }
         function visitCustomer(id){
             const c=customersData.find(x=>String(x.id)===String(id)); if(!c)return;
+            currentVisitCustomerId = customerIdOf(c) ?? id;
             switchTab('tab-order',document.querySelector('.nav-item[onclick*="tab-order"]'));
             const form=document.getElementById('order-entry-form-card');
             const tempCard=document.getElementById('temp-order-card');

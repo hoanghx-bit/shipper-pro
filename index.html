@@ -491,6 +491,14 @@
         #tab-dashboard .dash-summary-item { min-width:0; padding:10px 12px; gap:4px; }
         #tab-dashboard .dash-summary-item .label { font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
         #tab-dashboard .dash-summary-item .value { font-size:clamp(15px,1.5vw,19px); line-height:1.3; margin-top:2px; overflow-wrap:anywhere; }
+        #tab-order .order-customer-filter-panel { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; padding:12px; margin:-4px 0 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; }
+        #tab-order .order-filter-field { min-width:0; display:flex; flex-direction:column; gap:7px; }
+        #tab-order .order-filter-field label { font-size:11px; font-weight:700; color:#475569; }
+        #tab-order .order-filter-field .form-control { width:100%; min-width:0; padding:9px 10px; }
+        #tab-order .order-weekday-options { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+        #tab-order .order-weekday-options label { display:flex; align-items:center; gap:5px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; font-size:12px; cursor:pointer; }
+        #tab-order .order-weekday-options input { accent-color:#2563eb; margin:0; }
+        @media(max-width:600px) { #tab-order .order-customer-filter-panel { grid-template-columns:1fr; gap:8px; } #tab-order .order-customer-filter-panel .form-control { font-size:13px; } #tab-order .order-weekday-options { gap:5px; } #tab-order .order-weekday-options label { padding:7px 9px; } }
         #tab-order .visit-icon-btn { width:34px; min-width:34px; height:32px; padding:0; justify-content:center; gap:0; border-radius:8px; }
         #tab-order .visit-icon-btn svg { width:17px; height:17px; }
         #tab-order .visit-icon-btn.has-order { background:#16a34a !important; color:#fff !important; border:1px solid #15803d; }
@@ -664,7 +672,13 @@
 
             <div id="tab-order" class="tab-panel active">
                 <div class="card" id="order-customer-visit-card">
-                    <div class="card-header"><span><i data-lucide="map-pinned" style="vertical-align:middle"></i> Khách hàng</span><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;color:#64748b">Tự lọc theo thứ hiện tại</span><select id="order-customer-day-filter" class="form-control" style="width:auto;min-width:145px" onchange="renderOrderCustomerVisits()"><option value="today">Hôm nay</option><option value="1">Thứ 2</option><option value="2">Thứ 3</option><option value="3">Thứ 4</option><option value="4">Thứ 5</option><option value="5">Thứ 6</option><option value="6">Thứ 7</option><option value="all">Tất cả các ngày</option></select></div></div>
+                    <div class="card-header"><span><i data-lucide="map-pinned" style="vertical-align:middle"></i> Khách hàng cần viếng thăm</span><button type="button" id="order-customer-filter-toggle" class="btn btn-secondary btn-sm" onclick="toggleOrderCustomerFilters()" aria-expanded="false" aria-controls="order-customer-filter-panel"><i data-lucide="list-filter"></i> Lọc</button></div>
+                    <div id="order-customer-filter-panel" class="order-customer-filter-panel" style="display:none">
+                        <div class="order-filter-field order-weekday-filter"><label>Ngày tuyến khách hàng (có thể chọn nhiều ngày)</label><div class="order-weekday-options">
+                            <label><input type="checkbox" class="order-route-day" value="1" onchange="renderOrderCustomerVisits()"> T2</label><label><input type="checkbox" class="order-route-day" value="2" onchange="renderOrderCustomerVisits()"> T3</label><label><input type="checkbox" class="order-route-day" value="3" onchange="renderOrderCustomerVisits()"> T4</label><label><input type="checkbox" class="order-route-day" value="4" onchange="renderOrderCustomerVisits()"> T5</label><label><input type="checkbox" class="order-route-day" value="5" onchange="renderOrderCustomerVisits()"> T6</label><label><input type="checkbox" class="order-route-day" value="6" onchange="renderOrderCustomerVisits()"> T7</label><button type="button" class="btn btn-secondary btn-sm" onclick="setOrderRouteDays('all')">Tất cả</button><button type="button" class="btn btn-secondary btn-sm" onclick="setOrderRouteDays('none')">Bỏ chọn</button>
+                        </div></div>
+                        <div class="order-filter-field"><label for="order-customer-status-filter">Trạng thái khách hàng</label><select id="order-customer-status-filter" class="form-control" onchange="renderOrderCustomerVisits()"><option value="all">Tất cả khách hàng</option><option value="orders">Khách có đơn hôm nay</option><option value="visited">Đã viếng thăm hôm nay</option><option value="not-visited">Chưa viếng thăm hôm nay</option></select></div>
+                    </div>
                     <div style="margin-bottom:10px;position:relative">
                         <i data-lucide="search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#64748b"></i>
                         <input type="search" id="order-customer-search" class="form-control" placeholder="Tìm theo tên khách hàng..." oninput="renderOrderCustomerVisits()" style="width:100%;padding-left:36px">
@@ -1083,6 +1097,8 @@
             const todayDay = new Date().getDay();
             document.getElementById('customer-day-filter').value = 'today';
             document.getElementById('order-customer-day-filter').value = 'today';
+            const orderCustomerDateFilter = document.getElementById('order-customer-date-filter');
+            if (orderCustomerDateFilter) orderCustomerDateFilter.value = localDateKey();
             renderCustomers();
             renderOrderCustomerVisits();
             const orderForm = document.getElementById('order-entry-form-card');
@@ -2135,10 +2151,11 @@
             try { return JSON.parse(safeGetItem('dms_customer_visit_status') || '{}') || {}; }
             catch (_) { return {}; }
         }
-        function isCustomerVisitedToday(id) {
+        function isCustomerVisitedOnDate(id, dateKey = localDateKey()) {
             const status = getCustomerVisitStatus();
-            return !!status[localDateKey()]?.[String(id)];
+            return !!status[dateKey]?.[String(id)];
         }
+        function isCustomerVisitedToday(id) { return isCustomerVisitedOnDate(id, localDateKey()); }
         function markCurrentCustomerVisited() {
             if (currentVisitCustomerId == null) return;
             const status = getCustomerVisitStatus();
@@ -2221,29 +2238,58 @@
             list.innerHTML=rows.length?rows.map(c=>`<div class="customer-row ${c.distance<=100?'near':''}"><div><strong>${c.name}</strong><div class="customer-meta">${c.address||'Chưa có địa chỉ'}${c.phone?' · '+c.phone:''}</div><div class="customer-meta">Tuyến: ${Number.isFinite(c.day)?('Thứ '+(c.day===6?'7':c.day+1)):'Chưa đặt ngày'} · ${Number.isFinite(c.distance)?(c.distance<1000?Math.round(c.distance)+' m':(c.distance/1000).toFixed(1)+' km'):'Chưa có khoảng cách'} ${c.distance<=100?' · GẦN VỊ TRÍ HIỆN TẠI':''}</div></div><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="selectCustomerForLocation('${c.id}')">Ghim vị trí khách</button><button class="btn btn-primary btn-sm" onclick="visitCustomer('${c.id}')"><i data-lucide="map-pin-check"></i> Viếng thăm</button><button class="btn btn-danger btn-sm" onclick="deleteCustomer('${c.id}')">×</button></div></div>`).join(''):'<div style="padding:20px;color:#64748b;text-align:center">Chưa có khách hàng cho lựa chọn này.</div>';
             safeCreateIcons();
         }
-        function customerHasOrderToday(customer) {
+        function customerHasOrderOnDate(customer, dateKey = localDateKey()) {
             const name = String(customer?.name || '').trim().toLocaleLowerCase('vi');
             if (!name) return false;
-            const today = localDateKey();
             return ordersData.some(order =>
-                String(order.date || '') === today &&
+                String(order.date || '') === dateKey &&
                 String(order.customer || '').trim().toLocaleLowerCase('vi') === name
             );
         }
+        function customerHasOrderToday(customer) { return customerHasOrderOnDate(customer, localDateKey()); }
+        function toggleOrderCustomerFilters(forceOpen) {
+            const panel=document.getElementById('order-customer-filter-panel');
+            const button=document.getElementById('order-customer-filter-toggle');
+            if(!panel || !button) return;
+            const open=typeof forceOpen==='boolean' ? forceOpen : panel.style.display==='none';
+            panel.style.display=open?'grid':'none';
+            button.setAttribute('aria-expanded',String(open));
+            button.innerHTML=open?'<i data-lucide="list-filter"></i> Đóng lọc':'<i data-lucide="list-filter"></i> Lọc';
+            safeCreateIcons();
+        }
+        function setOrderRouteDays(mode) {
+            const boxes=[...document.querySelectorAll('#order-customer-filter-panel .order-route-day')];
+            if(mode==='all') boxes.forEach(x=>x.checked=true);
+            else if(mode==='none') boxes.forEach(x=>x.checked=false);
+            renderOrderCustomerVisits();
+        }
         function renderOrderCustomerVisits() {
             const list=document.getElementById('order-customer-visit-list'); if(!list) return;
-            const filter=document.getElementById('order-customer-day-filter');
-            if(filter && !filter.dataset.initialized){filter.value='today';filter.dataset.initialized='1';}
+            const dayBoxes=[...document.querySelectorAll('#order-customer-filter-panel .order-route-day')];
+            const dayPanel=document.getElementById('order-customer-filter-panel');
+            if(dayBoxes.length && dayPanel && dayPanel.dataset.daysInitialized!=='1') {
+                const todayDay=(new Date().getDay()+6)%7; // Monday=0, Sunday=6
+                const todayRoute=todayDay===6?null:todayDay+1;
+                const defaultBox=dayBoxes.find(x=>Number(x.value)===todayRoute);
+                if(defaultBox) defaultBox.checked=true;
+                dayPanel.dataset.daysInitialized='1';
+            }
+            const selectedDays=dayBoxes.filter(x=>x.checked).map(x=>Number(x.value));
+            const selectedDate=localDateKey();
+            const statusFilter=document.getElementById('order-customer-status-filter')?.value || 'all';
             const searchInput=document.getElementById('order-customer-search');
             const searchTerm=(searchInput?.value || '').trim().toLocaleLowerCase('vi');
-            const rows=customerRowsForFilter(filter ? filter.value : 'today')
-                .filter(c => !searchTerm || String(c.name || '').toLocaleLowerCase('vi').includes(searchTerm));
+            const rows=customersData.map(c=>({...c,id:customerIdOf(c),day:normalizedCustomerDay(c)}))
+                .filter(c=>selectedDays.length===0 || selectedDays.includes(c.day))
+                .map(c=>({...c,distance:currentPosition && c.lat!=null && c.lon!=null ? haversine(currentPosition,{lat:Number(c.lat),lon:Number(c.lon)}) : Infinity,hasOrder:customerHasOrderOnDate(c,selectedDate),visited:isCustomerVisitedOnDate(c.id,selectedDate)}))
+                .filter(c => !searchTerm || String(c.name || '').toLocaleLowerCase('vi').includes(searchTerm))
+                .filter(c => statusFilter==='all' || (statusFilter==='orders' && c.hasOrder) || (statusFilter==='visited' && c.visited) || (statusFilter==='not-visited' && !c.visited));
             list.innerHTML=rows.length?rows.map(c=>{
-                const visited=isCustomerVisitedToday(c.id);
-                const hasOrder=customerHasOrderToday(c);
+                const visited=c.visited;
+                const hasOrder=c.hasOrder;
                 const buttonClass=hasOrder?'has-order':(visited?'btn-visited':'btn-primary');
                 const buttonIcon=hasOrder?'shopping-bag':(visited?'check-circle-2':'map-pin-check');
-                const buttonTitle=hasOrder?'Khách đã có đơn hôm nay':(visited?'Đã viếng thăm hôm nay':'Viếng thăm khách hàng');
+                const buttonTitle=hasOrder?'Khách đã có đơn ngày '+selectedDate:(visited?'Đã viếng thăm ngày '+selectedDate:'Viếng thăm khách hàng');
                 return `<div class="customer-row ${c.distance<=100?'near':''}">
                     <div style="min-width:0;flex:1">
                         <strong>${c.name}</strong>
